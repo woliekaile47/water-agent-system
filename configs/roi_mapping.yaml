@@ -1,0 +1,24 @@
+roi_mapping:
+  mapping_method: "region_level_manual"
+  description: "Manual region-level mapping from camera mask to DEM grid region."
+
+  camera_mask:
+    mask_path: "data/masks/manual_water_mask.npy"
+    metadata_path: "data/masks/manual_water_mask_metadata.json"
+
+  dem:
+    ground_dem_path: "data/dem/ground_dem.npy"
+    ground_dem_interpolated_path: "data/dem/ground_dem_interpolated.npy"
+    ground_dem_valid_mask_path: "data/dem/ground_dem_valid_mask.npy"
+    metadata_path: "data/dem/ground_dem_metadata.json"
+
+  dem_water_roi:
+    x_min: -2.4
+    x_max: -1.4
+    y_min: -3.2
+    y_max: -2.3
+
+  water_surface:
+    mode: "configured_depth"
+    configured_depth_cm: 30.0
+    note: "S4 MVP uses configured depth to validate mask-to-DEM and depth-map pipeline. It is not final real-water measurement."

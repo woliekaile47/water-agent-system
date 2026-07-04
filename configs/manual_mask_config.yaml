@@ -1,0 +1,11 @@
+manual_mask:
+  source_image: "outputs/figures/camera_water_sim_39cm.png"
+  image_width: 640
+  image_height: 360
+  mask_type: "polygon"
+  polygon_points:
+    - [250, 220]
+    - [480, 220]
+    - [520, 350]
+    - [180, 350]
+  description: "Manual water candidate mask for S3 region-level MVP."

@@ -1,0 +1,100 @@
+{
+  "stage": "S7A_deterministic_rule_engine",
+  "prediction_mode": "offline_mock_depth_history",
+  "source_area_volume_result_json": "/home/wlkl/water_agent_ws/water_agent_system/outputs/json/water_area_volume_result.json",
+  "source_weather_correction_result_json": "/home/wlkl/water_agent_ws/water_agent_system/outputs/json/weather_correction_result.json",
+  "current_mean_depth_cm": 44.6426787517137,
+  "current_max_depth_cm": 62.95400857925415,
+  "current_water_area_m2": 0.7200000000000002,
+  "current_water_volume_m3": 0.3214272870123387,
+  "rainfall_intensity_mm_h": 20.0,
+  "rainfall_level_label": "moderate_rain",
+  "weather_correction_factor": 1.3,
+  "depth_history_source": "offline_mock_depth_history",
+  "depth_history_records": [
+    {
+      "minutes_before_now": 10,
+      "mean_depth_cm": 26.0
+    },
+    {
+      "minutes_before_now": 5,
+      "mean_depth_cm": 34.0
+    },
+    {
+      "minutes_before_now": 1,
+      "mean_depth_cm": 42.0
+    },
+    {
+      "minutes_before_now": 0,
+      "mean_depth_cm": 44.64
+    }
+  ],
+  "k_1min_cm_per_min": 2.642678751713703,
+  "k_5min_cm_per_min": 2.1285357503427407,
+  "k_10min_cm_per_min": 1.8642678751713704,
+  "k_base_cm_per_min": 2.332753675993948,
+  "k_forecast_cm_per_min": 3.0325797787921323,
+  "k_forecast_raw_cm_per_min": 3.0325797787921323,
+  "slope_weights": {
+    "window_1min": 0.5,
+    "window_5min": 0.3,
+    "window_10min": 0.2
+  },
+  "forecast_horizons_min": [
+    5,
+    15,
+    30,
+    60
+  ],
+  "forecast_results": [
+    {
+      "horizon_min": 5,
+      "forecast_depth_cm": 59.80557764567436,
+      "raw_forecast_depth_cm": 59.80557764567436,
+      "warning_level": "orange",
+      "clipped": false
+    },
+    {
+      "horizon_min": 15,
+      "forecast_depth_cm": 90.13137543359568,
+      "raw_forecast_depth_cm": 90.13137543359568,
+      "warning_level": "orange",
+      "clipped": false
+    },
+    {
+      "horizon_min": 30,
+      "forecast_depth_cm": 100.0,
+      "raw_forecast_depth_cm": 135.62007211547768,
+      "warning_level": "orange",
+      "clipped": true
+    },
+    {
+      "horizon_min": 60,
+      "forecast_depth_cm": 100.0,
+      "raw_forecast_depth_cm": 226.59746547924163,
+      "warning_level": "orange",
+      "clipped": true
+    }
+  ],
+  "time_to_thresholds_min": {
+    "blue": 0.0,
+    "yellow": 0.0,
+    "orange": 1.7665887261241657
+  },
+  "warning_thresholds_cm": {
+    "blue": 15.0,
+    "yellow": 30.0,
+    "orange": 50.0
+  },
+  "mvp_note": "S7-A uses configured_mvp_simulation depth, offline_mock_weather, and offline_mock_depth_history to validate deterministic forecasting pipeline. It is not final real short-term waterlogging forecast.",
+  "config_note": "S7-A MVP performs deterministic rule-engine forecasting only. Case retrieval and physical constraint layers will be added in S7-B/S7-C.",
+  "timestamp": "2026-07-04T16:24:35.160240+00:00",
+  "warning": [
+    "forecast depth at 30 min clipped from 135.62 to max_reasonable_depth_cm=100.00",
+    "forecast depth at 60 min clipped from 226.60 to max_reasonable_depth_cm=100.00"
+  ],
+  "output_files": {
+    "data_result_json": "/home/wlkl/water_agent_ws/water_agent_system/data/reasoning/deterministic_forecast_result.json",
+    "output_result_json": "/home/wlkl/water_agent_ws/water_agent_system/outputs/json/deterministic_forecast_result.json"
+  }
+}

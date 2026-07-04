@@ -1,0 +1,66 @@
+{
+  "stage": "S2-B_ground_dem_build",
+  "method": "low_percentile_grid",
+  "grid_size": 0.1,
+  "dem_shape": [
+    110,
+    95
+  ],
+  "dem_roi": {
+    "x_min": -3.0,
+    "x_max": 6.5,
+    "y_min": -3.5,
+    "y_max": 7.5,
+    "z_min": -1.5,
+    "z_max": 2.5
+  },
+  "ground_z_filter": {
+    "ground_z_min": -0.7,
+    "ground_z_max": 0.35
+  },
+  "grid_height_percentile": 20.0,
+  "min_points_per_cell": 3,
+  "valid_cell_count": 696,
+  "total_cell_count": 10450,
+  "valid_ratio": 0.06660287081339714,
+  "source_bag": "/home/wlkl/water_agent_data/rosbags/dry_baseline_001",
+  "lidar_topic": "/cx/lslidar_point_cloud",
+  "max_frames": 80,
+  "rosbag_read_stats": {
+    "bag_path": "/home/wlkl/water_agent_data/rosbags/dry_baseline_001",
+    "topic": "/cx/lslidar_point_cloud",
+    "frames_read": 80,
+    "point_count": 2231485,
+    "x_min": -2.746220111846924,
+    "x_max": 6.157037734985352,
+    "y_min": -3.2298214435577393,
+    "y_max": 7.366896629333496,
+    "z_min": -0.8531699180603027,
+    "z_max": 2.4041543006896973
+  },
+  "roi_point_count": 2231485,
+  "ground_point_count": 2062539,
+  "interpolation": {
+    "enabled": true,
+    "method": "nearest",
+    "max_neighbor_distance_cells": 3,
+    "filled_cell_count": 1278,
+    "note": "Interpolated cells are gap-filled estimates, not direct observations."
+  },
+  "created_at": "2026-07-04T14:24:54.146934+00:00",
+  "z_min": -0.6852900981903076,
+  "z_max": 0.34812796115875244,
+  "z_median": -0.2423519492149353,
+  "z_p10": -0.44758738577365875,
+  "z_p90": 0.17410296201705933,
+  "output_files": {
+    "ground_dem": "/home/wlkl/water_agent_ws/water_agent_system/data/dem/ground_dem.npy",
+    "ground_dem_valid_mask": "/home/wlkl/water_agent_ws/water_agent_system/data/dem/ground_dem_valid_mask.npy",
+    "ground_dem_point_count": "/home/wlkl/water_agent_ws/water_agent_system/data/dem/ground_dem_point_count.npy",
+    "ground_dem_interpolated": "/home/wlkl/water_agent_ws/water_agent_system/data/dem/ground_dem_interpolated.npy",
+    "ground_dem_metadata": "/home/wlkl/water_agent_ws/water_agent_system/data/dem/ground_dem_metadata.json",
+    "ground_dem_heatmap": "/home/wlkl/water_agent_ws/water_agent_system/outputs/figures/ground_dem_heatmap.png",
+    "ground_dem_interpolated_heatmap": "/home/wlkl/water_agent_ws/water_agent_system/outputs/figures/ground_dem_interpolated_heatmap.png",
+    "ground_dem_point_count_figure": "/home/wlkl/water_agent_ws/water_agent_system/outputs/figures/ground_dem_point_count.png"
+  }
+}

@@ -1,0 +1,110 @@
+{
+  "run_id": "run_20260705_002430",
+  "agent_name": "water_agent_mvp",
+  "mode": "offline_pipeline_agent",
+  "start_time": "2026-07-04T16:24:30.582563+00:00",
+  "end_time": "2026-07-04T16:24:38.740722+00:00",
+  "status": "success",
+  "stages": [
+    {
+      "stage_name": "area_volume",
+      "command_stage": "area_volume",
+      "command": "/usr/bin/python3 run_offline_pipeline.py --stage area_volume --config configs/roi_mapping.yaml",
+      "config_path": "configs/roi_mapping.yaml",
+      "start_time": "2026-07-04T16:24:30.591984+00:00",
+      "end_time": "2026-07-04T16:24:32.948278+00:00",
+      "status": "success",
+      "return_code": 0,
+      "stdout_tail": "[pipeline] water_agent_system offline pipeline\n[pipeline] current stage: area_volume\n[pipeline] config=/home/wlkl/water_agent_ws/water_agent_system/configs/roi_mapping.yaml\n[S4][water_depth] configured depth: 30.00 cm\n[S4][water_depth] max depth cm: 62.95\n[S4][water_depth] mean depth cm: 43.45\n[S4][water_depth] median depth cm: 57.97\n[S4][water_depth] output files:\n  - /home/wlkl/water_agent_ws/water_agent_system/data/hydrology/water_depth_map.npy\n  - /home/wlkl/water_agent_ws/water_agent_system/data/hydrology/water_depth_valid_mask.npy\n  - /home/wlkl/water_agent_ws/water_agent_system/outputs/figures/water_depth_heatmap.png\n  - /home/wlkl/water_agent_ws/water_agent_system/outputs/json/water_depth_result.json\n[S5][area_volume] valid depth cell count: 72\n[S5][area_volume] water area m2: 0.7200\n[S5][area_volume] water volume m3: 0.3214\n[S5][area_volume] water volume liter: 321.43\n[S5][area_volume] max depth cm: 62.95\n[S5][area_volume] mean depth cm: 44.64\n[S5][area_volume] output files:\n  - /home/wlkl/water_agent_ws/water_agent_system/data/hydrology/water_area_volume_result.json\n  - /home/wlkl/water_agent_ws/water_agent_system/outputs/json/water_area_volume_result.json\n[S5][summary] output file: /home/wlkl/water_agent_ws/water_agent_system/outputs/figures/water_area_volume_summary.png\n[pipeline] S5 area_volume complete\n[pipeline] valid depth cell count: 72\n[pipeline] water area m2: 0.7200\n[pipeline] water volume m3: 0.3214\n[pipeline] water volume liter: 321.43\n[pipeline] max depth cm: 62.95\n[pipeline] mean depth cm: 44.64\n[pipeline] configured depth cm: 30.00\n[pipeline] output file paths:\n  - /home/wlkl/water_agent_ws/water_agent_system/data/hydrology/water_area_volume_result.json\n  - /home/wlkl/water_agent_ws/water_agent_system/outputs/json/water_area_volume_result.json\n  - /home/wlkl/water_agent_ws/water_agent_system/outputs/figures/water_area_volume_summary.png\n",
+      "stderr_tail": ""
+    },
+    {
+      "stage_name": "weather_correction",
+      "command_stage": "weather_correction",
+      "command": "/usr/bin/python3 run_offline_pipeline.py --stage weather_correction --config configs/weather_config.yaml",
+      "config_path": "configs/weather_config.yaml",
+      "start_time": "2026-07-04T16:24:32.953430+00:00",
+      "end_time": "2026-07-04T16:24:34.933342+00:00",
+      "status": "success",
+      "return_code": 0,
+      "stdout_tail": "[pipeline] water_agent_system offline pipeline\n[pipeline] current stage: weather_correction\n[pipeline] config=/home/wlkl/water_agent_ws/water_agent_system/configs/weather_config.yaml\n[S6][weather] current rainfall intensity mm/h: 20.00\n[S6][weather] rainfall level label: moderate_rain\n[S6][weather] weather correction factor: 1.30\n[S6][weather] forecast rainfall 15/30/60 min: 5.00 / 10.00 / 18.00 mm\n[S6][weather] output files:\n  - /home/wlkl/water_agent_ws/water_agent_system/data/meteorology/weather_correction_result.json\n  - /home/wlkl/water_agent_ws/water_agent_system/outputs/json/weather_correction_result.json\n[S6][weather_summary] output file: /home/wlkl/water_agent_ws/water_agent_system/outputs/figures/weather_correction_summary.png\n[pipeline] S6 weather_correction complete\n[pipeline] current rainfall intensity mm/h: 20.00\n[pipeline] rainfall level label: moderate_rain\n[pipeline] weather correction factor: 1.30\n[pipeline] forecast rainfall 15/30/60 min: 5.00 / 10.00 / 18.00 mm\n[pipeline] output file paths:\n  - /home/wlkl/water_agent_ws/water_agent_system/data/meteorology/weather_correction_result.json\n  - /home/wlkl/water_agent_ws/water_agent_system/outputs/json/weather_correction_result.json\n  - /home/wlkl/water_agent_ws/water_agent_system/outputs/figures/weather_correction_summary.png\n",
+      "stderr_tail": ""
+    },
+    {
+      "stage_name": "deterministic_forecast",
+      "command_stage": "deterministic_forecast",
+      "command": "/usr/bin/python3 run_offline_pipeline.py --stage deterministic_forecast --config configs/prediction_config.yaml",
+      "config_path": "configs/prediction_config.yaml",
+      "start_time": "2026-07-04T16:24:34.937274+00:00",
+      "end_time": "2026-07-04T16:24:36.706202+00:00",
+      "status": "success",
+      "return_code": 0,
+      "stdout_tail": "configs/prediction_config.yaml\n[S7-A][forecast] current mean depth cm: 44.64\n[S7-A][forecast] k_1min cm/min: 2.6427\n[S7-A][forecast] k_5min cm/min: 2.1285\n[S7-A][forecast] k_10min cm/min: 1.8643\n[S7-A][forecast] k_base cm/min: 2.3328\n[S7-A][forecast] weather correction factor: 1.30\n[S7-A][forecast] k_forecast cm/min: 3.0326\n[S7-A][forecast] 5 min depth cm: 59.81, warning level: orange\n[S7-A][forecast] 15 min depth cm: 90.13, warning level: orange\n[S7-A][forecast] 30 min depth cm: 100.00, warning level: orange\n[S7-A][forecast] 60 min depth cm: 100.00, warning level: orange\n[S7-A][forecast] time to blue/yellow/orange threshold min: 0.0 / 0.0 / 1.7665887261241657\n[S7-A][forecast] output files:\n  - /home/wlkl/water_agent_ws/water_agent_system/data/reasoning/deterministic_forecast_result.json\n  - /home/wlkl/water_agent_ws/water_agent_system/outputs/json/deterministic_forecast_result.json\n[S7-A][forecast_curve] output file: /home/wlkl/water_agent_ws/water_agent_system/outputs/figures/deterministic_forecast_curve.png\n[pipeline] S7-A deterministic_forecast complete\n[pipeline] current mean depth cm: 44.64\n[pipeline] k_1min cm/min: 2.6427\n[pipeline] k_5min cm/min: 2.1285\n[pipeline] k_10min cm/min: 1.8643\n[pipeline] k_base cm/min: 2.3328\n[pipeline] weather correction factor: 1.30\n[pipeline] k_forecast cm/min: 3.0326\n[pipeline] 5 min forecast depth cm: 59.81, warning level: orange\n[pipeline] 15 min forecast depth cm: 90.13, warning level: orange\n[pipeline] 30 min forecast depth cm: 100.00, warning level: orange\n[pipeline] 60 min forecast depth cm: 100.00, warning level: orange\n[pipeline] time to blue/yellow/orange threshold min: 0.0 / 0.0 / 1.7665887261241657\n[pipeline] output file paths:\n  - /home/wlkl/water_agent_ws/water_agent_system/data/reasoning/deterministic_forecast_result.json\n  - /home/wlkl/water_agent_ws/water_agent_system/outputs/json/deterministic_forecast_result.json\n  - /home/wlkl/water_agent_ws/water_agent_system/outputs/figures/deterministic_forecast_curve.png\n",
+      "stderr_tail": ""
+    },
+    {
+      "stage_name": "warning_report",
+      "command_stage": "warning_report",
+      "command": "/usr/bin/python3 run_offline_pipeline.py --stage warning_report --config configs/warning_config.yaml",
+      "config_path": "configs/warning_config.yaml",
+      "start_time": "2026-07-04T16:24:36.710266+00:00",
+      "end_time": "2026-07-04T16:24:38.737394+00:00",
+      "status": "success",
+      "return_code": 0,
+      "stdout_tail": " /home/wlkl/water_agent_ws/water_agent_system/outputs/json/warning_decision_result.json\n  - /home/wlkl/water_agent_ws/water_agent_system/outputs/reports/warning_report.md\n  - /home/wlkl/water_agent_ws/water_agent_system/outputs/figures/warning_summary.png\n  - /home/wlkl/water_agent_ws/water_agent_system/data/audit_logs/warning_audit_log.jsonl\n[S8][report] report path: /home/wlkl/water_agent_ws/water_agent_system/outputs/reports/warning_report.md\n[S8][audit] audit log path: /home/wlkl/water_agent_ws/water_agent_system/data/audit_logs/warning_audit_log.jsonl\n[S8][summary] figure path: /home/wlkl/water_agent_ws/water_agent_system/outputs/figures/warning_summary.png\n[pipeline] S8 warning_report complete\n[pipeline] overall warning level: orange\n[pipeline] current mean depth cm: 44.64\n[pipeline] 5 min warning level: orange (59.81 cm)\n[pipeline] 15 min warning level: orange (90.13 cm)\n[pipeline] 30 min warning level: orange (100.00 cm)\n[pipeline] 60 min warning level: orange (100.00 cm)\n[pipeline] time to orange threshold min: 1.7665887261241657\n[pipeline] action suggestion: Orange warning: high risk. Recommend immediate on-site verification, traffic restriction, or temporary closure. Orange threshold may be reached very soon. Immediate action is recommended.\n[pipeline] output file paths:\n  - /home/wlkl/water_agent_ws/water_agent_system/data/warnings/warning_decision_result.json\n  - /home/wlkl/water_agent_ws/water_agent_system/outputs/json/warning_decision_result.json\n  - /home/wlkl/water_agent_ws/water_agent_system/outputs/reports/warning_report.md\n  - /home/wlkl/water_agent_ws/water_agent_system/outputs/figures/warning_summary.png\n  - /home/wlkl/water_agent_ws/water_agent_system/data/audit_logs/warning_audit_log.jsonl\n  - /home/wlkl/water_agent_ws/water_agent_system/outputs/reports/warning_report.md\n  - /home/wlkl/water_agent_ws/water_agent_system/data/audit_logs/warning_audit_log.jsonl\n  - /home/wlkl/water_agent_ws/water_agent_system/outputs/figures/warning_summary.png\n",
+      "stderr_tail": ""
+    }
+  ],
+  "overall_warning_level": "orange",
+  "current_mean_depth_cm": 44.6426787517137,
+  "water_area_m2": 0.7200000000000002,
+  "water_volume_m3": 0.3214272870123387,
+  "rainfall_intensity_mm_h": 20.0,
+  "weather_correction_factor": 1.3,
+  "artifacts": [
+    {
+      "artifact_type": "area_volume_result",
+      "path": "/home/wlkl/water_agent_ws/water_agent_system/outputs/json/water_area_volume_result.json",
+      "exists_flag": 1,
+      "note": "Agent MVP artifact path only; file content is not stored in SQLite."
+    },
+    {
+      "artifact_type": "weather_correction_result",
+      "path": "/home/wlkl/water_agent_ws/water_agent_system/outputs/json/weather_correction_result.json",
+      "exists_flag": 1,
+      "note": "Agent MVP artifact path only; file content is not stored in SQLite."
+    },
+    {
+      "artifact_type": "deterministic_forecast_result",
+      "path": "/home/wlkl/water_agent_ws/water_agent_system/outputs/json/deterministic_forecast_result.json",
+      "exists_flag": 1,
+      "note": "Agent MVP artifact path only; file content is not stored in SQLite."
+    },
+    {
+      "artifact_type": "warning_decision_result",
+      "path": "/home/wlkl/water_agent_ws/water_agent_system/outputs/json/warning_decision_result.json",
+      "exists_flag": 1,
+      "note": "Agent MVP artifact path only; file content is not stored in SQLite."
+    },
+    {
+      "artifact_type": "warning_report",
+      "path": "/home/wlkl/water_agent_ws/water_agent_system/outputs/reports/warning_report.md",
+      "exists_flag": 1,
+      "note": "Agent MVP artifact path only; file content is not stored in SQLite."
+    },
+    {
+      "artifact_type": "warning_summary",
+      "path": "/home/wlkl/water_agent_ws/water_agent_system/outputs/figures/warning_summary.png",
+      "exists_flag": 1,
+      "note": "Agent MVP artifact path only; file content is not stored in SQLite."
+    },
+    {
+      "artifact_type": "warning_audit_log",
+      "path": "/home/wlkl/water_agent_ws/water_agent_system/data/audit_logs/warning_audit_log.jsonl",
+      "exists_flag": 1,
+      "note": "Agent MVP artifact path only; file content is not stored in SQLite."
+    }
+  ],
+  "sqlite_db_path": "/home/wlkl/water_agent_ws/water_agent_system/data/db/water_agent_audit.db",
+  "mvp_note": "Agent MVP orchestrates offline S4-S8 pipeline using configured_mvp_simulation, offline_mock_weather, and offline_mock_depth_history. It is not real-time emergency dispatch."
+}

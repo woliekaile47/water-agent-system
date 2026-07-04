@@ -1,0 +1,37 @@
+# Added by Codex for water_agent_system local Git hygiene
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# ROS / colcon
+build/
+install/
+log/
+
+# Raw rosbag / large sensor data
+*.db3
+*.mcap
+*.bag
+*.bag/
+*.pcd
+*.ply
+
+# Large generated arrays
+*.npy
+*.npz
+
+# SQLite runtime database
+data/db/*.db
+data/db/*.sqlite
+data/db/*.sqlite3
+
+# Cache / system
+.cache/
+.DS_Store
+
+# Temporary files
+*.tmp
+*.bak
+*.swp

@@ -1,0 +1,31 @@
+{
+  "stage": "S4_mask_to_dem_mapping",
+  "mapping_method": "region_level_manual",
+  "camera_mask_path": "/home/wlkl/water_agent_ws/water_agent_system/data/masks/manual_water_mask.npy",
+  "camera_mask_shape": [
+    360,
+    640
+  ],
+  "camera_mask_pixel_count": 14526,
+  "dem_water_roi": {
+    "x_min": -2.4,
+    "x_max": -1.4,
+    "y_min": -3.2,
+    "y_max": -2.3
+  },
+  "dem_grid_index_range": {
+    "ix_min": 6,
+    "ix_max": 15,
+    "iy_min": 2,
+    "iy_max": 12
+  },
+  "grid_size": 0.1,
+  "water_region_cell_count": 110,
+  "created_at": "2026-07-04T15:35:55.151697+00:00",
+  "note": "Region-level manual mapping, not pixel-level calibration.",
+  "output_files": {
+    "water_region_mask": "/home/wlkl/water_agent_ws/water_agent_system/data/fusion/water_region_mask.npy",
+    "mask_to_dem_mapping": "/home/wlkl/water_agent_ws/water_agent_system/data/fusion/mask_to_dem_mapping.json",
+    "water_region_on_dem": "/home/wlkl/water_agent_ws/water_agent_system/outputs/figures/water_region_on_dem.png"
+  }
+}

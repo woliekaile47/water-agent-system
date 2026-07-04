@@ -1,0 +1,47 @@
+{
+  "grid_size": 0.1,
+  "dem_shape": [
+    110,
+    95
+  ],
+  "dem_roi": {
+    "x_min": -3.0,
+    "x_max": 6.5,
+    "y_min": -3.5,
+    "y_max": 7.5,
+    "z_min": -1.5,
+    "z_max": 2.5
+  },
+  "valid_cell_count": 783,
+  "total_cell_count": 10450,
+  "roi_point_count": 2231485,
+  "grid_point_count": 2231485,
+  "z_min": -0.8506661057472229,
+  "z_max": 2.4029040336608887,
+  "z_median": -0.07238133996725082,
+  "stage": "S2_dry_dem_build",
+  "source_bag": "/home/wlkl/water_agent_data/rosbags/dry_baseline_001",
+  "lidar_topic": "/cx/lslidar_point_cloud",
+  "max_frames": 80,
+  "rosbag_read_stats": {
+    "bag_path": "/home/wlkl/water_agent_data/rosbags/dry_baseline_001",
+    "topic": "/cx/lslidar_point_cloud",
+    "frames_read": 80,
+    "point_count": 2231485,
+    "x_min": -2.746220111846924,
+    "x_max": 6.157037734985352,
+    "y_min": -3.2298214435577393,
+    "y_max": 7.366896629333496,
+    "z_min": -0.8531699180603027,
+    "z_max": 2.4041543006896973
+  },
+  "created_at": "2026-07-04T14:16:21.821357+00:00",
+  "description": "Dry baseline DEM built from LiDAR PointCloud2 median z per XY grid cell.",
+  "output_files": {
+    "dem_baseline": "/home/wlkl/water_agent_ws/water_agent_system/data/dem/dem_baseline.npy",
+    "dem_valid_mask": "/home/wlkl/water_agent_ws/water_agent_system/data/dem/dem_valid_mask.npy",
+    "dem_point_count": "/home/wlkl/water_agent_ws/water_agent_system/data/dem/dem_point_count.npy",
+    "dem_metadata": "/home/wlkl/water_agent_ws/water_agent_system/data/dem/dem_metadata.json",
+    "dem_heatmap": "/home/wlkl/water_agent_ws/water_agent_system/outputs/figures/dem_baseline_heatmap.png"
+  }
+}

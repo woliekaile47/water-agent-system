@@ -1,0 +1,24 @@
+lidar_topic: /cx/lslidar_point_cloud
+camera_topic: /hik_camera/image_raw
+grid_size: 0.10
+max_frames: 80
+dem_roi:
+  x_min: -3.0
+  x_max: 6.5
+  y_min: -3.5
+  y_max: 7.5
+  z_min: -1.5
+  z_max: 2.5
+
+ground_dem:
+  enabled: true
+  method: "low_percentile_grid"
+  ground_z_min: -0.7
+  ground_z_max: 0.35
+  grid_height_percentile: 20
+  min_points_per_cell: 3
+  max_frames: 80
+  interpolation:
+    enabled: true
+    method: "nearest"
+    max_neighbor_distance_cells: 3

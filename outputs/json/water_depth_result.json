@@ -1,0 +1,33 @@
+{
+  "stage": "S4_water_depth_inversion",
+  "mapping_method": "region_level_manual",
+  "depth_method": "configured_depth_region_level_mvp",
+  "simulation_label": "configured_mvp_simulation",
+  "configured_depth_cm": 30.0,
+  "ground_z_min_in_region": -0.6768630743026733,
+  "ground_z_max_in_region": 0.300081342458725,
+  "ground_z_median_in_region": -0.3473230004310608,
+  "water_surface_z_m": -0.0473230004310608,
+  "max_depth_cm": 62.954010009765625,
+  "mean_depth_cm": 43.448204040527344,
+  "median_depth_cm": 57.97212219238281,
+  "valid_depth_cell_count": 74,
+  "water_region_cell_count": 110,
+  "source_ground_dem": "/home/wlkl/water_agent_ws/water_agent_system/data/dem/ground_dem_interpolated.npy",
+  "source_mask": "/home/wlkl/water_agent_ws/water_agent_system/data/fusion/water_region_mask.npy",
+  "source_mapping": "/home/wlkl/water_agent_ws/water_agent_system/data/fusion/mask_to_dem_mapping.json",
+  "mapping_grid_index_range": {
+    "ix_min": 6,
+    "ix_max": 15,
+    "iy_min": 2,
+    "iy_max": 12
+  },
+  "created_at": "2026-07-04T16:24:32.593731+00:00",
+  "note": "configured_mvp_simulation: S4 MVP uses configured depth to validate mask-to-DEM and depth-map pipeline. It is not final real-water measurement.",
+  "output_files": {
+    "water_depth_map": "/home/wlkl/water_agent_ws/water_agent_system/data/hydrology/water_depth_map.npy",
+    "water_depth_valid_mask": "/home/wlkl/water_agent_ws/water_agent_system/data/hydrology/water_depth_valid_mask.npy",
+    "water_depth_heatmap": "/home/wlkl/water_agent_ws/water_agent_system/outputs/figures/water_depth_heatmap.png",
+    "water_depth_result": "/home/wlkl/water_agent_ws/water_agent_system/outputs/json/water_depth_result.json"
+  }
+}

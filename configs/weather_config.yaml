@@ -1,0 +1,37 @@
+weather:
+  provider: "offline_mock"
+  location_name: "dormitory_test_scene"
+  data_mode: "manual_config"
+
+  current:
+    rainfall_intensity_mm_h: 20.0
+    observation_time: "offline_test"
+
+  forecast:
+    rainfall_15min_mm: 5.0
+    rainfall_30min_mm: 10.0
+    rainfall_60min_mm: 18.0
+
+  correction_rules:
+    no_rain:
+      min_mm_h: 0.0
+      max_mm_h: 0.0
+      coefficient: 0.7
+      label: "no_rain"
+    light_rain:
+      min_mm_h: 0.0
+      max_mm_h: 15.0
+      coefficient: 1.0
+      label: "light_rain"
+    moderate_rain:
+      min_mm_h: 15.0
+      max_mm_h: 30.0
+      coefficient: 1.3
+      label: "moderate_rain"
+    heavy_rain:
+      min_mm_h: 30.0
+      max_mm_h: null
+      coefficient: 1.8
+      label: "heavy_rain"
+
+  note: "S6 MVP uses offline mock rainfall data to validate weather correction pipeline. It is not real-time meteorological API data."

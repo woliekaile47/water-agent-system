@@ -1,0 +1,36 @@
+{
+  "source_image": "/home/wlkl/water_agent_ws/water_agent_system/outputs/figures/camera_water_sim_39cm.png",
+  "image_width": 640,
+  "image_height": 360,
+  "mask_type": "polygon",
+  "polygon_points": [
+    [
+      260,
+      245
+    ],
+    [
+      395,
+      245
+    ],
+    [
+      410,
+      320
+    ],
+    [
+      165,
+      320
+    ]
+  ],
+  "description": "Manual water candidate mask for S3 region-level MVP.",
+  "mask_pixel_count": 14526,
+  "mask_area_ratio": 0.063046875,
+  "created_at": "2026-07-04T15:25:09.874625+00:00",
+  "stage": "S3_manual_water_mask",
+  "note": "Manual polygon mask is used as the minimum implementation of image segmentation.",
+  "output_files": {
+    "manual_water_mask_png": "/home/wlkl/water_agent_ws/water_agent_system/data/masks/manual_water_mask.png",
+    "manual_water_mask_npy": "/home/wlkl/water_agent_ws/water_agent_system/data/masks/manual_water_mask.npy",
+    "manual_water_mask_metadata": "/home/wlkl/water_agent_ws/water_agent_system/data/masks/manual_water_mask_metadata.json",
+    "manual_water_mask_overlay": "/home/wlkl/water_agent_ws/water_agent_system/outputs/figures/manual_water_mask_overlay.png"
+  }
+}

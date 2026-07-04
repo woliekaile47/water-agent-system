@@ -1,0 +1,47 @@
+agent:
+  name: "water_agent_mvp"
+  mode: "offline_pipeline_agent"
+  description: "MVP Agent for orchestrating S4-S8 offline waterlogging pipeline."
+
+  project_root: "."
+
+  pipeline:
+    stages:
+      - name: "area_volume"
+        command_stage: "area_volume"
+        config: "configs/roi_mapping.yaml"
+      - name: "weather_correction"
+        command_stage: "weather_correction"
+        config: "configs/weather_config.yaml"
+      - name: "deterministic_forecast"
+        command_stage: "deterministic_forecast"
+        config: "configs/prediction_config.yaml"
+      - name: "warning_report"
+        command_stage: "warning_report"
+        config: "configs/warning_config.yaml"
+
+  inputs:
+    roi_mapping_config: "configs/roi_mapping.yaml"
+    weather_config: "configs/weather_config.yaml"
+    prediction_config: "configs/prediction_config.yaml"
+    warning_config: "configs/warning_config.yaml"
+
+  outputs:
+    agent_dir: "data/agent"
+    audit_dir: "data/audit_logs"
+    db_dir: "data/db"
+    json_dir: "outputs/json"
+    report_dir: "outputs/reports"
+    figure_dir: "outputs/figures"
+
+  database:
+    sqlite_path: "data/db/water_agent_audit.db"
+
+  expected_outputs:
+    area_volume_result: "outputs/json/water_area_volume_result.json"
+    weather_correction_result: "outputs/json/weather_correction_result.json"
+    deterministic_forecast_result: "outputs/json/deterministic_forecast_result.json"
+    warning_decision_result: "outputs/json/warning_decision_result.json"
+    warning_report: "outputs/reports/warning_report.md"
+
+  mvp_note: "Agent MVP orchestrates offline S4-S8 pipeline using configured_mvp_simulation, offline_mock_weather, and offline_mock_depth_history. It is not real-time emergency dispatch."

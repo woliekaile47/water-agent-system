@@ -1,0 +1,21 @@
+{
+  "stage": "S6_weather_correction",
+  "provider": "offline_mock",
+  "data_mode": "manual_config",
+  "location_name": "dormitory_test_scene",
+  "observation_time": "offline_test",
+  "current_rainfall_intensity_mm_h": 20.0,
+  "rainfall_level_label": "moderate_rain",
+  "weather_correction_factor": 1.3,
+  "forecast_rainfall_15min_mm": 5.0,
+  "forecast_rainfall_30min_mm": 10.0,
+  "forecast_rainfall_60min_mm": 18.0,
+  "rule_source": "patent_specification_s6",
+  "mock_data_note": "offline_mock_weather: S6 MVP uses offline mock rainfall data to validate the S6-S7 pipeline. It is not real-time meteorological API data.",
+  "config_note": "S6 MVP uses offline mock rainfall data to validate weather correction pipeline. It is not real-time meteorological API data.",
+  "timestamp": "2026-07-04T16:24:33.224415+00:00",
+  "output_files": {
+    "data_result_json": "/home/wlkl/water_agent_ws/water_agent_system/data/meteorology/weather_correction_result.json",
+    "output_result_json": "/home/wlkl/water_agent_ws/water_agent_system/outputs/json/weather_correction_result.json"
+  }
+}

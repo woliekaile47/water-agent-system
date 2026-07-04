@@ -1,0 +1,59 @@
+{
+  "stage": "S8_warning_decision",
+  "warning_mode": "offline_mvp_warning",
+  "source_deterministic_forecast_json": "/home/wlkl/water_agent_ws/water_agent_system/outputs/json/deterministic_forecast_result.json",
+  "source_area_volume_json": "/home/wlkl/water_agent_ws/water_agent_system/outputs/json/water_area_volume_result.json",
+  "source_weather_correction_json": "/home/wlkl/water_agent_ws/water_agent_system/outputs/json/weather_correction_result.json",
+  "current_mean_depth_cm": 44.6426787517137,
+  "current_max_depth_cm": 62.95400857925415,
+  "water_area_m2": 0.7200000000000002,
+  "water_volume_m3": 0.3214272870123387,
+  "rainfall_intensity_mm_h": 20.0,
+  "rainfall_level_label": "moderate_rain",
+  "weather_correction_factor": 1.3,
+  "forecast_warning_results": [
+    {
+      "horizon_min": 5,
+      "forecast_depth_cm": 59.80557764567436,
+      "warning_level": "orange",
+      "source_warning_level": "orange"
+    },
+    {
+      "horizon_min": 15,
+      "forecast_depth_cm": 90.13137543359568,
+      "warning_level": "orange",
+      "source_warning_level": "orange"
+    },
+    {
+      "horizon_min": 30,
+      "forecast_depth_cm": 100.0,
+      "warning_level": "orange",
+      "source_warning_level": "orange"
+    },
+    {
+      "horizon_min": 60,
+      "forecast_depth_cm": 100.0,
+      "warning_level": "orange",
+      "source_warning_level": "orange"
+    }
+  ],
+  "overall_warning_level": "orange",
+  "action_suggestion": "Orange warning: high risk. Recommend immediate on-site verification, traffic restriction, or temporary closure. Orange threshold may be reached very soon. Immediate action is recommended.",
+  "time_to_thresholds_min": {
+    "blue": 0.0,
+    "yellow": 0.0,
+    "orange": 1.7665887261241657
+  },
+  "confidence_mode": "mvp_rule_based",
+  "confidence_score": 0.75,
+  "mvp_note": "S8 MVP uses deterministic forecast output from configured_mvp_simulation, offline_mock_weather, and offline_mock_depth_history. It is not final real emergency dispatch advice.",
+  "upstream_mvp_note": "S7-A uses configured_mvp_simulation depth, offline_mock_weather, and offline_mock_depth_history to validate deterministic forecasting pipeline. It is not final real short-term waterlogging forecast.",
+  "timestamp": "2026-07-04T16:24:37.044544+00:00",
+  "output_files": {
+    "data_warning_decision": "/home/wlkl/water_agent_ws/water_agent_system/data/warnings/warning_decision_result.json",
+    "output_warning_decision": "/home/wlkl/water_agent_ws/water_agent_system/outputs/json/warning_decision_result.json",
+    "warning_report": "/home/wlkl/water_agent_ws/water_agent_system/outputs/reports/warning_report.md",
+    "warning_summary": "/home/wlkl/water_agent_ws/water_agent_system/outputs/figures/warning_summary.png",
+    "audit_log": "/home/wlkl/water_agent_ws/water_agent_system/data/audit_logs/warning_audit_log.jsonl"
+  }
+}

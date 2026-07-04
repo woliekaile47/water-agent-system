@@ -1,0 +1,33 @@
+warning:
+  mode: "offline_mvp_warning"
+  description: "S8 MVP warning decision and audit report based on deterministic forecast result."
+
+  input:
+    deterministic_forecast_result_json: "outputs/json/deterministic_forecast_result.json"
+    area_volume_result_json: "outputs/json/water_area_volume_result.json"
+    weather_correction_result_json: "outputs/json/weather_correction_result.json"
+
+  output:
+    warning_dir: "data/warnings"
+    report_dir: "outputs/reports"
+    json_dir: "outputs/json"
+    figure_dir: "outputs/figures"
+    audit_dir: "data/audit_logs"
+
+  warning_thresholds_cm:
+    blue: 15.0
+    yellow: 30.0
+    orange: 50.0
+
+  action_policy:
+    none: "No warning. Continue routine monitoring."
+    blue: "Blue warning: pay attention to water level changes and prepare for inspection."
+    yellow: "Yellow warning: strengthen inspection and prepare traffic guidance."
+    orange: "Orange warning: high risk. Recommend immediate on-site verification, traffic restriction, or temporary closure."
+
+  confidence:
+    mode: "mvp_rule_based"
+    default_confidence_score: 0.75
+    note: "MVP confidence is rule-based placeholder. Full confidence will be computed after S7-B/S7-C."
+
+  mvp_note: "S8 MVP uses deterministic forecast output from configured_mvp_simulation, offline_mock_weather, and offline_mock_depth_history. It is not final real emergency dispatch advice."

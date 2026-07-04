@@ -1,0 +1,50 @@
+prediction:
+  mode: "offline_mock_depth_history"
+  description: "S7-A deterministic rule engine MVP using offline mock depth history."
+
+  input:
+    area_volume_result_json: "outputs/json/water_area_volume_result.json"
+    weather_correction_result_json: "outputs/json/weather_correction_result.json"
+
+  output:
+    reasoning_dir: "data/reasoning"
+    json_dir: "outputs/json"
+    figure_dir: "outputs/figures"
+
+  depth_history:
+    unit: "cm"
+    note: "Offline mock history for validating deterministic forecasting pipeline. Replace with real sequential S4-S5 outputs later."
+    records:
+      - minutes_before_now: 10
+        mean_depth_cm: 26.0
+      - minutes_before_now: 5
+        mean_depth_cm: 34.0
+      - minutes_before_now: 1
+        mean_depth_cm: 42.0
+      - minutes_before_now: 0
+        mean_depth_cm: 44.64
+
+  slope_windows:
+    window_1min:
+      minutes: 1
+      weight: 0.5
+    window_5min:
+      minutes: 5
+      weight: 0.3
+    window_10min:
+      minutes: 10
+      weight: 0.2
+
+  forecast_horizons_min: [5, 15, 30, 60]
+
+  warning_thresholds_cm:
+    blue: 15.0
+    yellow: 30.0
+    orange: 50.0
+
+  constraints:
+    max_reasonable_depth_cm: 100.0
+    min_slope_cm_per_min: -5.0
+    max_slope_cm_per_min: 10.0
+
+  note: "S7-A MVP performs deterministic rule-engine forecasting only. Case retrieval and physical constraint layers will be added in S7-B/S7-C."
