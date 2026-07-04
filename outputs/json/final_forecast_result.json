@@ -1,0 +1,55 @@
+{
+  "stage": "S7_final_forecast_after_physical_constraint",
+  "source_corrected_forecast_json": "/home/wlkl/water_agent_ws/water_agent_system/outputs/json/corrected_forecast_result.json",
+  "source_physical_constraint_json": "/home/wlkl/water_agent_ws/water_agent_system/outputs/json/physical_constraint_result.json",
+  "final_forecast_results": [
+    {
+      "horizon_min": 5,
+      "final_forecast_depth_cm": 48.622276346842185,
+      "source_corrected_depth_cm": 56.30557764567436,
+      "physical_check": "adjusted",
+      "physical_confidence": "low",
+      "warning_level": "yellow"
+    },
+    {
+      "horizon_min": 15,
+      "final_forecast_depth_cm": 58.831471537099134,
+      "source_corrected_depth_cm": 84.13137543359568,
+      "physical_check": "adjusted",
+      "physical_confidence": "low",
+      "warning_level": "orange"
+    },
+    {
+      "horizon_min": 30,
+      "final_forecast_depth_cm": 56.210228264745744,
+      "source_corrected_depth_cm": 90.0,
+      "physical_check": "adjusted",
+      "physical_confidence": "low",
+      "warning_level": "orange"
+    },
+    {
+      "horizon_min": 60,
+      "final_forecast_depth_cm": 42.0,
+      "source_corrected_depth_cm": 84.0,
+      "physical_check": "adjusted",
+      "physical_confidence": "low",
+      "warning_level": "yellow"
+    }
+  ],
+  "overall_warning_level": "orange",
+  "physical_confidence_summary": {
+    "overall_physical_confidence": "low",
+    "counts": {
+      "high": 0,
+      "medium": 0,
+      "low": 4
+    }
+  },
+  "mvp_note": "S7-C uses simplified MVP water balance to validate physical constraint checking. It is not a full hydrodynamic model or final real forecast.",
+  "timestamp": "2026-07-04T16:50:19.948281+00:00",
+  "output_files": {
+    "data_final_forecast_result": "/home/wlkl/water_agent_ws/water_agent_system/data/reasoning/final_forecast_result.json",
+    "output_final_forecast_result": "/home/wlkl/water_agent_ws/water_agent_system/outputs/json/final_forecast_result.json",
+    "physical_constraint_figure": "/home/wlkl/water_agent_ws/water_agent_system/outputs/figures/physical_constraint_summary.png"
+  }
+}

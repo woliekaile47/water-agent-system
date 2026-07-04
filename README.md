@@ -272,6 +272,37 @@ python3 run_offline_pipeline.py \
 - `outputs/json/corrected_forecast_result.json`
 - `outputs/figures/case_retrieval_correction.png`
 
+## S7-C Output
+
+S7-C implements a simplified physical constraint check MVP. It uses
+`simplified_water_balance_mvp` to compare S7-B corrected forecast
+volume against a simple expected volume:
+
+`current volume + rainfall input - drainage output - infiltration loss`
+
+The current version uses a linear volume-depth proxy based on S5:
+`volume_per_cm = current_volume_m3 / current_mean_depth_cm`.
+If the forecast volume deviates beyond the configured tolerance, S7-C
+applies a limited callback toward the expected depth and recalculates
+the warning level.
+
+This is not a full hydrodynamic model and not SWMM. It only validates
+the physical-constraint layer for the MVP. Future versions can use real
+catchment area, real drainage capacity, and a hydrodynamic/SWMM model.
+
+```bash
+cd ~/water_agent_ws/water_agent_system
+python3 run_offline_pipeline.py \
+  --stage physical_constraint \
+  --config configs/physical_constraint_config.yaml
+```
+
+- `data/reasoning/physical_constraint_result.json`
+- `outputs/json/physical_constraint_result.json`
+- `data/reasoning/final_forecast_result.json`
+- `outputs/json/final_forecast_result.json`
+- `outputs/figures/physical_constraint_summary.png`
+
 ## S8 Output
 
 S8 generates graded warning decisions and action suggestions from the

@@ -1,0 +1,38 @@
+physical_constraint:
+  mode: "simplified_water_balance_mvp"
+  description: "S7-C MVP physical constraint check using simplified water balance."
+
+  input:
+    corrected_forecast_result_json: "outputs/json/corrected_forecast_result.json"
+    area_volume_result_json: "outputs/json/water_area_volume_result.json"
+    weather_correction_result_json: "outputs/json/weather_correction_result.json"
+
+  output:
+    reasoning_dir: "data/reasoning"
+    json_dir: "outputs/json"
+    figure_dir: "outputs/figures"
+
+  horizons_min: [5, 15, 30, 60]
+
+  water_balance:
+    catchment_area_m2: 2.0
+    drainage_rate_m3_per_min: 0.005
+    infiltration_loss_rate_m3_per_min: 0.001
+    tolerance_ratio: 0.15
+    max_callback_ratio: 0.5
+
+  depth_volume_model:
+    # MVP linear proxy:
+    # volume_per_cm = current_volume_m3 / current_mean_depth_cm
+    mode: "linear_volume_depth_proxy"
+
+  warning_thresholds_cm:
+    blue: 15.0
+    yellow: 30.0
+    orange: 50.0
+
+  confidence:
+    high_physical_confidence_max_error_ratio: 0.15
+    medium_physical_confidence_max_error_ratio: 0.35
+
+  mvp_note: "S7-C MVP uses simplified water balance for physical constraint checking. It is not a full hydrodynamic or SWMM model."

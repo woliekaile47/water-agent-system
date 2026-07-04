@@ -13,6 +13,7 @@ Current stages:
 - weather_correction: S6 offline mock weather correction
 - deterministic_forecast: S7-A deterministic rule-engine forecast
 - case_retrieval: S7-B offline mock case retrieval correction
+- physical_constraint: S7-C simplified physical constraint check
 - warning_report: S8 warning decision, report, audit, and summary
 - agent_pipeline: Agent MVP orchestrating S4-S8 with SQLite audit records
 """
@@ -39,6 +40,8 @@ from src.reasoning.deterministic_forecast import deterministic_forecast
 from src.reasoning.visualize_forecast import visualize_forecast
 from src.reasoning.case_retrieval_correction import case_retrieval_correction
 from src.reasoning.visualize_case_retrieval import visualize_case_retrieval
+from src.reasoning.physical_constraint_check import physical_constraint_check
+from src.reasoning.visualize_physical_constraint import visualize_physical_constraint
 from src.vision.create_manual_mask import create_manual_mask
 from src.vision.extract_camera_frame import extract_camera_frame
 from src.warning.generate_warning_decision import generate_warning_decision
@@ -64,6 +67,7 @@ def main() -> None:
             "weather_correction",
             "deterministic_forecast",
             "case_retrieval",
+            "physical_constraint",
             "warning_report",
             "agent_pipeline",
         ],
@@ -234,6 +238,26 @@ def main() -> None:
                 f"corrected={item['corrected_forecast_depth_cm']:.2f} cm, "
                 f"warning={item['warning_level']}"
             )
+        print("[pipeline] output file paths:")
+        for path in metadata["output_files"].values():
+            print(f"  - {path}")
+        for path in figure_files.values():
+            print(f"  - {path}")
+        return
+    elif args.stage == "physical_constraint":
+        metadata = physical_constraint_check(config_path, PROJECT_ROOT)
+        figure_files = visualize_physical_constraint(config_path, PROJECT_ROOT)
+        print("[pipeline] S7-C physical_constraint complete")
+        for item in metadata["final_forecast_results"]:
+            print(
+                "[pipeline] "
+                f"{item['horizon_min']} min: final={item['final_forecast_depth_cm']:.2f} cm, "
+                f"source_corrected={item['source_corrected_depth_cm']:.2f} cm, "
+                f"check={item['physical_check']}, "
+                f"confidence={item['physical_confidence']}, "
+                f"warning={item['warning_level']}"
+            )
+        print(f"[pipeline] overall warning level: {metadata['overall_warning_level']}")
         print("[pipeline] output file paths:")
         for path in metadata["output_files"].values():
             print(f"  - {path}")
