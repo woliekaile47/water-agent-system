@@ -1,0 +1,134 @@
+{
+  "library_name": "offline_mock_case_library",
+  "description": "Mock historical cases for validating S7-B case retrieval correction.",
+  "unit_note": "Depth values are cm, rainfall intensity is mm/h, area is m2, volume is m3.",
+  "mvp_note": "These cases are synthetic/offline mock cases only. Replace with real historical records later.",
+  "cases": [
+    {
+      "case_id": "mock_case_001_moderate_rain_fast_rise",
+      "features": {
+        "rainfall_intensity_mm_h": 21.0,
+        "forecast_rainfall_15min_mm": 5.2,
+        "forecast_rainfall_30min_mm": 10.4,
+        "forecast_rainfall_60min_mm": 18.5,
+        "current_mean_depth_cm": 43.5,
+        "current_max_depth_cm": 61.0,
+        "water_area_m2": 0.75,
+        "water_volume_m3": 0.31,
+        "k_forecast_cm_per_min": 2.85
+      },
+      "forecast_bias_cm": {
+        "5": -3.5,
+        "15": -6.0,
+        "30": -10.0,
+        "60": -16.0
+      },
+      "note": "Similar moderate-rain scene where deterministic layer overestimated later horizons."
+    },
+    {
+      "case_id": "mock_case_002_moderate_rain_compact_area",
+      "features": {
+        "rainfall_intensity_mm_h": 18.0,
+        "forecast_rainfall_15min_mm": 4.8,
+        "forecast_rainfall_30min_mm": 9.6,
+        "forecast_rainfall_60min_mm": 17.2,
+        "current_mean_depth_cm": 46.0,
+        "current_max_depth_cm": 64.0,
+        "water_area_m2": 0.68,
+        "water_volume_m3": 0.34,
+        "k_forecast_cm_per_min": 3.10
+      },
+      "forecast_bias_cm": {
+        "5": -2.0,
+        "15": -5.5,
+        "30": -8.5,
+        "60": -13.0
+      },
+      "note": "Close rainfall and depth state with modest overprediction bias."
+    },
+    {
+      "case_id": "mock_case_003_heavy_rain_accelerating",
+      "features": {
+        "rainfall_intensity_mm_h": 31.0,
+        "forecast_rainfall_15min_mm": 7.5,
+        "forecast_rainfall_30min_mm": 15.0,
+        "forecast_rainfall_60min_mm": 28.0,
+        "current_mean_depth_cm": 48.0,
+        "current_max_depth_cm": 69.0,
+        "water_area_m2": 0.86,
+        "water_volume_m3": 0.43,
+        "k_forecast_cm_per_min": 3.45
+      },
+      "forecast_bias_cm": {
+        "5": 2.5,
+        "15": 5.0,
+        "30": 8.0,
+        "60": 9.0
+      },
+      "note": "Heavier-rain case with acceleration that deterministic layer underestimated."
+    },
+    {
+      "case_id": "mock_case_004_light_rain_slow_rise",
+      "features": {
+        "rainfall_intensity_mm_h": 9.0,
+        "forecast_rainfall_15min_mm": 2.2,
+        "forecast_rainfall_30min_mm": 4.0,
+        "forecast_rainfall_60min_mm": 7.0,
+        "current_mean_depth_cm": 28.0,
+        "current_max_depth_cm": 41.0,
+        "water_area_m2": 0.42,
+        "water_volume_m3": 0.12,
+        "k_forecast_cm_per_min": 1.15
+      },
+      "forecast_bias_cm": {
+        "5": -1.0,
+        "15": -2.0,
+        "30": -3.0,
+        "60": -4.0
+      },
+      "note": "Light-rain slow-rise case."
+    },
+    {
+      "case_id": "mock_case_005_no_rain_receding",
+      "features": {
+        "rainfall_intensity_mm_h": 0.0,
+        "forecast_rainfall_15min_mm": 0.0,
+        "forecast_rainfall_30min_mm": 0.0,
+        "forecast_rainfall_60min_mm": 0.0,
+        "current_mean_depth_cm": 18.0,
+        "current_max_depth_cm": 29.0,
+        "water_area_m2": 0.25,
+        "water_volume_m3": 0.05,
+        "k_forecast_cm_per_min": -0.45
+      },
+      "forecast_bias_cm": {
+        "5": -2.0,
+        "15": -4.0,
+        "30": -6.0,
+        "60": -8.0
+      },
+      "note": "No-rain receding case."
+    },
+    {
+      "case_id": "mock_case_006_moderate_rain_wide_area",
+      "features": {
+        "rainfall_intensity_mm_h": 23.0,
+        "forecast_rainfall_15min_mm": 5.6,
+        "forecast_rainfall_30min_mm": 11.2,
+        "forecast_rainfall_60min_mm": 20.0,
+        "current_mean_depth_cm": 39.5,
+        "current_max_depth_cm": 57.0,
+        "water_area_m2": 1.15,
+        "water_volume_m3": 0.45,
+        "k_forecast_cm_per_min": 2.45
+      },
+      "forecast_bias_cm": {
+        "5": -4.0,
+        "15": -7.0,
+        "30": -11.0,
+        "60": -18.0
+      },
+      "note": "Moderate-rain wider-area case with flow spreading."
+    }
+  ]
+}

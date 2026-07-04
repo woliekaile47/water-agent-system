@@ -12,6 +12,7 @@ Current stages:
 - area_volume: S5 water area and volume calculation
 - weather_correction: S6 offline mock weather correction
 - deterministic_forecast: S7-A deterministic rule-engine forecast
+- case_retrieval: S7-B offline mock case retrieval correction
 - warning_report: S8 warning decision, report, audit, and summary
 - agent_pipeline: Agent MVP orchestrating S4-S8 with SQLite audit records
 """
@@ -36,6 +37,8 @@ from src.meteorology.compute_weather_correction import compute_weather_correctio
 from src.meteorology.visualize_weather_correction import visualize_weather_correction
 from src.reasoning.deterministic_forecast import deterministic_forecast
 from src.reasoning.visualize_forecast import visualize_forecast
+from src.reasoning.case_retrieval_correction import case_retrieval_correction
+from src.reasoning.visualize_case_retrieval import visualize_case_retrieval
 from src.vision.create_manual_mask import create_manual_mask
 from src.vision.extract_camera_frame import extract_camera_frame
 from src.warning.generate_warning_decision import generate_warning_decision
@@ -60,6 +63,7 @@ def main() -> None:
             "area_volume",
             "weather_correction",
             "deterministic_forecast",
+            "case_retrieval",
             "warning_report",
             "agent_pipeline",
         ],
@@ -206,6 +210,30 @@ def main() -> None:
             "[pipeline] time to blue/yellow/orange threshold min: "
             f"{times['blue']} / {times['yellow']} / {times['orange']}"
         )
+        print("[pipeline] output file paths:")
+        for path in metadata["output_files"].values():
+            print(f"  - {path}")
+        for path in figure_files.values():
+            print(f"  - {path}")
+        return
+    elif args.stage == "case_retrieval":
+        metadata = case_retrieval_correction(config_path, PROJECT_ROOT)
+        figure_files = visualize_case_retrieval(config_path, PROJECT_ROOT)
+        print("[pipeline] S7-B case_retrieval complete")
+        print("[pipeline] top_k retrieved case ids:")
+        for case_id, score in zip(metadata["top_case_ids"], metadata["top_case_similarity_scores"]):
+            print(f"[pipeline]   {case_id}: similarity={score:.4f}")
+        print("[pipeline] median bias for 5/15/30/60 min:")
+        for horizon in metadata["forecast_horizons_min"]:
+            print(f"[pipeline]   {horizon} min: {metadata['median_bias_cm_by_horizon'][str(horizon)]:.2f} cm")
+        print("[pipeline] deterministic vs corrected forecast depths:")
+        for item in metadata["corrected_forecast_results"]:
+            print(
+                "[pipeline] "
+                f"{item['horizon_min']} min: deterministic={item['deterministic_forecast_depth_cm']:.2f} cm, "
+                f"corrected={item['corrected_forecast_depth_cm']:.2f} cm, "
+                f"warning={item['warning_level']}"
+            )
         print("[pipeline] output file paths:")
         for path in metadata["output_files"].values():
             print(f"  - {path}")

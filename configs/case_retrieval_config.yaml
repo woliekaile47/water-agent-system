@@ -1,0 +1,42 @@
+case_retrieval:
+  mode: "offline_mock_case_library"
+  description: "S7-B MVP case retrieval correction using offline mock historical cases."
+
+  input:
+    area_volume_result_json: "outputs/json/water_area_volume_result.json"
+    weather_correction_result_json: "outputs/json/weather_correction_result.json"
+    deterministic_forecast_result_json: "outputs/json/deterministic_forecast_result.json"
+    case_library_json: "data/cases/mock_historical_cases.json"
+
+  output:
+    reasoning_dir: "data/reasoning"
+    json_dir: "outputs/json"
+    figure_dir: "outputs/figures"
+
+  retrieval:
+    top_k: 3
+    distance_method: "weighted_euclidean"
+    similarity_method: "1_over_1_plus_distance"
+    feature_weights:
+      rainfall_intensity_mm_h: 0.010
+      forecast_rainfall_15min_mm: 0.020
+      forecast_rainfall_30min_mm: 0.015
+      forecast_rainfall_60min_mm: 0.010
+      current_mean_depth_cm: 0.020
+      current_max_depth_cm: 0.012
+      water_area_m2: 4.000
+      water_volume_m3: 4.000
+      k_forecast_cm_per_min: 0.500
+
+  forecast_horizons_min: [5, 15, 30, 60]
+
+  warning_thresholds_cm:
+    blue: 15.0
+    yellow: 30.0
+    orange: 50.0
+
+  constraints:
+    min_depth_cm: 0.0
+    max_reasonable_depth_cm: 100.0
+
+  note: "S7-B MVP uses offline mock historical cases to validate case retrieval correction. It is not final real historical-case correction."

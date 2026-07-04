@@ -1,0 +1,119 @@
+{
+  "stage": "S7B_case_retrieval_correction",
+  "mode": "offline_mock_case_library",
+  "distance_method": "weighted_euclidean",
+  "similarity_method": "1_over_1_plus_distance",
+  "top_k": 3,
+  "source_area_volume_result_json": "/home/wlkl/water_agent_ws/water_agent_system/outputs/json/water_area_volume_result.json",
+  "source_weather_correction_result_json": "/home/wlkl/water_agent_ws/water_agent_system/outputs/json/weather_correction_result.json",
+  "source_deterministic_forecast_result_json": "/home/wlkl/water_agent_ws/water_agent_system/outputs/json/deterministic_forecast_result.json",
+  "source_case_library_json": "/home/wlkl/water_agent_ws/water_agent_system/data/cases/mock_historical_cases.json",
+  "current_event_features": {
+    "rainfall_intensity_mm_h": 20.0,
+    "forecast_rainfall_15min_mm": 5.0,
+    "forecast_rainfall_30min_mm": 10.0,
+    "forecast_rainfall_60min_mm": 18.0,
+    "current_mean_depth_cm": 44.6426787517137,
+    "current_max_depth_cm": 62.95400857925415,
+    "water_area_m2": 0.7200000000000002,
+    "water_volume_m3": 0.3214272870123387,
+    "k_forecast_cm_per_min": 3.0325797787921323
+  },
+  "feature_weights": {
+    "rainfall_intensity_mm_h": 0.01,
+    "forecast_rainfall_15min_mm": 0.02,
+    "forecast_rainfall_30min_mm": 0.015,
+    "forecast_rainfall_60min_mm": 0.01,
+    "current_mean_depth_cm": 0.02,
+    "current_max_depth_cm": 0.012,
+    "water_area_m2": 4.0,
+    "water_volume_m3": 4.0,
+    "k_forecast_cm_per_min": 0.5
+  },
+  "retrieved_cases": [
+    {
+      "case_id": "mock_case_001_moderate_rain_fast_rise",
+      "distance": 0.32927512552831406,
+      "similarity_score": 0.7522897109825589,
+      "forecast_bias_cm": {
+        "5": -3.5,
+        "15": -6.0,
+        "30": -10.0,
+        "60": -16.0
+      },
+      "features": {
+        "rainfall_intensity_mm_h": 21.0,
+        "forecast_rainfall_15min_mm": 5.2,
+        "forecast_rainfall_30min_mm": 10.4,
+        "forecast_rainfall_60min_mm": 18.5,
+        "current_mean_depth_cm": 43.5,
+        "current_max_depth_cm": 61.0,
+        "water_area_m2": 0.75,
+        "water_volume_m3": 0.31,
+        "k_forecast_cm_per_min": 2.85
+      },
+      "note": "Similar moderate-rain scene where deterministic layer overestimated later horizons."
+    },
+    {
+      "case_id": "mock_case_002_moderate_rain_compact_area",
+      "distance": 0.3311013769724065,
+      "similarity_score": 0.751257580601789,
+      "forecast_bias_cm": {
+        "5": -2.0,
+        "15": -5.5,
+        "30": -8.5,
+        "60": -13.0
+      },
+      "features": {
+        "rainfall_intensity_mm_h": 18.0,
+        "forecast_rainfall_15min_mm": 4.8,
+        "forecast_rainfall_30min_mm": 9.6,
+        "forecast_rainfall_60min_mm": 17.2,
+        "current_mean_depth_cm": 46.0,
+        "current_max_depth_cm": 64.0,
+        "water_area_m2": 0.68,
+        "water_volume_m3": 0.34,
+        "k_forecast_cm_per_min": 3.1
+      },
+      "note": "Close rainfall and depth state with modest overprediction bias."
+    },
+    {
+      "case_id": "mock_case_006_moderate_rain_wide_area",
+      "distance": 1.4451881822922958,
+      "similarity_score": 0.4089664784256105,
+      "forecast_bias_cm": {
+        "5": -4.0,
+        "15": -7.0,
+        "30": -11.0,
+        "60": -18.0
+      },
+      "features": {
+        "rainfall_intensity_mm_h": 23.0,
+        "forecast_rainfall_15min_mm": 5.6,
+        "forecast_rainfall_30min_mm": 11.2,
+        "forecast_rainfall_60min_mm": 20.0,
+        "current_mean_depth_cm": 39.5,
+        "current_max_depth_cm": 57.0,
+        "water_area_m2": 1.15,
+        "water_volume_m3": 0.45,
+        "k_forecast_cm_per_min": 2.45
+      },
+      "note": "Moderate-rain wider-area case with flow spreading."
+    }
+  ],
+  "median_bias_cm_by_horizon": {
+    "5": -3.5,
+    "15": -6.0,
+    "30": -10.0,
+    "60": -16.0
+  },
+  "mvp_note": "S7-B uses offline_mock_case_library to validate case retrieval correction. It is not final real historical-case correction.",
+  "config_note": "S7-B MVP uses offline mock historical cases to validate case retrieval correction. It is not final real historical-case correction.",
+  "timestamp": "2026-07-04T16:40:51.352838+00:00",
+  "output_files": {
+    "data_case_retrieval_result": "/home/wlkl/water_agent_ws/water_agent_system/data/reasoning/case_retrieval_result.json",
+    "output_case_retrieval_result": "/home/wlkl/water_agent_ws/water_agent_system/outputs/json/case_retrieval_result.json",
+    "data_corrected_forecast_result": "/home/wlkl/water_agent_ws/water_agent_system/data/reasoning/corrected_forecast_result.json",
+    "output_corrected_forecast_result": "/home/wlkl/water_agent_ws/water_agent_system/outputs/json/corrected_forecast_result.json"
+  }
+}

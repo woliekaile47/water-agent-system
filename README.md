@@ -247,6 +247,31 @@ python3 run_offline_pipeline.py \
 - `outputs/json/deterministic_forecast_result.json`
 - `outputs/figures/deterministic_forecast_curve.png`
 
+## S7-B Output
+
+S7-B implements a case retrieval correction MVP. It reads the S5
+area/volume result, S6 weather correction result, and S7-A deterministic
+forecast result, then compares the current event with
+`offline_mock_case_library` cases using weighted Euclidean distance.
+
+For the top-k retrieved mock cases, S7-B takes the median historical
+forecast bias for the 5/15/30/60 minute horizons and applies that bias
+to the deterministic forecast. This validates the case-retrieval layer
+only; it is not final real historical-case correction.
+
+```bash
+cd ~/water_agent_ws/water_agent_system
+python3 run_offline_pipeline.py \
+  --stage case_retrieval \
+  --config configs/case_retrieval_config.yaml
+```
+
+- `data/reasoning/case_retrieval_result.json`
+- `outputs/json/case_retrieval_result.json`
+- `data/reasoning/corrected_forecast_result.json`
+- `outputs/json/corrected_forecast_result.json`
+- `outputs/figures/case_retrieval_correction.png`
+
 ## S8 Output
 
 S8 generates graded warning decisions and action suggestions from the

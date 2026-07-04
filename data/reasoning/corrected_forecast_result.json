@@ -1,0 +1,113 @@
+{
+  "stage": "S7B_corrected_forecast",
+  "prediction_mode": "offline_mock_case_retrieval_correction",
+  "source_deterministic_forecast_result_json": "/home/wlkl/water_agent_ws/water_agent_system/outputs/json/deterministic_forecast_result.json",
+  "source_case_retrieval_result_json": "/home/wlkl/water_agent_ws/water_agent_system/outputs/json/case_retrieval_result.json",
+  "current_mean_depth_cm": 44.6426787517137,
+  "current_max_depth_cm": 62.95400857925415,
+  "k_forecast_cm_per_min": 3.0325797787921323,
+  "forecast_horizons_min": [
+    5,
+    15,
+    30,
+    60
+  ],
+  "deterministic_forecast_results": [
+    {
+      "horizon_min": 5,
+      "forecast_depth_cm": 59.80557764567436,
+      "raw_forecast_depth_cm": 59.80557764567436,
+      "warning_level": "orange",
+      "clipped": false
+    },
+    {
+      "horizon_min": 15,
+      "forecast_depth_cm": 90.13137543359568,
+      "raw_forecast_depth_cm": 90.13137543359568,
+      "warning_level": "orange",
+      "clipped": false
+    },
+    {
+      "horizon_min": 30,
+      "forecast_depth_cm": 100.0,
+      "raw_forecast_depth_cm": 135.62007211547768,
+      "warning_level": "orange",
+      "clipped": true
+    },
+    {
+      "horizon_min": 60,
+      "forecast_depth_cm": 100.0,
+      "raw_forecast_depth_cm": 226.59746547924163,
+      "warning_level": "orange",
+      "clipped": true
+    }
+  ],
+  "corrected_forecast_results": [
+    {
+      "horizon_min": 5,
+      "deterministic_forecast_depth_cm": 59.80557764567436,
+      "median_case_bias_cm": -3.5,
+      "raw_corrected_forecast_depth_cm": 56.30557764567436,
+      "corrected_forecast_depth_cm": 56.30557764567436,
+      "warning_level": "orange",
+      "clipped": false
+    },
+    {
+      "horizon_min": 15,
+      "deterministic_forecast_depth_cm": 90.13137543359568,
+      "median_case_bias_cm": -6.0,
+      "raw_corrected_forecast_depth_cm": 84.13137543359568,
+      "corrected_forecast_depth_cm": 84.13137543359568,
+      "warning_level": "orange",
+      "clipped": false
+    },
+    {
+      "horizon_min": 30,
+      "deterministic_forecast_depth_cm": 100.0,
+      "median_case_bias_cm": -10.0,
+      "raw_corrected_forecast_depth_cm": 90.0,
+      "corrected_forecast_depth_cm": 90.0,
+      "warning_level": "orange",
+      "clipped": false
+    },
+    {
+      "horizon_min": 60,
+      "deterministic_forecast_depth_cm": 100.0,
+      "median_case_bias_cm": -16.0,
+      "raw_corrected_forecast_depth_cm": 84.0,
+      "corrected_forecast_depth_cm": 84.0,
+      "warning_level": "orange",
+      "clipped": false
+    }
+  ],
+  "median_bias_cm_by_horizon": {
+    "5": -3.5,
+    "15": -6.0,
+    "30": -10.0,
+    "60": -16.0
+  },
+  "top_case_ids": [
+    "mock_case_001_moderate_rain_fast_rise",
+    "mock_case_002_moderate_rain_compact_area",
+    "mock_case_006_moderate_rain_wide_area"
+  ],
+  "top_case_similarity_scores": [
+    0.7522897109825589,
+    0.751257580601789,
+    0.4089664784256105
+  ],
+  "warning_thresholds_cm": {
+    "blue": 15.0,
+    "yellow": 30.0,
+    "orange": 50.0
+  },
+  "mvp_note": "S7-B uses offline_mock_case_library to validate case retrieval correction. It is not final real historical-case correction.",
+  "timestamp": "2026-07-04T16:40:51.352838+00:00",
+  "output_files": {
+    "data_case_retrieval_result": "/home/wlkl/water_agent_ws/water_agent_system/data/reasoning/case_retrieval_result.json",
+    "output_case_retrieval_result": "/home/wlkl/water_agent_ws/water_agent_system/outputs/json/case_retrieval_result.json",
+    "data_corrected_forecast_result": "/home/wlkl/water_agent_ws/water_agent_system/data/reasoning/corrected_forecast_result.json",
+    "output_corrected_forecast_result": "/home/wlkl/water_agent_ws/water_agent_system/outputs/json/corrected_forecast_result.json",
+    "case_retrieval_figure": "/home/wlkl/water_agent_ws/water_agent_system/outputs/figures/case_retrieval_correction.png"
+  }
+}
