@@ -1,0 +1,47 @@
+{
+  "stage": "S3_playground_pit_dem_space_water_mask",
+  "scene_type": "playground_pit",
+  "case_name": "playground_pit_water_sim_6cm_001",
+  "dem_shape": [
+    1722,
+    708
+  ],
+  "mask_shape": [
+    1722,
+    708
+  ],
+  "polygon_points_rc": [
+    [
+      1220,
+      122
+    ],
+    [
+      1220,
+      154
+    ],
+    [
+      1310,
+      154
+    ],
+    [
+      1310,
+      122
+    ]
+  ],
+  "mask_cell_count": 2880,
+  "mask_area_m2": 28.8,
+  "grid_resolution": 0.1,
+  "source_ground_dem": "/home/wlkl/water_agent_ws/water_agent_system/data/dem/playground_pit/ground_dem_interpolated.npy",
+  "source_ground_valid_mask": "/home/wlkl/water_agent_ws/water_agent_system/data/dem/playground_pit/ground_dem_valid_mask.npy",
+  "source_ground_point_count": "/home/wlkl/water_agent_ws/water_agent_system/data/dem/playground_pit/ground_dem_point_count.npy",
+  "source_ground_metadata": "/home/wlkl/water_agent_ws/water_agent_system/data/dem/playground_pit/ground_dem_metadata.json",
+  "created_at": "2026-07-05T13:56:00.390224+00:00",
+  "note": "DEM-space polygon mask for playground_pit. This is not a camera pixel mask and should be manually checked with overlay figures.",
+  "output_files": {
+    "water_region_mask_npy": "/home/wlkl/water_agent_ws/water_agent_system/data/masks/playground_pit_water_region_mask.npy",
+    "water_region_mask_png": "/home/wlkl/water_agent_ws/water_agent_system/data/masks/playground_pit_water_region_mask.png",
+    "water_region_mask_metadata": "/home/wlkl/water_agent_ws/water_agent_system/data/masks/playground_pit_water_region_mask_metadata.json",
+    "water_region_mask_on_dem": "/home/wlkl/water_agent_ws/water_agent_system/outputs/figures/playground_pit_water_region_mask_on_dem.png",
+    "water_region_mask_on_point_count": "/home/wlkl/water_agent_ws/water_agent_system/outputs/figures/playground_pit_water_region_mask_on_point_count.png"
+  }
+}

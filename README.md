@@ -129,6 +129,86 @@ The quality gate labels each S4-real result as `pass`, `warning`, or
 Rejected S4-real results are saved as diagnostic artifacts only and
 must not enter the formal warning chain.
 
+## S4-real-B Boundary Waterline Inversion
+
+S4-real-B adds a boundary-based waterline method for shallow-water or
+unstable water-surface return scenes. Instead of directly trusting LiDAR
+surface returns, it:
+
+1. uses a water-region mask to define the flooded area,
+2. extracts boundary cells from that mask,
+3. reads boundary ground elevations from the ground DEM,
+4. estimates a water level with a trimmed median,
+5. computes depth as `max(0, water_level - ground_dem)` inside the mask,
+6. reports depth, area, volume, and a boundary-specific quality status.
+
+This method can be useful when LiDAR cannot reliably detect the water
+surface, but it depends on mask boundary quality and DEM quality. The
+playground scene now requires its own DEM-space mask and refuses to use
+the old dormitory mask as a fallback.
+
+### S3-playground DEM-space Mask
+
+The playground pit scene requires a DEM-space mask whose shape exactly
+matches `data/dem/playground_pit/ground_dem_interpolated.npy`. The older
+dormitory `data/fusion/water_region_mask.npy` has a different shape and
+must not be used for playground S4-real-B.
+
+Create the playground DEM-space mask:
+
+```bash
+cd ~/water_agent_ws/water_agent_system
+python3 run_offline_pipeline.py \
+  --stage create_dem_water_mask \
+  --config configs/playground_pit_dem_mask_config.yaml
+```
+
+The polygon points are row/column DEM grid coordinates, not camera
+pixels. Review the generated overlay figures and adjust
+`configs/playground_pit_dem_mask_config.yaml` if the mask does not cover
+only the pit water region.
+
+Diagnose the current playground mask before using S4-real-B as evidence:
+
+```bash
+python3 src/masks/diagnose_dem_space_mask.py \
+  --config configs/playground_pit_dem_mask_config.yaml
+```
+
+The diagnosis reports mask area, boundary height spread, boundary
+outliers, and point-count statistics. It also writes overlay figures for
+manual refinement. If needed, edit `refined_polygon_points_rc` and
+regenerate the mask with:
+
+```bash
+python3 src/masks/create_dem_space_water_mask.py \
+  --config configs/playground_pit_dem_mask_config.yaml \
+  --use-refined
+```
+
+Do not refine the polygon solely to force agreement with `known_depth_cm`;
+the mask boundary should match the actual pit water region in the DEM
+and point-count overlays.
+
+Run S4-real-B for the playground pit 6cm case:
+
+```bash
+source /opt/ros/humble/setup.bash
+cd ~/water_agent_ws/water_agent_system
+
+python3 run_offline_pipeline.py \
+  --stage boundary_waterline_depth \
+  --case playground_pit_water_sim_6cm_001
+```
+
+Outputs:
+
+- `data/hydrology/<case>/boundary_waterline_depth_map.npy`
+- `data/hydrology/<case>/boundary_waterline_depth_valid_mask.npy`
+- `outputs/json/boundary_waterline_depth_result_<case>.json`
+- `outputs/figures/boundary_waterline_depth_heatmap_<case>.png`
+- `outputs/reports/boundary_waterline_depth_report.md`
+
 Run the playground pit 6cm scene:
 
 ```bash

@@ -1,0 +1,113 @@
+{
+  "stage": "S3_playground_pit_dem_space_mask_diagnosis",
+  "scene_type": "playground_pit",
+  "case_name": "playground_pit_water_sim_6cm_001",
+  "mask_shape": [
+    1722,
+    708
+  ],
+  "mask_cell_count": 2880,
+  "mask_area_m2": 28.8,
+  "grid_resolution": 0.1,
+  "row_min": 1220,
+  "row_max": 1309,
+  "col_min": 122,
+  "col_max": 153,
+  "boundary_cell_count": 240,
+  "outer_boundary_cell_count": 248,
+  "boundary_valid_cell_count": 68,
+  "outer_boundary_valid_cell_count": 63,
+  "boundary_valid_ratio": 0.2833333333333333,
+  "outer_boundary_valid_ratio": 0.2540322580645161,
+  "boundary_height_stats": {
+    "min": -1.050169825553894,
+    "mean": 0.07855408496278174,
+    "median": 0.36948880553245544,
+    "max": 0.5014408230781555,
+    "p10": -0.9248133540153504,
+    "p25": -0.2280476838350296,
+    "p75": 0.41752201318740845,
+    "p90": 0.4554704755544663,
+    "std": 0.4975722218201574
+  },
+  "outer_boundary_height_stats": {
+    "min": -1.085647702217102,
+    "mean": 0.021754126463617598,
+    "median": 0.3360230624675751,
+    "max": 0.5615308284759521,
+    "p10": -0.8897727131843567,
+    "p25": -0.36710475385189056,
+    "p75": 0.4283263683319092,
+    "p90": 0.5094922900199891,
+    "std": 0.5213529114457909
+  },
+  "boundary_height_std_cm": 49.757222182015745,
+  "outer_boundary_height_std_cm": 52.135291144579085,
+  "boundary_outlier_counts": {
+    "gt_10cm": 31,
+    "gt_20cm": 25,
+    "gt_50cm": 19
+  },
+  "boundary_outlier_ratio": {
+    "gt_10cm": 0.45588235294117646,
+    "gt_20cm": 0.36764705882352944,
+    "gt_50cm": 0.27941176470588236
+  },
+  "point_count_on_mask_stats": {
+    "min": 0.0,
+    "mean": 246.1625,
+    "median": 0.0,
+    "max": 5423.0,
+    "p10": 0.0,
+    "p25": 0.0,
+    "p75": 387.0,
+    "p90": 815.0999999999999,
+    "std": 441.2101469058015
+  },
+  "point_count_on_boundary_stats": {
+    "min": 0.0,
+    "mean": 142.75,
+    "median": 0.0,
+    "max": 5423.0,
+    "p10": 0.0,
+    "p25": 0.0,
+    "p75": 55.0,
+    "p90": 527.3,
+    "std": 459.01179632626724
+  },
+  "source_files": {
+    "ground_dem": "/home/wlkl/water_agent_ws/water_agent_system/data/dem/playground_pit/ground_dem_interpolated.npy",
+    "ground_valid_mask": "/home/wlkl/water_agent_ws/water_agent_system/data/dem/playground_pit/ground_dem_valid_mask.npy",
+    "ground_point_count": "/home/wlkl/water_agent_ws/water_agent_system/data/dem/playground_pit/ground_dem_point_count.npy",
+    "ground_metadata": "/home/wlkl/water_agent_ws/water_agent_system/data/dem/playground_pit/ground_dem_metadata.json",
+    "water_mask": "/home/wlkl/water_agent_ws/water_agent_system/data/masks/playground_pit_water_region_mask.npy",
+    "water_mask_metadata": "/home/wlkl/water_agent_ws/water_agent_system/data/masks/playground_pit_water_region_mask_metadata.json"
+  },
+  "mask_metadata_polygon_points_rc": [
+    [
+      1220,
+      122
+    ],
+    [
+      1220,
+      154
+    ],
+    [
+      1310,
+      154
+    ],
+    [
+      1310,
+      122
+    ]
+  ],
+  "diagnosis_note": "This diagnosis only evaluates mask geometry, boundary height stability, and point density. It does not tune the mask to match known water depth.",
+  "created_at": "2026-07-05T14:05:00.837208+00:00",
+  "output_files": {
+    "mask_diagnosis_json": "/home/wlkl/water_agent_ws/water_agent_system/outputs/json/playground_pit_mask_diagnosis.json",
+    "mask_diagnosis_report": "/home/wlkl/water_agent_ws/water_agent_system/outputs/reports/playground_pit_mask_diagnosis.md",
+    "mask_diagnosis_on_dem": "/home/wlkl/water_agent_ws/water_agent_system/outputs/figures/playground_pit_mask_diagnosis_on_dem.png",
+    "mask_boundary_height_outliers": "/home/wlkl/water_agent_ws/water_agent_system/outputs/figures/playground_pit_mask_boundary_height_outliers.png",
+    "mask_on_point_count": "/home/wlkl/water_agent_ws/water_agent_system/outputs/figures/playground_pit_mask_on_point_count.png"
+  }
+}

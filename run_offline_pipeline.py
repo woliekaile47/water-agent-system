@@ -8,12 +8,14 @@ Current stages:
 - build_ground_dem: S4-real scene-specific ground DEM from offline LiDAR rosbag
 - extract_camera: S3 offline camera frame extraction
 - manual_mask: S3 manual polygon water mask
+- create_dem_water_mask: S3-playground DEM-space polygon water mask
 - mask_to_dem: S4 region-level mask-to-DEM mapping
 - water_depth: S4 configured-depth water depth inversion
 - build_surface_dem: S4-real surface DEM from offline LiDAR rosbag
 - surface_depth: S4-real depth from surface DEM minus ground DEM
 - surface_depth_eval: S4-real accuracy evaluation against known simulated depth
 - surface_depth_quality_gate: S4-real quality gate before downstream warning use
+- boundary_waterline_depth: S4-real-B boundary-based waterline depth inversion
 - area_volume: S5 water area and volume calculation
 - weather_correction: S6 offline mock weather correction
 - deterministic_forecast: S7-A deterministic rule-engine forecast
@@ -43,7 +45,9 @@ from src.fusion.map_mask_to_dem import map_mask_to_dem
 from src.hydrology.calculate_area_volume import calculate_area_volume
 from src.hydrology.invert_water_depth import invert_water_depth
 from src.hydrology.invert_surface_depth import invert_surface_depth
+from src.hydrology.invert_boundary_waterline_depth import invert_boundary_waterline_depth
 from src.hydrology.visualize_area_volume_summary import visualize_area_volume_summary
+from src.masks.create_dem_space_water_mask import create_dem_space_water_mask
 from src.meteorology.compute_weather_correction import compute_weather_correction
 from src.meteorology.visualize_weather_correction import visualize_weather_correction
 from src.reasoning.deterministic_forecast import deterministic_forecast
@@ -72,12 +76,14 @@ def main() -> None:
             "build_ground_dem",
             "extract_camera",
             "manual_mask",
+            "create_dem_water_mask",
             "mask_to_dem",
             "water_depth",
             "build_surface_dem",
             "surface_depth",
             "surface_depth_eval",
             "surface_depth_quality_gate",
+            "boundary_waterline_depth",
             "area_volume",
             "weather_correction",
             "deterministic_forecast",
@@ -102,6 +108,7 @@ def main() -> None:
         "surface_depth",
         "surface_depth_eval",
         "surface_depth_quality_gate",
+        "boundary_waterline_depth",
     }
     if args.stage in surface_stages and args.config == "configs/system_config.yaml":
         args.config = "configs/surface_dem_config.yaml"
@@ -172,6 +179,19 @@ def main() -> None:
         print("[pipeline] S3 manual_mask complete")
         print(f"[pipeline] mask pixel count: {metadata['mask_pixel_count']}")
         print(f"[pipeline] mask area ratio: {metadata['mask_area_ratio']:.6f}")
+        print("[pipeline] output file paths:")
+        for path in metadata["output_files"].values():
+            print(f"  - {path}")
+        return
+    elif args.stage == "create_dem_water_mask":
+        metadata = create_dem_space_water_mask(config_path, PROJECT_ROOT)
+        print("[pipeline] S3-playground create_dem_water_mask complete")
+        print(f"[pipeline] scene_type: {metadata['scene_type']}")
+        print(f"[pipeline] case_name: {metadata['case_name']}")
+        print(f"[pipeline] ground DEM shape: {metadata['dem_shape']}")
+        print(f"[pipeline] mask shape: {metadata['mask_shape']}")
+        print(f"[pipeline] mask_cell_count: {metadata['mask_cell_count']}")
+        print(f"[pipeline] mask_area_m2: {metadata['mask_area_m2']:.4f}")
         print("[pipeline] output file paths:")
         for path in metadata["output_files"].values():
             print(f"  - {path}")
@@ -261,6 +281,30 @@ def main() -> None:
             print("[pipeline] warning reasons:")
             for reason in metadata["warning_reasons"]:
                 print(f"  - {reason}")
+        print("[pipeline] output file paths:")
+        for path in metadata["output_files"].values():
+            print(f"  - {path}")
+        return
+    elif args.stage == "boundary_waterline_depth":
+        if not args.case:
+            parser.error("--stage boundary_waterline_depth requires --case")
+        metadata = invert_boundary_waterline_depth(config_path, PROJECT_ROOT, args.case)
+        print("[pipeline] S4-real-B boundary_waterline_depth complete")
+        print(f"[pipeline] case_name: {metadata['case_name']}")
+        print(f"[pipeline] boundary_valid_cell_count: {metadata['boundary_valid_cell_count']}")
+        print(f"[pipeline] estimated_water_level_m: {metadata['estimated_water_level_m']}")
+        print(f"[pipeline] boundary_height_median_m: {metadata['boundary_height_median_m']}")
+        print(f"[pipeline] boundary_height_std_cm: {metadata['boundary_height_std_cm']}")
+        print(f"[pipeline] mean_depth_cm: {metadata['mean_depth_cm']}")
+        print(f"[pipeline] median_depth_cm: {metadata['median_depth_cm']}")
+        print(f"[pipeline] max_depth_cm: {metadata['max_depth_cm']}")
+        print(f"[pipeline] known_depth_cm: {metadata['known_depth_cm']}")
+        print(f"[pipeline] mean_error_cm: {metadata['mean_error_cm']}")
+        print(f"[pipeline] area_m2: {metadata['area_m2']}")
+        print(f"[pipeline] volume_m3: {metadata['volume_m3']}")
+        print(f"[pipeline] boundary_quality_status: {metadata['boundary_quality_status']}")
+        if metadata.get("warning"):
+            print(f"[pipeline][WARN] {'; '.join(metadata['warning'])}")
         print("[pipeline] output file paths:")
         for path in metadata["output_files"].values():
             print(f"  - {path}")

@@ -5,8 +5,10 @@
 | S1 | Complete | ROS2 LiDAR + camera prototype acquisition chain |
 | S2 | Complete | Ground DEM baseline |
 | S3 | Complete | Manual polygon water candidate mask |
+| S3-playground | Initial implementation | DEM-space polygon water mask for playground_pit, matching the playground ground DEM shape |
 | S4 | Complete | Region-level mask-to-DEM mapping + MVP water depth |
 | S4-real | Experimental, quality-gated | Offline LiDAR surface DEM difference depth inversion; 39cm dormitory case shows the chain is feasible, while 13cm dormitory and playground 6cm cases expose overestimation / low-coverage quality issues |
+| S4-real-B | Initial implementation | Boundary-based waterline inversion from water mask boundary and ground DEM; intended for shallow water or unstable LiDAR water-surface returns |
 | S5 | Complete | Area and volume calculation |
 | S6 | Complete | Offline mock weather correction |
 | S7-A | Complete | Deterministic rule engine |
@@ -48,6 +50,35 @@ gate labels each case as `pass`, `warning`, or `reject` based on valid
 depth coverage, known-depth error when available, extreme outlier depth,
 and diagnosis warnings. Results that fail the gate are retained for
 diagnosis only and must not enter the formal S5-S8 warning chain.
+
+## S4-real-B Boundary Waterline Inversion
+
+S4-real-B estimates a water level from the water-region boundary on the
+ground DEM, then computes:
+
+```text
+depth = max(0, estimated_water_level - ground_dem)
+```
+
+This branch is designed for shallow-water or unstable LiDAR water-surface
+return scenes. It can compute depth, area, volume, and a boundary quality
+status, but it depends strongly on the water mask boundary and ground DEM
+quality.
+
+For `playground_pit`, S4-real-B now requires a dedicated DEM-space water
+mask at:
+
+- `data/masks/playground_pit_water_region_mask.npy`
+
+The old dormitory mask has a different grid shape and must not be used
+for the playground ground DEM. If the playground mask is missing or has
+the wrong shape, S4-real-B refuses to continue instead of using a fallback.
+
+The first playground DEM-space mask has the correct shape but still needs
+manual refinement. Mask diagnosis now reports boundary height stability,
+boundary outliers, and point-count coverage so `refined_polygon_points_rc`
+can be adjusted based on geometry and data coverage, not tuned to a known
+water-depth value.
 
 ## Playground Pit 6cm Scene
 

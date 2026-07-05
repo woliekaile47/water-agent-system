@@ -1,0 +1,34 @@
+dem_space_water_mask:
+  scene_type: "playground_pit"
+  case_name: "playground_pit_water_sim_6cm_001"
+
+  ground_dem_interpolated_path: "data/dem/playground_pit/ground_dem_interpolated.npy"
+  ground_dem_valid_mask_path: "data/dem/playground_pit/ground_dem_valid_mask.npy"
+  ground_dem_point_count_path: "data/dem/playground_pit/ground_dem_point_count.npy"
+  ground_dem_metadata_path: "data/dem/playground_pit/ground_dem_metadata.json"
+
+  # Row/col coordinates on the playground_pit DEM grid, not camera pixels.
+  # Initial polygon is based on the dominant observed playground pit cluster
+  # around row 1227-1302, col 127-146. It should be manually reviewed using
+  # the generated overlay figures before formal validation.
+  polygon_points_rc:
+    - [1220, 122]
+    - [1220, 154]
+    - [1310, 154]
+    - [1310, 122]
+
+  # Manual refinement slot. Keep this separate from the initial polygon so
+  # diagnosis figures can guide iterative shrinking without losing history.
+  refined_polygon_points_rc:
+    - [1220, 122]
+    - [1220, 154]
+    - [1310, 154]
+    - [1310, 122]
+
+  output_mask_npy: "data/masks/playground_pit_water_region_mask.npy"
+  output_mask_png: "data/masks/playground_pit_water_region_mask.png"
+  output_metadata: "data/masks/playground_pit_water_region_mask_metadata.json"
+  output_dem_overlay: "outputs/figures/playground_pit_water_region_mask_on_dem.png"
+  output_point_count_overlay: "outputs/figures/playground_pit_water_region_mask_on_point_count.png"
+
+  note: "DEM-space polygon mask for playground_pit. This is not a camera pixel mask and should be manually checked with overlay figures."
