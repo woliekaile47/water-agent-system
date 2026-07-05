@@ -1,0 +1,56 @@
+surface_dem:
+  mode: "offline_rosbag_surface_dem"
+  description: "Build current water surface DEM from offline LiDAR rosbag and compute surface-difference water depth."
+
+  data_root: "/home/wlkl/water_agent_data"
+
+  lidar:
+    topic: "/cx/lslidar_point_cloud"
+    max_frames: 30
+    frame_stride: 1
+
+  dem:
+    ground_dem_interpolated_path: "data/dem/ground_dem_interpolated.npy"
+    ground_dem_valid_mask_path: "data/dem/ground_dem_valid_mask.npy"
+    ground_dem_metadata_path: "data/dem/ground_dem_metadata.json"
+
+  fusion:
+    water_region_mask_path: "data/fusion/water_region_mask.npy"
+
+  cases:
+    water_sim_13cm_001:
+      bag_search_keyword: "water_sim_13cm_001"
+      known_depth_cm: 13.0
+      output_name: "water_sim_13cm_001"
+    water_sim_39cm_001:
+      bag_search_keyword: "water_sim_39cm_001"
+      known_depth_cm: 39.0
+      output_name: "water_sim_39cm_001"
+
+  active_case: "water_sim_13cm_001"
+
+  rasterization:
+    z_statistic: "median"
+    min_points_per_cell: 1
+    fill_missing_surface_cells: false
+
+  filtering:
+    use_dem_bounds: true
+    use_water_region_mask: true
+    z_min_m: -5.0
+    z_max_m: 5.0
+
+  depth:
+    min_valid_depth_m: 0.005
+    max_valid_depth_m: 1.5
+    negative_depth_policy: "set_zero"
+    outside_mask_value: 0.0
+
+  output:
+    surface_dem_dir: "data/surface_dem"
+    hydrology_dir: "data/hydrology"
+    json_dir: "outputs/json"
+    figure_dir: "outputs/figures"
+    report_dir: "outputs/reports"
+
+  note: "This module uses offline LiDAR point cloud data to build a current surface DEM. It is closer to real measurement than configured_mvp_simulation, but still depends on calibration quality, ROI mapping, point density, and water surface LiDAR returns."

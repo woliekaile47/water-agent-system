@@ -10,6 +10,7 @@ large generated arrays in Git.
 |---|---|---|
 | `configs/` | Offline pipeline configuration files | tracked |
 | `data/dem/` | DEM metadata and local DEM arrays | metadata tracked; `.npy` ignored |
+| `data/surface_dem/` | S4-real surface DEM arrays and metadata by case | metadata tracked; `.npy` ignored |
 | `data/masks/` | Manual mask metadata and local mask arrays/images | metadata tracked; `.npy` ignored |
 | `data/fusion/` | Mask-to-DEM mapping metadata and local masks | JSON tracked; `.npy` ignored |
 | `data/hydrology/` | Water depth, area, and volume results | JSON tracked; `.npy` ignored |
@@ -60,6 +61,11 @@ but the current offline demo expects them to be present locally:
 - `data/masks/manual_water_mask.npy`
 - `data/hydrology/water_depth_map.npy`
 - `data/hydrology/water_depth_valid_mask.npy`
+- `data/surface_dem/<case_name>/surface_dem.npy`
+- `data/surface_dem/<case_name>/surface_dem_valid_mask.npy`
+- `data/surface_dem/<case_name>/surface_dem_point_count.npy`
+- `data/hydrology/<case_name>/surface_water_depth_map.npy`
+- `data/hydrology/<case_name>/surface_water_depth_valid_mask.npy`
 
 If these files are missing, restore them from the local data directory or a
 backup, or regenerate earlier stages before running the Agent pipeline.
@@ -72,3 +78,21 @@ from backup or the original `~/water_agent_data` location first.
 
 The files under `outputs/json/` and `outputs/reports/` can be used to inspect
 the latest offline MVP run result.
+
+## Regenerating S4-real Surface DEM Outputs
+
+S4-real generated arrays are local large data products and may be ignored by
+Git. Regenerate them from local rosbags with:
+
+```bash
+source /opt/ros/humble/setup.bash
+cd ~/water_agent_ws/water_agent_system
+
+python3 src/dem/build_surface_dem_from_rosbag.py --config configs/surface_dem_config.yaml --case water_sim_13cm_001
+python3 src/hydrology/invert_surface_depth.py --config configs/surface_dem_config.yaml --case water_sim_13cm_001
+python3 src/evaluation/evaluate_surface_depth_accuracy.py --config configs/surface_dem_config.yaml --case water_sim_13cm_001
+
+python3 src/dem/build_surface_dem_from_rosbag.py --config configs/surface_dem_config.yaml --case water_sim_39cm_001
+python3 src/hydrology/invert_surface_depth.py --config configs/surface_dem_config.yaml --case water_sim_39cm_001
+python3 src/evaluation/evaluate_surface_depth_accuracy.py --config configs/surface_dem_config.yaml --case water_sim_39cm_001
+```

@@ -9,6 +9,9 @@ Current stages:
 - manual_mask: S3 manual polygon water mask
 - mask_to_dem: S4 region-level mask-to-DEM mapping
 - water_depth: S4 configured-depth water depth inversion
+- build_surface_dem: S4-real surface DEM from offline LiDAR rosbag
+- surface_depth: S4-real depth from surface DEM minus ground DEM
+- surface_depth_eval: S4-real accuracy evaluation against known simulated depth
 - area_volume: S5 water area and volume calculation
 - weather_correction: S6 offline mock weather correction
 - deterministic_forecast: S7-A deterministic rule-engine forecast
@@ -30,9 +33,12 @@ if str(PROJECT_ROOT) not in sys.path:
 
 from src.dem.build_dem import build_dem_from_bag
 from src.dem.build_ground_dem import build_ground_dem_from_bag
+from src.dem.build_surface_dem_from_rosbag import build_surface_dem
+from src.evaluation.evaluate_surface_depth_accuracy import evaluate_surface_depth_accuracy
 from src.fusion.map_mask_to_dem import map_mask_to_dem
 from src.hydrology.calculate_area_volume import calculate_area_volume
 from src.hydrology.invert_water_depth import invert_water_depth
+from src.hydrology.invert_surface_depth import invert_surface_depth
 from src.hydrology.visualize_area_volume_summary import visualize_area_volume_summary
 from src.meteorology.compute_weather_correction import compute_weather_correction
 from src.meteorology.visualize_weather_correction import visualize_weather_correction
@@ -63,6 +69,9 @@ def main() -> None:
             "manual_mask",
             "mask_to_dem",
             "water_depth",
+            "build_surface_dem",
+            "surface_depth",
+            "surface_depth_eval",
             "area_volume",
             "weather_correction",
             "deterministic_forecast",
@@ -78,6 +87,7 @@ def main() -> None:
     parser.add_argument("--config", default="configs/system_config.yaml", help="System config YAML path")
     parser.add_argument("--output", help="Output path, used by extract_camera stage")
     parser.add_argument("--frame-index", type=int, default=20, help="1-based camera frame index for extract_camera")
+    parser.add_argument("--case", help="Case name for surface DEM stages")
     args = parser.parse_args()
 
     config_path = Path(args.config).expanduser()
@@ -148,6 +158,57 @@ def main() -> None:
         print(f"[pipeline] configured depth cm: {metadata['configured_depth_cm']:.2f}")
         print(f"[pipeline] max depth cm: {metadata['max_depth_cm']:.2f}")
         print(f"[pipeline] mean depth cm: {metadata['mean_depth_cm']:.2f}")
+        print("[pipeline] output file paths:")
+        for path in metadata["output_files"].values():
+            print(f"  - {path}")
+        return
+    elif args.stage == "build_surface_dem":
+        metadata = build_surface_dem(config_path, PROJECT_ROOT, args.case)
+        print("[pipeline] S4-real build_surface_dem complete")
+        print(f"[pipeline] case_name: {metadata['case_name']}")
+        print(f"[pipeline] rosbag_path: {metadata['rosbag_path']}")
+        print(f"[pipeline] frames_read: {metadata['frames_read']}")
+        print(f"[pipeline] points_after_filter: {metadata['points_after_filter']}")
+        print(f"[pipeline] valid_surface_cell_count: {metadata['valid_surface_cell_count']}")
+        print(
+            "[pipeline] surface_valid_ratio_in_water_region: "
+            f"{metadata['surface_valid_ratio_in_water_region']:.4f}"
+        )
+        if metadata.get("warning"):
+            print(f"[pipeline][WARN] {'; '.join(metadata['warning'])}")
+        print("[pipeline] output file paths:")
+        for path in metadata["output_files"].values():
+            print(f"  - {path}")
+        return
+    elif args.stage == "surface_depth":
+        metadata = invert_surface_depth(config_path, PROJECT_ROOT, args.case)
+        print("[pipeline] S4-real surface_depth complete")
+        print(f"[pipeline] case_name: {metadata['case_name']}")
+        print(f"[pipeline] valid_depth_cell_count: {metadata['valid_depth_cell_count']}")
+        print(
+            "[pipeline] valid_depth_ratio_in_water_region: "
+            f"{metadata['valid_depth_ratio_in_water_region']:.4f}"
+        )
+        print(f"[pipeline] mean_depth_cm: {metadata['mean_depth_cm']}")
+        print(f"[pipeline] median_depth_cm: {metadata['median_depth_cm']}")
+        print(f"[pipeline] max_depth_cm: {metadata['max_depth_cm']}")
+        if metadata.get("warning"):
+            print(f"[pipeline][WARN] {'; '.join(metadata['warning'])}")
+        print("[pipeline] output file paths:")
+        for path in metadata["output_files"].values():
+            print(f"  - {path}")
+        return
+    elif args.stage == "surface_depth_eval":
+        metadata = evaluate_surface_depth_accuracy(config_path, PROJECT_ROOT, args.case)
+        print("[pipeline] S4-real surface_depth_eval complete")
+        print(f"[pipeline] case_name: {metadata['case_name']}")
+        print(f"[pipeline] known_depth_cm: {metadata['known_depth_cm']}")
+        print(f"[pipeline] mean_depth_cm: {metadata['mean_depth_cm']}")
+        print(f"[pipeline] median_depth_cm: {metadata['median_depth_cm']}")
+        print(f"[pipeline] mean_error_cm: {metadata['mean_error_cm']}")
+        print(f"[pipeline] median_error_cm: {metadata['median_error_cm']}")
+        if metadata.get("warning"):
+            print(f"[pipeline][WARN] {'; '.join(metadata['warning'])}")
         print("[pipeline] output file paths:")
         for path in metadata["output_files"].values():
             print(f"  - {path}")

@@ -1,0 +1,28 @@
+{
+  "stage": "S4_real_surface_depth_accuracy_evaluation",
+  "case_name": "water_sim_39cm_001",
+  "source_depth_result_json": "/home/wlkl/water_agent_ws/water_agent_system/outputs/json/surface_water_depth_result_water_sim_39cm_001.json",
+  "source_depth_map": "/home/wlkl/water_agent_ws/water_agent_system/data/hydrology/water_sim_39cm_001/surface_water_depth_map.npy",
+  "source_depth_valid_mask": "/home/wlkl/water_agent_ws/water_agent_system/data/hydrology/water_sim_39cm_001/surface_water_depth_valid_mask.npy",
+  "mean_depth_cm": 39.13751088760116,
+  "median_depth_cm": 45.904549956321716,
+  "max_depth_cm": 60.506224632263184,
+  "min_depth_cm": 5.371373891830444,
+  "known_depth_cm": 39.0,
+  "mean_error_cm": 0.13751088760115948,
+  "median_error_cm": 6.904549956321716,
+  "abs_mean_error_cm": 0.13751088760115948,
+  "abs_median_error_cm": 6.904549956321716,
+  "relative_mean_error_percent": 0.3525920194901525,
+  "valid_depth_cell_count": 22,
+  "valid_depth_ratio_in_water_region": 0.2,
+  "warning": [
+    "coverage_warning: valid_depth_ratio_in_water_region is below 0.30"
+  ],
+  "note": "Evaluation is based on dormitory simulated known-depth scenes. It does not represent final engineering accuracy.",
+  "timestamp": "2026-07-05T04:52:01.427864+00:00",
+  "output_files": {
+    "surface_depth_accuracy_json": "/home/wlkl/water_agent_ws/water_agent_system/outputs/json/surface_depth_accuracy_water_sim_39cm_001.json",
+    "surface_depth_accuracy_report": "/home/wlkl/water_agent_ws/water_agent_system/outputs/reports/surface_depth_accuracy_report.md"
+  }
+}

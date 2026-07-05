@@ -68,6 +68,61 @@ Key outputs:
 - `v0.2-case-retrieval-mvp`
 - `v0.3-physical-constraint-mvp`
 - `v0.4-full-s7-agent-integration`
+- `v0.5-reproducible-offline-demo`
+
+## Real LiDAR Surface DEM Depth Inversion
+
+The original S4 `configured_depth` path is kept for MVP pipeline
+verification. The new S4-real path reads offline LiDAR point clouds from
+existing rosbags and builds a current surface DEM. It then computes:
+
+```text
+surface_depth = current_surface_dem - ground_dem_interpolated
+```
+
+This mode does not start real-time devices. It only reads offline rosbags
+with `rosbag2_py`. The result does not use `configured_depth`, but its
+accuracy still depends on calibration quality, ROI mapping, point density,
+and LiDAR returns from the water/surface target.
+
+Current dormitory validation is diagnostic only. The 13cm dormitory scene
+is clearly overestimated, while the 39cm scene is much closer to the known
+manual depth. Low valid-cell coverage can affect accuracy, and a playground
+open-scene dataset should be recollected as the more formal S4-real
+validation set.
+
+Run the 13cm scene:
+
+```bash
+source /opt/ros/humble/setup.bash
+cd ~/water_agent_ws/water_agent_system
+
+python3 src/dem/build_surface_dem_from_rosbag.py --config configs/surface_dem_config.yaml --case water_sim_13cm_001
+python3 src/hydrology/invert_surface_depth.py --config configs/surface_dem_config.yaml --case water_sim_13cm_001
+python3 src/evaluation/evaluate_surface_depth_accuracy.py --config configs/surface_dem_config.yaml --case water_sim_13cm_001
+```
+
+Run the 39cm scene:
+
+```bash
+python3 src/dem/build_surface_dem_from_rosbag.py --config configs/surface_dem_config.yaml --case water_sim_39cm_001
+python3 src/hydrology/invert_surface_depth.py --config configs/surface_dem_config.yaml --case water_sim_39cm_001
+python3 src/evaluation/evaluate_surface_depth_accuracy.py --config configs/surface_dem_config.yaml --case water_sim_39cm_001
+```
+
+Run quality diagnosis for both cases:
+
+```bash
+python3 src/evaluation/diagnose_surface_depth_quality.py --config configs/surface_dem_config.yaml
+```
+
+Pipeline entrypoint equivalents:
+
+```bash
+python3 run_offline_pipeline.py --stage build_surface_dem --config configs/surface_dem_config.yaml --case water_sim_13cm_001
+python3 run_offline_pipeline.py --stage surface_depth --config configs/surface_dem_config.yaml --case water_sim_13cm_001
+python3 run_offline_pipeline.py --stage surface_depth_eval --config configs/surface_dem_config.yaml --case water_sim_13cm_001
+```
 
 `water_agent_system` 是面向城市道路积水感知与预警的离线工程化原型。
 

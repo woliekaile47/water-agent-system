@@ -1,0 +1,102 @@
+{
+  "stage": "S4_real_surface_depth_quality_diagnosis",
+  "cases": [
+    {
+      "case_name": "water_sim_13cm_001",
+      "known_depth_cm": 13.0,
+      "source_files": {
+        "surface_dem": "/home/wlkl/water_agent_ws/water_agent_system/data/surface_dem/water_sim_13cm_001/surface_dem.npy",
+        "surface_dem_valid_mask": "/home/wlkl/water_agent_ws/water_agent_system/data/surface_dem/water_sim_13cm_001/surface_dem_valid_mask.npy",
+        "surface_dem_point_count": "/home/wlkl/water_agent_ws/water_agent_system/data/surface_dem/water_sim_13cm_001/surface_dem_point_count.npy",
+        "surface_water_depth_map": "/home/wlkl/water_agent_ws/water_agent_system/data/hydrology/water_sim_13cm_001/surface_water_depth_map.npy",
+        "surface_water_depth_valid_mask": "/home/wlkl/water_agent_ws/water_agent_system/data/hydrology/water_sim_13cm_001/surface_water_depth_valid_mask.npy",
+        "surface_water_depth_result": "/home/wlkl/water_agent_ws/water_agent_system/outputs/json/surface_water_depth_result_water_sim_13cm_001.json",
+        "surface_depth_accuracy": "/home/wlkl/water_agent_ws/water_agent_system/outputs/json/surface_depth_accuracy_water_sim_13cm_001.json"
+      },
+      "water_region_cell_count": 110,
+      "surface_valid_cell_count": 57,
+      "depth_valid_cell_count": 22,
+      "valid_depth_ratio_in_water_region": 0.2,
+      "point_count_min": 1.0,
+      "point_count_mean": 704.8070175438596,
+      "point_count_median": 274.0,
+      "point_count_max": 2749.0,
+      "depth_p10": 12.165250480175018,
+      "depth_p25": 22.702403366565704,
+      "depth_p50": 35.073962807655334,
+      "depth_p75": 47.7996826171875,
+      "depth_p90": 59.08036231994631,
+      "mean_depth_cm": 34.72139517014677,
+      "median_depth_cm": 35.073962807655334,
+      "max_depth_cm": 60.506224632263184,
+      "mean_error_cm": 21.72139517014677,
+      "median_error_cm": 22.073962807655334,
+      "outlier_high_depth_cell_count": 11,
+      "outlier_low_depth_cell_count": 1,
+      "high_error_warning": true,
+      "low_coverage_warning": true,
+      "sparse_point_warning": false,
+      "warning": [
+        "coverage_warning: valid_depth_ratio_in_water_region is below 0.30",
+        "accuracy_warning: abs(mean_error_cm) is above 10cm"
+      ]
+    },
+    {
+      "case_name": "water_sim_39cm_001",
+      "known_depth_cm": 39.0,
+      "source_files": {
+        "surface_dem": "/home/wlkl/water_agent_ws/water_agent_system/data/surface_dem/water_sim_39cm_001/surface_dem.npy",
+        "surface_dem_valid_mask": "/home/wlkl/water_agent_ws/water_agent_system/data/surface_dem/water_sim_39cm_001/surface_dem_valid_mask.npy",
+        "surface_dem_point_count": "/home/wlkl/water_agent_ws/water_agent_system/data/surface_dem/water_sim_39cm_001/surface_dem_point_count.npy",
+        "surface_water_depth_map": "/home/wlkl/water_agent_ws/water_agent_system/data/hydrology/water_sim_39cm_001/surface_water_depth_map.npy",
+        "surface_water_depth_valid_mask": "/home/wlkl/water_agent_ws/water_agent_system/data/hydrology/water_sim_39cm_001/surface_water_depth_valid_mask.npy",
+        "surface_water_depth_result": "/home/wlkl/water_agent_ws/water_agent_system/outputs/json/surface_water_depth_result_water_sim_39cm_001.json",
+        "surface_depth_accuracy": "/home/wlkl/water_agent_ws/water_agent_system/outputs/json/surface_depth_accuracy_water_sim_39cm_001.json"
+      },
+      "water_region_cell_count": 110,
+      "surface_valid_cell_count": 49,
+      "depth_valid_cell_count": 22,
+      "valid_depth_ratio_in_water_region": 0.2,
+      "point_count_min": 1.0,
+      "point_count_mean": 797.8367346938776,
+      "point_count_median": 702.0,
+      "point_count_max": 2710.0,
+      "depth_p10": 20.904851853847504,
+      "depth_p25": 26.78113654255867,
+      "depth_p50": 45.904549956321716,
+      "depth_p75": 48.76775145530701,
+      "depth_p90": 60.031688809394836,
+      "mean_depth_cm": 39.13751088760116,
+      "median_depth_cm": 45.904549956321716,
+      "max_depth_cm": 60.506224632263184,
+      "mean_error_cm": 0.13751088760115948,
+      "median_error_cm": 6.904549956321716,
+      "outlier_high_depth_cell_count": 4,
+      "outlier_low_depth_cell_count": 6,
+      "high_error_warning": false,
+      "low_coverage_warning": true,
+      "sparse_point_warning": false,
+      "warning": [
+        "coverage_warning: valid_depth_ratio_in_water_region is below 0.30"
+      ]
+    }
+  ],
+  "cross_case_comparison": {
+    "case_a": "water_sim_13cm_001",
+    "case_b": "water_sim_39cm_001",
+    "overlapping_valid_cell_count": 22,
+    "overlap_ratio": 1.0,
+    "overlap_ratio_of_water_region": 0.2,
+    "same_cell_depth_difference_mean_cm": 4.41611571745439,
+    "same_cell_depth_difference_median_cm": 0.0,
+    "cells_valid_only_in_13cm": 0,
+    "cells_valid_only_in_39cm": 0
+  },
+  "diagnosis_note": "13cm dormitory scene is clearly overestimated. Current dormitory data is for S4-real pipeline diagnosis only, not final accuracy. Playground open-scene data should be recollected with dry baseline and water cases for formal validation.",
+  "timestamp": "2026-07-05T04:52:01.719369+00:00",
+  "output_files": {
+    "surface_depth_quality_diagnosis_json": "/home/wlkl/water_agent_ws/water_agent_system/outputs/json/surface_depth_quality_diagnosis.json",
+    "surface_depth_quality_diagnosis_report": "/home/wlkl/water_agent_ws/water_agent_system/outputs/reports/surface_depth_quality_diagnosis.md",
+    "surface_depth_quality_comparison_figure": "/home/wlkl/water_agent_ws/water_agent_system/outputs/figures/surface_depth_quality_comparison.png"
+  }
+}

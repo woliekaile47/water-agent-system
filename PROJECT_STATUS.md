@@ -6,6 +6,7 @@
 | S2 | Complete | Ground DEM baseline |
 | S3 | Complete | Manual polygon water candidate mask |
 | S4 | Complete | Region-level mask-to-DEM mapping + MVP water depth |
+| S4-real | Initial complete, dormitory validation in progress | Offline LiDAR surface DEM difference depth inversion; 39cm is close to manual depth, 13cm is clearly overestimated and needs playground re-test |
 | S5 | Complete | Area and volume calculation |
 | S6 | Complete | Offline mock weather correction |
 | S7-A | Complete | Deterministic rule engine |
@@ -22,6 +23,25 @@
 area_volume -> weather_correction -> deterministic_forecast ->
 case_retrieval -> physical_constraint -> warning_report
 ```
+
+## S4-real Surface DEM Depth Inversion
+
+S4-real adds an offline LiDAR surface DEM difference method:
+
+```text
+current_surface_dem - ground_dem_interpolated = surface_difference_depth
+```
+
+It is intended to replace the earlier `configured_mvp_simulation` depth
+source in future pipeline versions. The current implementation is still
+offline only; it reads existing rosbags and does not start real-time
+LiDAR, camera, ROS nodes, or rosbag replay.
+
+Current dormitory validation shows that the 39cm scene is close to the
+manual known depth, while the 13cm scene is clearly overestimated. This
+is a diagnostic result, not a tuned accuracy claim. A playground open
+scene should be recollected with a new dry baseline and water cases for
+more formal S4-real validation.
 
 ## MVP Simulation Boundary
 

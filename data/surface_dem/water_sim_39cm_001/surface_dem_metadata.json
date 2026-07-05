@@ -1,0 +1,37 @@
+{
+  "stage": "S4_real_surface_dem_build",
+  "case_name": "water_sim_39cm_001",
+  "rosbag_path": "/home/wlkl/water_agent_data/rosbags/water_sim_39cm_001",
+  "lidar_topic": "/cx/lslidar_point_cloud",
+  "frames_read": 30,
+  "topic_frames_seen": 30,
+  "points_total": 840859,
+  "points_after_filter": 39094,
+  "dem_shape": [
+    110,
+    95
+  ],
+  "grid_size_m": 0.1,
+  "dem_bounds": {
+    "x_min": -3.0,
+    "x_max": 6.5,
+    "y_min": -3.5,
+    "y_max": 7.5
+  },
+  "valid_surface_cell_count": 49,
+  "water_region_cell_count": 110,
+  "surface_valid_ratio_in_water_region": 0.44545454545454544,
+  "z_statistic": "median",
+  "known_depth_cm": 39.0,
+  "warning": [],
+  "note": "This module uses offline LiDAR point cloud data to build a current surface DEM. It is closer to real measurement than configured_mvp_simulation, but still depends on calibration quality, ROI mapping, point density, and water surface LiDAR returns.",
+  "timestamp": "2026-07-05T04:39:22.695946+00:00",
+  "output_files": {
+    "surface_dem": "/home/wlkl/water_agent_ws/water_agent_system/data/surface_dem/water_sim_39cm_001/surface_dem.npy",
+    "surface_dem_valid_mask": "/home/wlkl/water_agent_ws/water_agent_system/data/surface_dem/water_sim_39cm_001/surface_dem_valid_mask.npy",
+    "surface_dem_point_count": "/home/wlkl/water_agent_ws/water_agent_system/data/surface_dem/water_sim_39cm_001/surface_dem_point_count.npy",
+    "surface_dem_metadata": "/home/wlkl/water_agent_ws/water_agent_system/data/surface_dem/water_sim_39cm_001/surface_dem_metadata.json",
+    "surface_dem_heatmap": "/home/wlkl/water_agent_ws/water_agent_system/outputs/figures/surface_dem_heatmap_water_sim_39cm_001.png",
+    "surface_dem_point_count_figure": "/home/wlkl/water_agent_ws/water_agent_system/outputs/figures/surface_dem_point_count_water_sim_39cm_001.png"
+  }
+}
