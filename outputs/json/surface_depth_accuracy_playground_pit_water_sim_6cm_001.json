@@ -1,0 +1,30 @@
+{
+  "stage": "S4_real_surface_depth_accuracy_evaluation",
+  "case_name": "playground_pit_water_sim_6cm_001",
+  "source_depth_result_json": "/home/wlkl/water_agent_ws/water_agent_system/outputs/json/surface_water_depth_result_playground_pit_water_sim_6cm_001.json",
+  "source_depth_map": "/home/wlkl/water_agent_ws/water_agent_system/data/hydrology/playground_pit_water_sim_6cm_001/surface_water_depth_map.npy",
+  "source_depth_valid_mask": "/home/wlkl/water_agent_ws/water_agent_system/data/hydrology/playground_pit_water_sim_6cm_001/surface_water_depth_valid_mask.npy",
+  "mean_depth_cm": 39.01441784499555,
+  "median_depth_cm": 36.26929521560669,
+  "max_depth_cm": 149.01551008224487,
+  "min_depth_cm": 0.5007743835449219,
+  "known_depth_cm": 6.0,
+  "mean_error_cm": 33.01441784499555,
+  "median_error_cm": 30.26929521560669,
+  "abs_mean_error_cm": 33.01441784499555,
+  "abs_median_error_cm": 30.26929521560669,
+  "relative_mean_error_percent": 550.2402974165925,
+  "valid_depth_cell_count": 1960,
+  "valid_depth_ratio_in_water_region": 0.14006002572531084,
+  "warning": [
+    "82 cells exceeded max_valid_depth_m and were marked invalid",
+    "coverage_warning: valid_depth_ratio_in_water_region is below 0.30",
+    "accuracy_warning: abs(mean_error_cm) is above 10cm"
+  ],
+  "note": "Evaluation is based on dormitory simulated known-depth scenes. It does not represent final engineering accuracy.",
+  "timestamp": "2026-07-05T12:44:36.654187+00:00",
+  "output_files": {
+    "surface_depth_accuracy_json": "/home/wlkl/water_agent_ws/water_agent_system/outputs/json/surface_depth_accuracy_playground_pit_water_sim_6cm_001.json",
+    "surface_depth_accuracy_report": "/home/wlkl/water_agent_ws/water_agent_system/outputs/reports/surface_depth_accuracy_report.md"
+  }
+}

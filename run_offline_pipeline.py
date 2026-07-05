@@ -5,6 +5,7 @@
 Current stages:
 - dem: S2-A dry scene-height DEM construction
 - ground_dem: S2-B dry ground DEM construction
+- build_ground_dem: S4-real scene-specific ground DEM from offline LiDAR rosbag
 - extract_camera: S3 offline camera frame extraction
 - manual_mask: S3 manual polygon water mask
 - mask_to_dem: S4 region-level mask-to-DEM mapping
@@ -12,6 +13,7 @@ Current stages:
 - build_surface_dem: S4-real surface DEM from offline LiDAR rosbag
 - surface_depth: S4-real depth from surface DEM minus ground DEM
 - surface_depth_eval: S4-real accuracy evaluation against known simulated depth
+- surface_depth_quality_gate: S4-real quality gate before downstream warning use
 - area_volume: S5 water area and volume calculation
 - weather_correction: S6 offline mock weather correction
 - deterministic_forecast: S7-A deterministic rule-engine forecast
@@ -33,8 +35,10 @@ if str(PROJECT_ROOT) not in sys.path:
 
 from src.dem.build_dem import build_dem_from_bag
 from src.dem.build_ground_dem import build_ground_dem_from_bag
+from src.dem.build_ground_dem_from_rosbag import build_ground_dem_from_rosbag
 from src.dem.build_surface_dem_from_rosbag import build_surface_dem
 from src.evaluation.evaluate_surface_depth_accuracy import evaluate_surface_depth_accuracy
+from src.evaluation.surface_depth_quality_gate import surface_depth_quality_gate
 from src.fusion.map_mask_to_dem import map_mask_to_dem
 from src.hydrology.calculate_area_volume import calculate_area_volume
 from src.hydrology.invert_water_depth import invert_water_depth
@@ -65,6 +69,7 @@ def main() -> None:
         choices=[
             "dem",
             "ground_dem",
+            "build_ground_dem",
             "extract_camera",
             "manual_mask",
             "mask_to_dem",
@@ -72,6 +77,7 @@ def main() -> None:
             "build_surface_dem",
             "surface_depth",
             "surface_depth_eval",
+            "surface_depth_quality_gate",
             "area_volume",
             "weather_correction",
             "deterministic_forecast",
@@ -90,6 +96,16 @@ def main() -> None:
     parser.add_argument("--case", help="Case name for surface DEM stages")
     args = parser.parse_args()
 
+    surface_stages = {
+        "build_ground_dem",
+        "build_surface_dem",
+        "surface_depth",
+        "surface_depth_eval",
+        "surface_depth_quality_gate",
+    }
+    if args.stage in surface_stages and args.config == "configs/system_config.yaml":
+        args.config = "configs/surface_dem_config.yaml"
+
     config_path = Path(args.config).expanduser()
     if not config_path.is_absolute():
         config_path = PROJECT_ROOT / config_path
@@ -106,6 +122,22 @@ def main() -> None:
         print(f"[pipeline] ground DEM shape: {metadata['dem_shape']}")
         print(f"[pipeline] valid cell count: {metadata['valid_cell_count']}")
         print(f"[pipeline] valid ratio: {metadata['valid_ratio']:.4f}")
+    elif args.stage == "build_ground_dem":
+        if not args.case:
+            parser.error("--stage build_ground_dem requires --case")
+        metadata = build_ground_dem_from_rosbag(config_path, PROJECT_ROOT, args.case)
+        print("[pipeline] S4-real build_ground_dem complete")
+        print(f"[pipeline] case_name: {metadata['case_name']}")
+        print(f"[pipeline] scene_type: {metadata['scene_type']}")
+        print(f"[pipeline] source_bag: {metadata['source_bag']}")
+        print(f"[pipeline] frame_count: {metadata['frame_count']}")
+        print(f"[pipeline] total_points: {metadata['total_points']}")
+        print(f"[pipeline] filtered_points: {metadata['filtered_points']}")
+        print(f"[pipeline] valid_cell_count: {metadata['valid_cell_count']}")
+        print("[pipeline] output file paths:")
+        for path in metadata["output_files"].values():
+            print(f"  - {path}")
+        return
     elif args.stage == "dem":
         if not args.dry_bag:
             parser.error("--stage dem requires --dry_bag")
@@ -209,6 +241,26 @@ def main() -> None:
         print(f"[pipeline] median_error_cm: {metadata['median_error_cm']}")
         if metadata.get("warning"):
             print(f"[pipeline][WARN] {'; '.join(metadata['warning'])}")
+        print("[pipeline] output file paths:")
+        for path in metadata["output_files"].values():
+            print(f"  - {path}")
+        return
+    elif args.stage == "surface_depth_quality_gate":
+        if not args.case:
+            parser.error("--stage surface_depth_quality_gate requires --case")
+        metadata = surface_depth_quality_gate(config_path, PROJECT_ROOT, args.case)
+        print("[pipeline] S4-real surface_depth_quality_gate complete")
+        print(f"[pipeline] case_name: {metadata['case_name']}")
+        print(f"[pipeline] quality_status: {metadata['quality_status']}")
+        print(f"[pipeline] can_enter_s5_s8_warning_chain: {metadata['can_enter_s5_s8_warning_chain']}")
+        if metadata.get("reject_reasons"):
+            print("[pipeline] reject reasons:")
+            for reason in metadata["reject_reasons"]:
+                print(f"  - {reason}")
+        if metadata.get("warning_reasons"):
+            print("[pipeline] warning reasons:")
+            for reason in metadata["warning_reasons"]:
+                print(f"  - {reason}")
         print("[pipeline] output file paths:")
         for path in metadata["output_files"].values():
             print(f"  - {path}")

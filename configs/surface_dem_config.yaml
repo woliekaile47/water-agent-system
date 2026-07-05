@@ -18,6 +18,18 @@ surface_dem:
     water_region_mask_path: "data/fusion/water_region_mask.npy"
 
   cases:
+    playground_pit_dry_baseline_001:
+      bag_search_keyword: "playground_pit_dry_baseline_001"
+      output_name: "playground_pit_dry_baseline_001"
+      scene_type: "playground_pit"
+      data_type: "dry_baseline"
+    playground_pit_water_sim_6cm_001:
+      bag_search_keyword: "playground_pit_water_sim_6cm_001"
+      known_depth_cm: 6.0
+      matched_dry_baseline: "playground_pit_dry_baseline_001"
+      output_name: "playground_pit_water_sim_6cm_001"
+      scene_type: "playground_pit"
+      data_type: "water_case"
     water_sim_13cm_001:
       bag_search_keyword: "water_sim_13cm_001"
       known_depth_cm: 13.0
@@ -28,6 +40,28 @@ surface_dem:
       output_name: "water_sim_39cm_001"
 
   active_case: "water_sim_13cm_001"
+
+  ground_dem:
+    max_frames: 80
+    frame_stride: 1
+    grid_size: 0.10
+    z_statistic: "p20"
+    min_points_per_cell: 3
+    roi:
+      mode: "auto_from_points"
+      margin_m: 0.50
+      z_min_m: -5.0
+      z_max_m: 5.0
+    interpolation:
+      enabled: true
+      method: "nearest"
+      max_neighbor_distance_cells: 3
+
+  scenes:
+    playground_pit:
+      description: "Controlled playground pit water-depth scene."
+      ground_dem_output_dir: "data/dem/playground_pit"
+      water_region_mask_mode: "ground_valid_mask"
 
   rasterization:
     z_statistic: "median"

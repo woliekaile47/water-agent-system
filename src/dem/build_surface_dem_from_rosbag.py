@@ -91,6 +91,7 @@ def find_rosbag_dir(data_root: str | Path, keyword: str) -> Path:
 def parse_dem_grid(metadata: dict[str, Any], ground_dem_shape: tuple[int, int]) -> dict[str, Any]:
     grid_size = (
         metadata.get("grid_size")
+        or metadata.get("grid_resolution")
         or metadata.get("resolution")
         or metadata.get("cell_size")
         or metadata.get("cell_size_m")
@@ -108,7 +109,13 @@ def parse_dem_grid(metadata: dict[str, Any], ground_dem_shape: tuple[int, int]) 
             f"ground_dem shape {ground_dem_shape} does not match metadata dem_shape {(ny, nx)}"
         )
 
-    roi = metadata.get("dem_roi") or metadata.get("bounds") or metadata.get("roi") or {}
+    roi = (
+        metadata.get("dem_roi")
+        or metadata.get("bounds")
+        or metadata.get("roi")
+        or metadata.get("roi_settings")
+        or {}
+    )
     x_min = roi.get("x_min", metadata.get("x_min"))
     x_max = roi.get("x_max", metadata.get("x_max"))
     y_min = roi.get("y_min", metadata.get("y_min"))
@@ -127,6 +134,58 @@ def parse_dem_grid(metadata: dict[str, Any], ground_dem_shape: tuple[int, int]) 
         "y_min": y_min,
         "y_max": y_max,
     }
+
+
+def get_scene_config(config: dict[str, Any], scene_type: str | None) -> dict[str, Any]:
+    if not scene_type:
+        return {}
+    return dict(config.get("scenes", {}).get(scene_type, {}))
+
+
+def get_ground_dem_input_paths(
+    config: dict[str, Any],
+    project_root: Path,
+    case_config: dict[str, Any],
+) -> dict[str, Path | str]:
+    scene_type = case_config.get("scene_type")
+    scene_config = get_scene_config(config, str(scene_type) if scene_type else None)
+    if case_config.get("matched_dry_baseline") and scene_type:
+        output_dir = scene_config.get("ground_dem_output_dir") or f"data/dem/{scene_type}"
+        ground_dir = resolve_project_path(project_root, output_dir)
+        return {
+            "ground_dem": ground_dir / "ground_dem_interpolated.npy",
+            "ground_valid_mask": ground_dir / "ground_dem_valid_mask.npy",
+            "ground_metadata": ground_dir / "ground_dem_metadata.json",
+            "water_region_mode": scene_config.get("water_region_mask_mode", "ground_valid_mask"),
+            "water_region_mask": (
+                resolve_project_path(project_root, scene_config["water_region_mask_path"])
+                if scene_config.get("water_region_mask_path")
+                else None
+            ),
+            "scene_type": str(scene_type),
+        }
+    return {
+        "ground_dem": resolve_project_path(project_root, config["dem"]["ground_dem_interpolated_path"]),
+        "ground_valid_mask": resolve_project_path(project_root, config["dem"]["ground_dem_valid_mask_path"]),
+        "ground_metadata": resolve_project_path(project_root, config["dem"]["ground_dem_metadata_path"]),
+        "water_region_mode": "configured_mask",
+        "water_region_mask": resolve_project_path(project_root, config["fusion"]["water_region_mask_path"]),
+        "scene_type": str(scene_type) if scene_type else "",
+    }
+
+
+def load_water_region_mask(
+    mask_path: Path | None,
+    ground_valid_mask: np.ndarray,
+    mode: str,
+) -> tuple[np.ndarray, str]:
+    if mask_path is not None and mask_path.exists():
+        return np.load(mask_path).astype(bool), str(mask_path)
+    if mode == "ground_valid_mask":
+        return ground_valid_mask.astype(bool), "ground_valid_mask"
+    if mask_path is not None:
+        raise FileNotFoundError(f"Configured water region mask does not exist: {mask_path}")
+    raise FileNotFoundError("No water region mask is configured and fallback mode is not ground_valid_mask.")
 
 
 def read_filtered_points(
@@ -306,14 +365,18 @@ def build_surface_dem(
     output_name = str(case_config.get("output_name", selected_case))
     bag = find_rosbag_dir(config["data_root"], str(case_config["bag_search_keyword"]))
 
-    ground_dem_path = resolve_project_path(root, config["dem"]["ground_dem_interpolated_path"])
-    ground_mask_path = resolve_project_path(root, config["dem"]["ground_dem_valid_mask_path"])
-    metadata_path = resolve_project_path(root, config["dem"]["ground_dem_metadata_path"])
-    water_mask_path = resolve_project_path(root, config["fusion"]["water_region_mask_path"])
+    ground_inputs = get_ground_dem_input_paths(config, root, case_config)
+    ground_dem_path = Path(ground_inputs["ground_dem"])
+    ground_mask_path = Path(ground_inputs["ground_valid_mask"])
+    metadata_path = Path(ground_inputs["ground_metadata"])
     ground_dem = np.load(ground_dem_path)
     ground_valid_mask = np.load(ground_mask_path).astype(bool)
     dem_metadata = load_json(metadata_path)
-    water_region_mask = np.load(water_mask_path).astype(bool)
+    water_region_mask, water_region_source = load_water_region_mask(
+        ground_inputs.get("water_region_mask"),  # type: ignore[arg-type]
+        ground_valid_mask,
+        str(ground_inputs.get("water_region_mode", "configured_mask")),
+    )
     if water_region_mask.shape != ground_dem.shape or ground_valid_mask.shape != ground_dem.shape:
         raise ValueError(
             "ground DEM, ground valid mask, and water region mask shapes must match: "
@@ -393,6 +456,11 @@ def build_surface_dem(
         "stage": "S4_real_surface_dem_build",
         "case_name": output_name,
         "rosbag_path": str(bag),
+        "scene_type": case_config.get("scene_type", ""),
+        "matched_dry_baseline": case_config.get("matched_dry_baseline"),
+        "source_ground_dem": str(ground_dem_path),
+        "source_ground_dem_metadata": str(metadata_path),
+        "water_region_source": water_region_source,
         "lidar_topic": str(config["lidar"]["topic"]),
         "frames_read": read_stats["frames_read"],
         "topic_frames_seen": read_stats["topic_frames_seen"],

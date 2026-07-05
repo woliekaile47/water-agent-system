@@ -53,7 +53,11 @@ def _fmt(value: Any, digits: int = 2) -> str:
 def _case_names(config: dict[str, Any], requested_cases: list[str] | None) -> list[str]:
     if requested_cases:
         return requested_cases
-    return list(config.get("cases", {}).keys())
+    return [
+        name
+        for name, case_config in config.get("cases", {}).items()
+        if case_config.get("data_type") != "dry_baseline" and case_config.get("known_depth_cm") is not None
+    ]
 
 
 def diagnose_case(config: dict[str, Any], project_root: Path, case_name: str) -> dict[str, Any]:
@@ -194,10 +198,10 @@ def write_diagnosis_report(report_path: Path, result: dict[str, Any]) -> None:
         "",
         "Important conclusions:",
         "",
-        "- The 13cm dormitory scene is clearly overestimated in the current result.",
-        "- Current dormitory data is used to validate the S4-real pipeline and diagnose quality; it is not a final accuracy conclusion.",
-        "- An open playground scene should be recollected with a new dry baseline and water cases for a more formal S4-real validation.",
-        "- `valid_depth_ratio=0.20` indicates low coverage and the results should be interpreted cautiously.",
+        "- Results are diagnostic and should not be treated as final engineering accuracy.",
+        "- The 13cm dormitory scene is clearly overestimated when included in this report.",
+        "- Playground pit data is used as an additional controlled S4-real validation scene.",
+        "- Low valid-depth coverage indicates that results should be interpreted cautiously.",
         "",
         "## Per-case Diagnosis",
         "",
@@ -229,22 +233,29 @@ def write_diagnosis_report(report_path: Path, result: dict[str, Any]) -> None:
         )
 
     cross = result.get("cross_case_comparison", {})
+    lines.extend(["", "## Cross-case Comparison", ""])
+    if cross.get("warning"):
+        lines.append(f"- {cross.get('warning')}")
+    else:
+        lines.extend(
+            [
+                f"- case_a: {cross.get('case_a')}",
+                f"- case_b: {cross.get('case_b')}",
+                f"- overlapping_valid_cell_count: {cross.get('overlapping_valid_cell_count')}",
+                f"- overlap_ratio: {_fmt(cross.get('overlap_ratio'), 4)}",
+                f"- same_cell_depth_difference_mean_cm: {_fmt(cross.get('same_cell_depth_difference_mean_cm'))}",
+                f"- same_cell_depth_difference_median_cm: {_fmt(cross.get('same_cell_depth_difference_median_cm'))}",
+                f"- cells_valid_only_in_case_a: {cross.get('cells_valid_only_in_13cm')}",
+                f"- cells_valid_only_in_case_b: {cross.get('cells_valid_only_in_39cm')}",
+            ]
+        )
     lines.extend(
         [
             "",
-            "## Cross-case Comparison",
-            "",
-            f"- overlapping_valid_cell_count: {cross.get('overlapping_valid_cell_count')}",
-            f"- overlap_ratio: {_fmt(cross.get('overlap_ratio'), 4)}",
-            f"- same_cell_depth_difference_mean_cm: {_fmt(cross.get('same_cell_depth_difference_mean_cm'))}",
-            f"- same_cell_depth_difference_median_cm: {_fmt(cross.get('same_cell_depth_difference_median_cm'))}",
-            f"- cells_valid_only_in_13cm: {cross.get('cells_valid_only_in_13cm')}",
-            f"- cells_valid_only_in_39cm: {cross.get('cells_valid_only_in_39cm')}",
-            "",
             "## Interpretation",
             "",
-            "The diagnosis intentionally does not tune ROI, thresholds, or DEM settings to fit the 13cm target. "
-            "The high 13cm error should be treated as a real quality signal for the current dormitory data and calibration setup.",
+            "The diagnosis intentionally does not tune ROI, thresholds, or DEM settings to fit known depths. "
+            "High error or low coverage should be treated as a real quality signal for the current data and calibration setup.",
         ]
     )
     report_path.parent.mkdir(parents=True, exist_ok=True)
@@ -309,7 +320,7 @@ def save_comparison_figure(case_results: list[dict[str, Any]], output_path: Path
     fig.text(
         0.5,
         0.01,
-        "Dormitory S4-real diagnosis: 13cm is overestimated; low coverage should be interpreted cautiously.",
+        "S4-real diagnosis: no tuning is applied; high error or low coverage should be interpreted cautiously.",
         ha="center",
         fontsize=9,
         color="#92400e",
@@ -351,9 +362,8 @@ def diagnose_surface_depth_quality(
         "cases": [public_case_result(item) for item in case_results],
         "cross_case_comparison": cross_case,
         "diagnosis_note": (
-            "13cm dormitory scene is clearly overestimated. Current dormitory data is for S4-real "
-            "pipeline diagnosis only, not final accuracy. Playground open-scene data should be "
-            "recollected with dry baseline and water cases for formal validation."
+            "S4-real diagnosis reads existing surface-depth outputs only. It does not tune ROI, "
+            "thresholds, or depth values to match known depths."
         ),
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "output_files": {

@@ -1,0 +1,42 @@
+{
+  "stage": "S4_real_surface_dem_build",
+  "case_name": "playground_pit_water_sim_6cm_001",
+  "rosbag_path": "/home/wlkl/water_agent_data/rosbags/playground_pit_water_sim_6cm_001",
+  "scene_type": "playground_pit",
+  "matched_dry_baseline": "playground_pit_dry_baseline_001",
+  "source_ground_dem": "/home/wlkl/water_agent_ws/water_agent_system/data/dem/playground_pit/ground_dem_interpolated.npy",
+  "source_ground_dem_metadata": "/home/wlkl/water_agent_ws/water_agent_system/data/dem/playground_pit/ground_dem_metadata.json",
+  "water_region_source": "ground_valid_mask",
+  "lidar_topic": "/cx/lslidar_point_cloud",
+  "frames_read": 30,
+  "topic_frames_seen": 30,
+  "points_total": 573401,
+  "points_after_filter": 274441,
+  "dem_shape": [
+    1722,
+    708
+  ],
+  "grid_size_m": 0.1,
+  "dem_bounds": {
+    "x_min": -15.700000000000001,
+    "x_max": 55.1,
+    "y_min": -126.80000000000001,
+    "y_max": 45.300000000000004
+  },
+  "valid_surface_cell_count": 3511,
+  "water_region_cell_count": 13994,
+  "surface_valid_ratio_in_water_region": 0.25089323995998286,
+  "z_statistic": "median",
+  "known_depth_cm": 6.0,
+  "warning": [],
+  "note": "This module uses offline LiDAR point cloud data to build a current surface DEM. It is closer to real measurement than configured_mvp_simulation, but still depends on calibration quality, ROI mapping, point density, and water surface LiDAR returns.",
+  "timestamp": "2026-07-05T12:44:34.196224+00:00",
+  "output_files": {
+    "surface_dem": "/home/wlkl/water_agent_ws/water_agent_system/data/surface_dem/playground_pit_water_sim_6cm_001/surface_dem.npy",
+    "surface_dem_valid_mask": "/home/wlkl/water_agent_ws/water_agent_system/data/surface_dem/playground_pit_water_sim_6cm_001/surface_dem_valid_mask.npy",
+    "surface_dem_point_count": "/home/wlkl/water_agent_ws/water_agent_system/data/surface_dem/playground_pit_water_sim_6cm_001/surface_dem_point_count.npy",
+    "surface_dem_metadata": "/home/wlkl/water_agent_ws/water_agent_system/data/surface_dem/playground_pit_water_sim_6cm_001/surface_dem_metadata.json",
+    "surface_dem_heatmap": "/home/wlkl/water_agent_ws/water_agent_system/outputs/figures/surface_dem_heatmap_playground_pit_water_sim_6cm_001.png",
+    "surface_dem_point_count_figure": "/home/wlkl/water_agent_ws/water_agent_system/outputs/figures/surface_dem_point_count_playground_pit_water_sim_6cm_001.png"
+  }
+}

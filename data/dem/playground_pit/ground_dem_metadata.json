@@ -1,0 +1,65 @@
+{
+  "stage": "S4_real_scene_ground_dem_build",
+  "source_bag": "/home/wlkl/water_agent_data/rosbags/playground_pit_dry_baseline_001",
+  "case_name": "playground_pit_dry_baseline_001",
+  "scene_type": "playground_pit",
+  "lidar_topic": "/cx/lslidar_point_cloud",
+  "frame_count": 80,
+  "topic_frames_seen": 80,
+  "total_points": 1541303,
+  "filtered_points": 1455237,
+  "valid_cell_count": 13994,
+  "total_cell_count": 1219176,
+  "valid_ratio": 0.011478244322394799,
+  "grid_size": 0.1,
+  "grid_resolution": 0.1,
+  "dem_shape": [
+    1722,
+    708
+  ],
+  "dem_roi": {
+    "x_min": -15.700000000000001,
+    "x_max": 55.1,
+    "y_min": -126.80000000000001,
+    "y_max": 45.300000000000004,
+    "z_min": -5.0,
+    "z_max": 5.0
+  },
+  "roi_settings": {
+    "x_min": -15.700000000000001,
+    "x_max": 55.1,
+    "y_min": -126.80000000000001,
+    "y_max": 45.300000000000004,
+    "z_min": -5.0,
+    "z_max": 5.0
+  },
+  "ground_config": {
+    "max_frames": 80,
+    "frame_stride": 1,
+    "grid_size": 0.1,
+    "z_statistic": "p20",
+    "min_points_per_cell": 3,
+    "roi": {
+      "mode": "auto_from_points",
+      "margin_m": 0.5,
+      "z_min_m": -5.0,
+      "z_max_m": 5.0
+    },
+    "interpolation": {
+      "enabled": true,
+      "method": "nearest",
+      "max_neighbor_distance_cells": 3
+    }
+  },
+  "created_at": "2026-07-05T12:44:29.384042+00:00",
+  "output_files": {
+    "ground_dem": "/home/wlkl/water_agent_ws/water_agent_system/data/dem/playground_pit/ground_dem.npy",
+    "ground_dem_valid_mask": "/home/wlkl/water_agent_ws/water_agent_system/data/dem/playground_pit/ground_dem_valid_mask.npy",
+    "ground_dem_point_count": "/home/wlkl/water_agent_ws/water_agent_system/data/dem/playground_pit/ground_dem_point_count.npy",
+    "ground_dem_interpolated": "/home/wlkl/water_agent_ws/water_agent_system/data/dem/playground_pit/ground_dem_interpolated.npy",
+    "ground_dem_metadata": "/home/wlkl/water_agent_ws/water_agent_system/data/dem/playground_pit/ground_dem_metadata.json",
+    "ground_dem_heatmap": "/home/wlkl/water_agent_ws/water_agent_system/outputs/figures/ground_dem_heatmap_playground_pit.png",
+    "ground_dem_interpolated_heatmap": "/home/wlkl/water_agent_ws/water_agent_system/outputs/figures/ground_dem_interpolated_heatmap_playground_pit.png",
+    "ground_dem_point_count_figure": "/home/wlkl/water_agent_ws/water_agent_system/outputs/figures/ground_dem_point_count_playground_pit.png"
+  }
+}

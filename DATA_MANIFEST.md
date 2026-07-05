@@ -96,3 +96,31 @@ python3 src/dem/build_surface_dem_from_rosbag.py --config configs/surface_dem_co
 python3 src/hydrology/invert_surface_depth.py --config configs/surface_dem_config.yaml --case water_sim_39cm_001
 python3 src/evaluation/evaluate_surface_depth_accuracy.py --config configs/surface_dem_config.yaml --case water_sim_39cm_001
 ```
+
+## Playground Pit Rosbag Metadata
+
+The playground pit scene adds two local rosbags under
+`~/water_agent_data/rosbags`:
+
+- `playground_pit_dry_baseline_001`
+- `playground_pit_water_sim_6cm_001`
+
+Raw rosbag `.db3` files are not stored in this Git repository. The
+repository records configuration, output metadata, JSON summaries, reports,
+and figures only. To regenerate the playground-pit S4-real outputs, restore
+the rosbags locally and run:
+
+```bash
+source /opt/ros/humble/setup.bash
+cd ~/water_agent_ws/water_agent_system
+
+python3 run_offline_pipeline.py --stage build_ground_dem --case playground_pit_dry_baseline_001
+python3 run_offline_pipeline.py --stage build_surface_dem --case playground_pit_water_sim_6cm_001
+python3 run_offline_pipeline.py --stage surface_depth --case playground_pit_water_sim_6cm_001
+python3 run_offline_pipeline.py --stage surface_depth_eval --case playground_pit_water_sim_6cm_001
+```
+
+Generated scene-specific arrays such as
+`data/dem/playground_pit/ground_dem.npy` and
+`data/hydrology/playground_pit_water_sim_6cm_001/surface_water_depth_map.npy`
+are local generated data products and may be ignored by Git.

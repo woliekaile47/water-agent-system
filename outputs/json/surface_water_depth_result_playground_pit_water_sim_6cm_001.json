@@ -1,0 +1,33 @@
+{
+  "stage": "S4_real_surface_difference_depth",
+  "case_name": "playground_pit_water_sim_6cm_001",
+  "depth_source": "offline_lidar_surface_dem_difference",
+  "source_surface_dem": "/home/wlkl/water_agent_ws/water_agent_system/data/surface_dem/playground_pit_water_sim_6cm_001/surface_dem.npy",
+  "source_ground_dem": "/home/wlkl/water_agent_ws/water_agent_system/data/dem/playground_pit/ground_dem_interpolated.npy",
+  "source_ground_valid_mask": "/home/wlkl/water_agent_ws/water_agent_system/data/dem/playground_pit/ground_dem_valid_mask.npy",
+  "source_water_region_mask": "ground_valid_mask",
+  "scene_type": "playground_pit",
+  "matched_dry_baseline": "playground_pit_dry_baseline_001",
+  "known_depth_cm": 6.0,
+  "valid_depth_cell_count": 1960,
+  "water_region_cell_count": 13994,
+  "valid_depth_ratio_in_water_region": 0.14006002572531084,
+  "max_depth_cm": 149.01551008224487,
+  "mean_depth_cm": 39.01441784499555,
+  "median_depth_cm": 36.26929521560669,
+  "min_depth_cm": 0.5007743835449219,
+  "min_valid_depth_m": 0.005,
+  "max_valid_depth_m": 1.5,
+  "negative_depth_policy": "set_zero",
+  "note": "This depth map is computed from offline LiDAR surface DEM minus ground DEM. It does not use configured_depth. Accuracy depends on calibration, ROI mapping, point density, and water surface returns.",
+  "warning": [
+    "82 cells exceeded max_valid_depth_m and were marked invalid"
+  ],
+  "timestamp": "2026-07-05T12:44:36.247304+00:00",
+  "output_files": {
+    "surface_water_depth_map": "/home/wlkl/water_agent_ws/water_agent_system/data/hydrology/playground_pit_water_sim_6cm_001/surface_water_depth_map.npy",
+    "surface_water_depth_valid_mask": "/home/wlkl/water_agent_ws/water_agent_system/data/hydrology/playground_pit_water_sim_6cm_001/surface_water_depth_valid_mask.npy",
+    "surface_water_depth_result_json": "/home/wlkl/water_agent_ws/water_agent_system/outputs/json/surface_water_depth_result_playground_pit_water_sim_6cm_001.json",
+    "surface_water_depth_heatmap": "/home/wlkl/water_agent_ws/water_agent_system/outputs/figures/surface_water_depth_heatmap_playground_pit_water_sim_6cm_001.png"
+  }
+}

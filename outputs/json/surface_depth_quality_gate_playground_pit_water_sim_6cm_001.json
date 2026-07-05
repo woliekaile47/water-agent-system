@@ -1,0 +1,61 @@
+{
+  "stage": "S4_real_surface_depth_quality_gate",
+  "case_name": "playground_pit_water_sim_6cm_001",
+  "quality_status": "reject",
+  "can_enter_s5_s8_warning_chain": false,
+  "source_surface_depth_accuracy_json": "/home/wlkl/water_agent_ws/water_agent_system/outputs/json/surface_depth_accuracy_playground_pit_water_sim_6cm_001.json",
+  "source_surface_water_depth_result_json": "/home/wlkl/water_agent_ws/water_agent_system/outputs/json/surface_water_depth_result_playground_pit_water_sim_6cm_001.json",
+  "source_surface_depth_quality_diagnosis_json": "/home/wlkl/water_agent_ws/water_agent_system/outputs/json/surface_depth_quality_diagnosis.json",
+  "known_depth_cm": 6.0,
+  "mean_depth_cm": 39.01441784499555,
+  "median_depth_cm": 36.26929521560669,
+  "max_depth_cm": 149.01551008224487,
+  "mean_error_cm": 33.01441784499555,
+  "abs_mean_error_cm": 33.01441784499555,
+  "valid_depth_ratio_in_water_region": 0.14006002572531084,
+  "high_error_warning": true,
+  "coverage_warning": true,
+  "sparse_point_warning": false,
+  "extreme_outlier_warning": true,
+  "reject_reasons": [
+    "low_coverage: valid_depth_ratio_in_water_region=0.1401 < 0.15",
+    "high_mean_error: abs(mean_error_cm)=33.01 cm > 20.00 cm",
+    "extreme_max_depth_outlier: max_depth_cm=149.02 cm > known_depth_cm + 50.00 cm (56.00 cm)",
+    "combined_quality_failure: high_error_warning=True and coverage_warning=True"
+  ],
+  "warning_reasons": [],
+  "gate_checks": [
+    {
+      "name": "coverage",
+      "status": "reject",
+      "value": 0.14006002572531084
+    },
+    {
+      "name": "accuracy_against_known_depth",
+      "status": "reject",
+      "value": 33.01441784499555
+    },
+    {
+      "name": "extreme_outlier",
+      "status": "reject",
+      "value": 149.01551008224487
+    },
+    {
+      "name": "combined_diagnosis_warnings",
+      "status": "reject"
+    }
+  ],
+  "thresholds": {
+    "coverage_reject_below": 0.15,
+    "coverage_warning_below": 0.3,
+    "mean_error_reject_abs_gt_cm": 20.0,
+    "mean_error_warning_abs_gt_cm": 10.0,
+    "max_depth_reject_gt_known_plus_cm": 50.0
+  },
+  "note": "S4-real quality gate is experimental. Rejected results are diagnostic artifacts only and must not enter the formal S5-S8 warning chain.",
+  "timestamp": "2026-07-05T12:55:38.859336+00:00",
+  "output_files": {
+    "surface_depth_quality_gate_json": "/home/wlkl/water_agent_ws/water_agent_system/outputs/json/surface_depth_quality_gate_playground_pit_water_sim_6cm_001.json",
+    "surface_depth_quality_gate_report": "/home/wlkl/water_agent_ws/water_agent_system/outputs/reports/surface_depth_quality_gate_report.md"
+  }
+}

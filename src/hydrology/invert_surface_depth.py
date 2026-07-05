@@ -17,7 +17,13 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from src.dem.build_surface_dem_from_rosbag import get_case_config, load_yaml, resolve_project_path
+from src.dem.build_surface_dem_from_rosbag import (
+    get_case_config,
+    get_ground_dem_input_paths,
+    load_water_region_mask,
+    load_yaml,
+    resolve_project_path,
+)
 
 
 NOTE = (
@@ -92,15 +98,20 @@ def invert_surface_depth(
 
     surface_dem_path = surface_dir / "surface_dem.npy"
     surface_valid_path = surface_dir / "surface_dem_valid_mask.npy"
-    ground_dem_path = resolve_project_path(root, config["dem"]["ground_dem_interpolated_path"])
-    ground_valid_path = resolve_project_path(root, config["dem"]["ground_dem_valid_mask_path"])
-    water_mask_path = resolve_project_path(root, config["fusion"]["water_region_mask_path"])
+    ground_inputs = get_ground_dem_input_paths(config, root, case_config)
+    ground_dem_path = Path(ground_inputs["ground_dem"])
+    ground_valid_path = Path(ground_inputs["ground_valid_mask"])
+    water_mask_path = ground_inputs.get("water_region_mask")
 
     surface_dem = np.load(surface_dem_path)
     surface_valid_mask = np.load(surface_valid_path).astype(bool)
     ground_dem = np.load(ground_dem_path)
     ground_valid_mask = np.load(ground_valid_path).astype(bool)
-    water_region_mask = np.load(water_mask_path).astype(bool)
+    water_region_mask, water_region_source = load_water_region_mask(
+        water_mask_path,  # type: ignore[arg-type]
+        ground_valid_mask,
+        str(ground_inputs.get("water_region_mode", "configured_mask")),
+    )
 
     if not (surface_dem.shape == surface_valid_mask.shape == ground_dem.shape == ground_valid_mask.shape == water_region_mask.shape):
         raise ValueError(
@@ -169,7 +180,10 @@ def invert_surface_depth(
         "depth_source": "offline_lidar_surface_dem_difference",
         "source_surface_dem": str(surface_dem_path),
         "source_ground_dem": str(ground_dem_path),
-        "source_water_region_mask": str(water_mask_path),
+        "source_ground_valid_mask": str(ground_valid_path),
+        "source_water_region_mask": str(water_region_source),
+        "scene_type": case_config.get("scene_type", ""),
+        "matched_dry_baseline": case_config.get("matched_dry_baseline"),
         "known_depth_cm": case_config.get("known_depth_cm"),
         "valid_depth_cell_count": valid_depth_cell_count,
         "water_region_cell_count": water_region_cell_count,

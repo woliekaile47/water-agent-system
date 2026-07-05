@@ -6,7 +6,7 @@
 | S2 | Complete | Ground DEM baseline |
 | S3 | Complete | Manual polygon water candidate mask |
 | S4 | Complete | Region-level mask-to-DEM mapping + MVP water depth |
-| S4-real | Initial complete, dormitory validation in progress | Offline LiDAR surface DEM difference depth inversion; 39cm is close to manual depth, 13cm is clearly overestimated and needs playground re-test |
+| S4-real | Experimental, quality-gated | Offline LiDAR surface DEM difference depth inversion; 39cm dormitory case shows the chain is feasible, while 13cm dormitory and playground 6cm cases expose overestimation / low-coverage quality issues |
 | S5 | Complete | Area and volume calculation |
 | S6 | Complete | Offline mock weather correction |
 | S7-A | Complete | Deterministic rule engine |
@@ -42,6 +42,30 @@ manual known depth, while the 13cm scene is clearly overestimated. This
 is a diagnostic result, not a tuned accuracy claim. A playground open
 scene should be recollected with a new dry baseline and water cases for
 more formal S4-real validation.
+
+S4-real now includes a quality gate before downstream warning use. The
+gate labels each case as `pass`, `warning`, or `reject` based on valid
+depth coverage, known-depth error when available, extreme outlier depth,
+and diagnosis warnings. Results that fail the gate are retained for
+diagnosis only and must not enter the formal S5-S8 warning chain.
+
+## Playground Pit 6cm Scene
+
+Collected playground pit rosbags:
+
+- `playground_pit_dry_baseline_001`
+- `playground_pit_water_sim_6cm_001`
+
+The `playground_pit` scene is a controlled pit water-depth validation
+scene with `known_depth_cm = 6.0`. It is used as the second S4-real
+validation scene. The 6cm water case must use the ground DEM built from
+`playground_pit_dry_baseline_001`; it must not use the dormitory ground
+DEM or another playground baseline.
+
+The current playground 6cm S4-real result is clearly overestimated and
+has low valid-depth coverage. Its quality gate status is expected to be
+`reject`, so it is preserved as a diagnostic result and is not allowed
+to enter S5-S8 warning generation.
 
 ## MVP Simulation Boundary
 

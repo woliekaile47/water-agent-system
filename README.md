@@ -116,6 +116,42 @@ Run quality diagnosis for both cases:
 python3 src/evaluation/diagnose_surface_depth_quality.py --config configs/surface_dem_config.yaml
 ```
 
+Run the S4-real quality gate for a case:
+
+```bash
+python3 run_offline_pipeline.py \
+  --stage surface_depth_quality_gate \
+  --case playground_pit_water_sim_6cm_001
+```
+
+The quality gate labels each S4-real result as `pass`, `warning`, or
+`reject` before it can be considered for downstream S5-S8 warning use.
+Rejected S4-real results are saved as diagnostic artifacts only and
+must not enter the formal warning chain.
+
+Run the playground pit 6cm scene:
+
+```bash
+source /opt/ros/humble/setup.bash
+cd ~/water_agent_ws/water_agent_system
+
+python3 run_offline_pipeline.py --stage build_ground_dem --case playground_pit_dry_baseline_001
+python3 run_offline_pipeline.py --stage build_surface_dem --case playground_pit_water_sim_6cm_001
+python3 run_offline_pipeline.py --stage surface_depth --case playground_pit_water_sim_6cm_001
+python3 run_offline_pipeline.py --stage surface_depth_eval --case playground_pit_water_sim_6cm_001
+
+python3 src/evaluation/diagnose_surface_depth_quality.py \
+  --config configs/surface_dem_config.yaml \
+  --cases playground_pit_water_sim_6cm_001
+```
+
+The playground pit scene uses `known_depth_cm = 6.0`. Its water case must
+use the scene-specific ground DEM built from
+`playground_pit_dry_baseline_001`; it must not use the dormitory ground DEM.
+The current playground 6cm result is clearly overestimated and has low
+valid-depth coverage, so the quality gate rejects it for downstream
+warning use.
+
 Pipeline entrypoint equivalents:
 
 ```bash
