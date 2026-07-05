@@ -270,13 +270,17 @@ def main() -> None:
         audit_files = write_audit_log(config_path, PROJECT_ROOT)
         figure_files = visualize_warning_summary(config_path, PROJECT_ROOT)
         print("[pipeline] S8 warning_report complete")
+        print(f"[pipeline] forecast source: {metadata.get('forecast_source')}")
+        print(f"[pipeline] S7 pipeline used: {metadata.get('s7_pipeline_used')}")
         print(f"[pipeline] overall warning level: {metadata['overall_warning_level']}")
         print(f"[pipeline] current mean depth cm: {metadata['current_mean_depth_cm']:.2f}")
         for item in metadata["forecast_warning_results"]:
+            confidence_text = item.get("physical_confidence")
+            confidence_suffix = f", physical confidence: {confidence_text}" if confidence_text else ""
             print(
                 "[pipeline] "
                 f"{item['horizon_min']} min warning level: {item['warning_level']} "
-                f"({item['forecast_depth_cm']:.2f} cm)"
+                f"({item['forecast_depth_cm']:.2f} cm{confidence_suffix})"
             )
         print(
             "[pipeline] time to orange threshold min: "
@@ -306,6 +310,15 @@ def main() -> None:
         print(f"[pipeline] water volume m3: {metadata['water_volume_m3']}")
         print(f"[pipeline] rainfall intensity: {metadata['rainfall_intensity_mm_h']}")
         print(f"[pipeline] weather correction factor: {metadata['weather_correction_factor']}")
+        print(f"[pipeline] forecast source: {metadata.get('forecast_source')}")
+        print(
+            "[pipeline] final forecast 5/15/30/60 min cm: "
+            f"{metadata.get('final_forecast_5min_cm')} / "
+            f"{metadata.get('final_forecast_15min_cm')} / "
+            f"{metadata.get('final_forecast_30min_cm')} / "
+            f"{metadata.get('final_forecast_60min_cm')}"
+        )
+        print(f"[pipeline] physical confidence summary: {metadata.get('physical_confidence_summary')}")
         print(f"[pipeline] sqlite db path: {metadata['sqlite_db_path']}")
         return
 

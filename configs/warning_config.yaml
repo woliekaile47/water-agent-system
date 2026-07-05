@@ -1,8 +1,12 @@
 warning:
   mode: "offline_mvp_warning"
-  description: "S8 MVP warning decision and audit report based on deterministic forecast result."
+  description: "S8 MVP warning decision and audit report based on S7-C final forecast when available."
 
   input:
+    final_forecast_result_json: "outputs/json/final_forecast_result.json"
+    physical_constraint_result_json: "outputs/json/physical_constraint_result.json"
+    case_retrieval_result_json: "outputs/json/case_retrieval_result.json"
+    corrected_forecast_result_json: "outputs/json/corrected_forecast_result.json"
     deterministic_forecast_result_json: "outputs/json/deterministic_forecast_result.json"
     area_volume_result_json: "outputs/json/water_area_volume_result.json"
     weather_correction_result_json: "outputs/json/weather_correction_result.json"
@@ -28,6 +32,6 @@ warning:
   confidence:
     mode: "mvp_rule_based"
     default_confidence_score: 0.75
-    note: "MVP confidence is rule-based placeholder. Full confidence will be computed after S7-B/S7-C."
+    note: "MVP confidence is rule-based placeholder. S7-C physical confidence is reported when final forecast is available."
 
-  mvp_note: "S8 MVP uses deterministic forecast output from configured_mvp_simulation, offline_mock_weather, and offline_mock_depth_history. It is not final real emergency dispatch advice."
+  mvp_note: "S8 MVP uses S7-C final forecast when available, with fallback to S7-A deterministic forecast. Current results are based on configured_mvp_simulation, offline_mock_weather, offline_mock_depth_history, offline_mock_case_library, and simplified_water_balance_mvp. It is not final real emergency dispatch advice."

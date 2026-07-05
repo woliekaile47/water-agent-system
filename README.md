@@ -371,3 +371,32 @@ Generated Agent outputs:
 Future versions can split this MVP into a perception Agent, modeling
 Agent, meteorology Agent, reasoning Agent, warning Agent, and audit
 Agent.
+
+## Integrated S7 Hybrid Reasoning And S8 Warning
+
+The current offline pipeline integrates the full S7 three-layer hybrid
+reasoning chain before S8 warning generation:
+
+1. **S7-A deterministic forecast** reads S5 area/volume results and S6
+   weather correction, then produces deterministic 5/15/30/60 minute
+   forecast depths.
+2. **S7-B case retrieval correction** reads the S7-A forecast and an
+   `offline_mock_case_library`, then applies median historical bias from
+   top-k mock similar cases.
+3. **S7-C physical constraint check** reads the S7-B corrected forecast
+   and applies `simplified_water_balance_mvp` constraints to produce
+   `final_forecast_result.json`.
+4. **S8 warning decision** now prefers
+   `outputs/json/final_forecast_result.json` when it exists. If it is
+   missing, S8 falls back to
+   `outputs/json/deterministic_forecast_result.json` and records a
+   fallback warning in `warning_decision_result.json`.
+5. **Agent MVP** now schedules the offline chain:
+   `area_volume -> weather_correction -> deterministic_forecast ->
+   case_retrieval -> physical_constraint -> warning_report`.
+
+This remains an MVP simulation. The current chain uses
+`configured_mvp_simulation`, `offline_mock_weather`,
+`offline_mock_depth_history`, `offline_mock_case_library`, and
+`simplified_water_balance_mvp`. It is not a real-time emergency dispatch
+system and not a final hydrodynamic/SWMM forecast.

@@ -1,7 +1,7 @@
 agent:
   name: "water_agent_mvp"
   mode: "offline_pipeline_agent"
-  description: "MVP Agent for orchestrating S4-S8 offline waterlogging pipeline."
+  description: "MVP Agent for orchestrating S4-S8 and S7-A/B/C offline waterlogging pipeline."
 
   project_root: "."
 
@@ -16,6 +16,12 @@ agent:
       - name: "deterministic_forecast"
         command_stage: "deterministic_forecast"
         config: "configs/prediction_config.yaml"
+      - name: "case_retrieval"
+        command_stage: "case_retrieval"
+        config: "configs/case_retrieval_config.yaml"
+      - name: "physical_constraint"
+        command_stage: "physical_constraint"
+        config: "configs/physical_constraint_config.yaml"
       - name: "warning_report"
         command_stage: "warning_report"
         config: "configs/warning_config.yaml"
@@ -24,6 +30,8 @@ agent:
     roi_mapping_config: "configs/roi_mapping.yaml"
     weather_config: "configs/weather_config.yaml"
     prediction_config: "configs/prediction_config.yaml"
+    case_retrieval_config: "configs/case_retrieval_config.yaml"
+    physical_constraint_config: "configs/physical_constraint_config.yaml"
     warning_config: "configs/warning_config.yaml"
 
   outputs:
@@ -41,7 +49,11 @@ agent:
     area_volume_result: "outputs/json/water_area_volume_result.json"
     weather_correction_result: "outputs/json/weather_correction_result.json"
     deterministic_forecast_result: "outputs/json/deterministic_forecast_result.json"
+    case_retrieval_result: "outputs/json/case_retrieval_result.json"
+    corrected_forecast_result: "outputs/json/corrected_forecast_result.json"
+    physical_constraint_result: "outputs/json/physical_constraint_result.json"
+    final_forecast_result: "outputs/json/final_forecast_result.json"
     warning_decision_result: "outputs/json/warning_decision_result.json"
     warning_report: "outputs/reports/warning_report.md"
 
-  mvp_note: "Agent MVP orchestrates offline S4-S8 pipeline using configured_mvp_simulation, offline_mock_weather, and offline_mock_depth_history. It is not real-time emergency dispatch."
+  mvp_note: "Agent MVP orchestrates offline S4-S8 plus S7-A/B/C pipeline using configured_mvp_simulation, offline_mock_weather, offline_mock_depth_history, offline_mock_case_library, and simplified_water_balance_mvp. It is not real-time emergency dispatch."

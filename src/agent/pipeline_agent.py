@@ -109,7 +109,13 @@ def collect_metrics(project_root: Path, agent_config: dict[str, Any]) -> dict[st
     expected = agent_config["expected_outputs"]
     area_volume = load_json(resolve_project_path(project_root, expected["area_volume_result"]))
     weather = load_json(resolve_project_path(project_root, expected["weather_correction_result"]))
+    final_forecast = load_json(resolve_project_path(project_root, expected["final_forecast_result"]))
+    physical_constraint = load_json(resolve_project_path(project_root, expected["physical_constraint_result"]))
     warning = load_json(resolve_project_path(project_root, expected["warning_decision_result"]))
+    final_by_horizon = {
+        int(item["horizon_min"]): float(item["final_forecast_depth_cm"])
+        for item in final_forecast.get("final_forecast_results", [])
+    }
     return {
         "overall_warning_level": warning.get("overall_warning_level"),
         "current_mean_depth_cm": float(warning["current_mean_depth_cm"]),
@@ -117,6 +123,17 @@ def collect_metrics(project_root: Path, agent_config: dict[str, Any]) -> dict[st
         "water_volume_m3": float(area_volume["water_volume_m3"]),
         "rainfall_intensity_mm_h": float(weather["current_rainfall_intensity_mm_h"]),
         "weather_correction_factor": float(weather["weather_correction_factor"]),
+        "final_forecast_5min_cm": final_by_horizon.get(5),
+        "final_forecast_15min_cm": final_by_horizon.get(15),
+        "final_forecast_30min_cm": final_by_horizon.get(30),
+        "final_forecast_60min_cm": final_by_horizon.get(60),
+        "final_forecast_results": final_forecast.get("final_forecast_results", []),
+        "physical_confidence_summary": final_forecast.get(
+            "physical_confidence_summary",
+            physical_constraint.get("physical_confidence_summary"),
+        ),
+        "forecast_source": warning.get("forecast_source"),
+        "s7_pipeline_used": warning.get("s7_pipeline_used", []),
     }
 
 
@@ -125,6 +142,12 @@ def collect_artifacts(project_root: Path) -> list[dict[str, Any]]:
         ("area_volume_result", "outputs/json/water_area_volume_result.json"),
         ("weather_correction_result", "outputs/json/weather_correction_result.json"),
         ("deterministic_forecast_result", "outputs/json/deterministic_forecast_result.json"),
+        ("case_retrieval_result", "outputs/json/case_retrieval_result.json"),
+        ("corrected_forecast_result", "outputs/json/corrected_forecast_result.json"),
+        ("physical_constraint_result", "outputs/json/physical_constraint_result.json"),
+        ("final_forecast_result", "outputs/json/final_forecast_result.json"),
+        ("case_retrieval_correction", "outputs/figures/case_retrieval_correction.png"),
+        ("physical_constraint_summary", "outputs/figures/physical_constraint_summary.png"),
         ("warning_decision_result", "outputs/json/warning_decision_result.json"),
         ("warning_report", "outputs/reports/warning_report.md"),
         ("warning_summary", "outputs/figures/warning_summary.png"),
@@ -194,6 +217,14 @@ def run_agent(config_path: str | Path, project_root: str | Path | None = None) -
         "water_volume_m3": None,
         "rainfall_intensity_mm_h": None,
         "weather_correction_factor": None,
+        "final_forecast_5min_cm": None,
+        "final_forecast_15min_cm": None,
+        "final_forecast_30min_cm": None,
+        "final_forecast_60min_cm": None,
+        "final_forecast_results": [],
+        "physical_confidence_summary": None,
+        "forecast_source": None,
+        "s7_pipeline_used": [],
     }
 
     for stage in agent["pipeline"]["stages"]:
@@ -232,6 +263,18 @@ def run_agent(config_path: str | Path, project_root: str | Path | None = None) -
         water_volume_m3=metrics.get("water_volume_m3"),
         rainfall_intensity_mm_h=metrics.get("rainfall_intensity_mm_h"),
         weather_correction_factor=metrics.get("weather_correction_factor"),
+        final_forecast_5min_cm=metrics.get("final_forecast_5min_cm"),
+        final_forecast_15min_cm=metrics.get("final_forecast_15min_cm"),
+        final_forecast_30min_cm=metrics.get("final_forecast_30min_cm"),
+        final_forecast_60min_cm=metrics.get("final_forecast_60min_cm"),
+        physical_confidence_summary=json.dumps(
+            metrics.get("physical_confidence_summary"),
+            ensure_ascii=False,
+        )
+        if metrics.get("physical_confidence_summary") is not None
+        else None,
+        forecast_source=metrics.get("forecast_source"),
+        s7_pipeline_used=json.dumps(metrics.get("s7_pipeline_used", []), ensure_ascii=False),
     )
 
     artifacts = collect_artifacts(configured_project_root)
@@ -259,6 +302,14 @@ def run_agent(config_path: str | Path, project_root: str | Path | None = None) -
         "water_volume_m3": metrics.get("water_volume_m3"),
         "rainfall_intensity_mm_h": metrics.get("rainfall_intensity_mm_h"),
         "weather_correction_factor": metrics.get("weather_correction_factor"),
+        "final_forecast_5min_cm": metrics.get("final_forecast_5min_cm"),
+        "final_forecast_15min_cm": metrics.get("final_forecast_15min_cm"),
+        "final_forecast_30min_cm": metrics.get("final_forecast_30min_cm"),
+        "final_forecast_60min_cm": metrics.get("final_forecast_60min_cm"),
+        "final_forecast_results": metrics.get("final_forecast_results", []),
+        "physical_confidence_summary": metrics.get("physical_confidence_summary"),
+        "forecast_source": metrics.get("forecast_source"),
+        "s7_pipeline_used": metrics.get("s7_pipeline_used", []),
         "artifacts": artifacts,
         "sqlite_db_path": str(db_path),
         "mvp_note": mvp_note,
@@ -273,6 +324,15 @@ def run_agent(config_path: str | Path, project_root: str | Path | None = None) -
     print(f"[agent] water volume m3: {summary['water_volume_m3']}")
     print(f"[agent] rainfall intensity: {summary['rainfall_intensity_mm_h']}")
     print(f"[agent] weather correction factor: {summary['weather_correction_factor']}")
+    print(f"[agent] forecast source: {summary['forecast_source']}")
+    print(
+        "[agent] final forecast 5/15/30/60 min cm: "
+        f"{summary['final_forecast_5min_cm']} / "
+        f"{summary['final_forecast_15min_cm']} / "
+        f"{summary['final_forecast_30min_cm']} / "
+        f"{summary['final_forecast_60min_cm']}"
+    )
+    print(f"[agent] physical confidence summary: {summary['physical_confidence_summary']}")
     print(f"[agent] agent summary path: {data_summary}")
     print(f"[agent] output summary path: {output_summary}")
     print(f"[agent] sqlite db path: {db_path}")

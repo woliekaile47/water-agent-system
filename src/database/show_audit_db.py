@@ -29,8 +29,17 @@ def show_audit_db(db_path: str | Path, limit: int = 10) -> None:
             "  - "
             f"run_id={run['run_id']}, status={run['status']}, "
             f"overall={run['overall_warning_level']}, start={run['start_time']}, "
-            f"end={run['end_time']}"
+            f"end={run['end_time']}, forecast_source={run.get('forecast_source')}"
         )
+        if run.get("final_forecast_5min_cm") is not None:
+            print(
+                "    "
+                "final forecast 5/15/30/60 min cm: "
+                f"{run.get('final_forecast_5min_cm')} / "
+                f"{run.get('final_forecast_15min_cm')} / "
+                f"{run.get('final_forecast_30min_cm')} / "
+                f"{run.get('final_forecast_60min_cm')}"
+            )
 
     latest_run_id = recent_runs[0]["run_id"]
     print(f"[audit_db] stage_runs for latest run: {latest_run_id}")

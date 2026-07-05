@@ -1,6 +1,11 @@
 {
   "stage": "S8_warning_decision",
   "warning_mode": "offline_mvp_warning",
+  "forecast_source": "S7C_final_forecast",
+  "source_final_forecast_json": "/home/wlkl/water_agent_ws/water_agent_system/outputs/json/final_forecast_result.json",
+  "source_physical_constraint_json": "/home/wlkl/water_agent_ws/water_agent_system/outputs/json/physical_constraint_result.json",
+  "source_case_retrieval_json": "/home/wlkl/water_agent_ws/water_agent_system/outputs/json/case_retrieval_result.json",
+  "source_corrected_forecast_json": "/home/wlkl/water_agent_ws/water_agent_system/outputs/json/corrected_forecast_result.json",
   "source_deterministic_forecast_json": "/home/wlkl/water_agent_ws/water_agent_system/outputs/json/deterministic_forecast_result.json",
   "source_area_volume_json": "/home/wlkl/water_agent_ws/water_agent_system/outputs/json/water_area_volume_result.json",
   "source_weather_correction_json": "/home/wlkl/water_agent_ws/water_agent_system/outputs/json/weather_correction_result.json",
@@ -14,41 +19,74 @@
   "forecast_warning_results": [
     {
       "horizon_min": 5,
-      "forecast_depth_cm": 59.80557764567436,
-      "warning_level": "orange",
-      "source_warning_level": "orange"
+      "forecast_depth_cm": 48.622276346842185,
+      "warning_level": "yellow",
+      "source_warning_level": "yellow",
+      "physical_confidence": "low",
+      "physical_check": "adjusted",
+      "source_corrected_depth_cm": 56.30557764567436
     },
     {
       "horizon_min": 15,
-      "forecast_depth_cm": 90.13137543359568,
+      "forecast_depth_cm": 58.831471537099134,
       "warning_level": "orange",
-      "source_warning_level": "orange"
+      "source_warning_level": "orange",
+      "physical_confidence": "low",
+      "physical_check": "adjusted",
+      "source_corrected_depth_cm": 84.13137543359568
     },
     {
       "horizon_min": 30,
-      "forecast_depth_cm": 100.0,
+      "forecast_depth_cm": 56.210228264745744,
       "warning_level": "orange",
-      "source_warning_level": "orange"
+      "source_warning_level": "orange",
+      "physical_confidence": "low",
+      "physical_check": "adjusted",
+      "source_corrected_depth_cm": 90.0
     },
     {
       "horizon_min": 60,
-      "forecast_depth_cm": 100.0,
-      "warning_level": "orange",
-      "source_warning_level": "orange"
+      "forecast_depth_cm": 42.0,
+      "warning_level": "yellow",
+      "source_warning_level": "yellow",
+      "physical_confidence": "low",
+      "physical_check": "adjusted",
+      "source_corrected_depth_cm": 84.0
     }
   ],
   "overall_warning_level": "orange",
-  "action_suggestion": "Orange warning: high risk. Recommend immediate on-site verification, traffic restriction, or temporary closure. Orange threshold may be reached very soon. Immediate action is recommended.",
+  "action_suggestion": "Orange warning: high risk. Recommend immediate on-site verification, traffic restriction, or temporary closure. First orange forecast horizon: 15 min.",
   "time_to_thresholds_min": {
-    "blue": 0.0,
-    "yellow": 0.0,
-    "orange": 1.7665887261241657
+    "blue": 5.0,
+    "yellow": 5.0,
+    "orange": 15.0
+  },
+  "physical_confidence_summary": {
+    "overall_physical_confidence": "low",
+    "counts": {
+      "high": 0,
+      "medium": 0,
+      "low": 4
+    }
+  },
+  "s7_pipeline_used": [
+    "S7A",
+    "S7B",
+    "S7C"
+  ],
+  "s7_summary": {
+    "deterministic_forecast_available": true,
+    "case_retrieval_available": true,
+    "corrected_forecast_available": true,
+    "physical_constraint_available": true,
+    "final_forecast_available": true
   },
   "confidence_mode": "mvp_rule_based",
   "confidence_score": 0.75,
-  "mvp_note": "S8 MVP uses deterministic forecast output from configured_mvp_simulation, offline_mock_weather, and offline_mock_depth_history. It is not final real emergency dispatch advice.",
-  "upstream_mvp_note": "S7-A uses configured_mvp_simulation depth, offline_mock_weather, and offline_mock_depth_history to validate deterministic forecasting pipeline. It is not final real short-term waterlogging forecast.",
-  "timestamp": "2026-07-04T16:24:37.044544+00:00",
+  "mvp_note": "S8 MVP uses S7-C final forecast when available, with fallback to S7-A deterministic forecast. Current results are based on configured_mvp_simulation, offline_mock_weather, offline_mock_depth_history, offline_mock_case_library, and simplified_water_balance_mvp. It is not final real emergency dispatch advice.",
+  "upstream_mvp_note": "S7-C uses simplified MVP water balance to validate physical constraint checking. It is not a full hydrodynamic model or final real forecast.",
+  "warnings": [],
+  "timestamp": "2026-07-05T04:09:24.077970+00:00",
   "output_files": {
     "data_warning_decision": "/home/wlkl/water_agent_ws/water_agent_system/data/warnings/warning_decision_result.json",
     "output_warning_decision": "/home/wlkl/water_agent_ws/water_agent_system/outputs/json/warning_decision_result.json",

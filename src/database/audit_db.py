@@ -61,6 +61,22 @@ def init_db(db_path: str | Path) -> None:
             );
             """
         )
+        existing_columns = {
+            row["name"]
+            for row in conn.execute("PRAGMA table_info(pipeline_runs)").fetchall()
+        }
+        optional_columns = {
+            "final_forecast_5min_cm": "REAL",
+            "final_forecast_15min_cm": "REAL",
+            "final_forecast_30min_cm": "REAL",
+            "final_forecast_60min_cm": "REAL",
+            "physical_confidence_summary": "TEXT",
+            "forecast_source": "TEXT",
+            "s7_pipeline_used": "TEXT",
+        }
+        for column_name, column_type in optional_columns.items():
+            if column_name not in existing_columns:
+                conn.execute(f"ALTER TABLE pipeline_runs ADD COLUMN {column_name} {column_type}")
 
 
 def insert_pipeline_run_start(
@@ -93,6 +109,13 @@ def update_pipeline_run_end(
     water_volume_m3: float | None = None,
     rainfall_intensity_mm_h: float | None = None,
     weather_correction_factor: float | None = None,
+    final_forecast_5min_cm: float | None = None,
+    final_forecast_15min_cm: float | None = None,
+    final_forecast_30min_cm: float | None = None,
+    final_forecast_60min_cm: float | None = None,
+    physical_confidence_summary: str | None = None,
+    forecast_source: str | None = None,
+    s7_pipeline_used: str | None = None,
 ) -> None:
     with _connect(db_path) as conn:
         conn.execute(
@@ -105,7 +128,14 @@ def update_pipeline_run_end(
                 water_area_m2 = ?,
                 water_volume_m3 = ?,
                 rainfall_intensity_mm_h = ?,
-                weather_correction_factor = ?
+                weather_correction_factor = ?,
+                final_forecast_5min_cm = ?,
+                final_forecast_15min_cm = ?,
+                final_forecast_30min_cm = ?,
+                final_forecast_60min_cm = ?,
+                physical_confidence_summary = ?,
+                forecast_source = ?,
+                s7_pipeline_used = ?
             WHERE run_id = ?
             """,
             (
@@ -117,6 +147,13 @@ def update_pipeline_run_end(
                 water_volume_m3,
                 rainfall_intensity_mm_h,
                 weather_correction_factor,
+                final_forecast_5min_cm,
+                final_forecast_15min_cm,
+                final_forecast_30min_cm,
+                final_forecast_60min_cm,
+                physical_confidence_summary,
+                forecast_source,
+                s7_pipeline_used,
                 run_id,
             ),
         )

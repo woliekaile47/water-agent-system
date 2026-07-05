@@ -88,7 +88,7 @@
   },
   "mvp_note": "S7-A uses configured_mvp_simulation depth, offline_mock_weather, and offline_mock_depth_history to validate deterministic forecasting pipeline. It is not final real short-term waterlogging forecast.",
   "config_note": "S7-A MVP performs deterministic rule-engine forecasting only. Case retrieval and physical constraint layers will be added in S7-B/S7-C.",
-  "timestamp": "2026-07-04T16:24:35.160240+00:00",
+  "timestamp": "2026-07-05T04:09:16.790442+00:00",
   "warning": [
     "forecast depth at 30 min clipped from 135.62 to max_reasonable_depth_cm=100.00",
     "forecast depth at 60 min clipped from 226.60 to max_reasonable_depth_cm=100.00"
