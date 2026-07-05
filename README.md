@@ -51,6 +51,26 @@ Key outputs:
 - `outputs/reports/warning_report.md`
 - `outputs/figures/warning_summary.png`
 
+## Streamlit Dashboard
+
+The project includes a Streamlit dashboard（可视化看板） for teacher
+review, classmate collaboration, and offline project demos. It displays
+pipeline diagrams, result figures, JSON metrics, warning reports, quality
+gate（质量门控） conclusions, S4-real diagnostics, and Agent audit
+summaries.
+
+Run:
+
+```bash
+cd ~/water_agent_ws/water_agent_system
+streamlit run dashboard/app.py
+```
+
+If the browser does not open automatically, open the local URL printed by
+Streamlit, usually `http://localhost:8501`. The dashboard only reads
+offline output files and does not start LiDAR, camera, ROS nodes, or
+rosbag replay.
+
 ## Important Notes
 
 - The current demo does not start real-time devices.

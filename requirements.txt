@@ -3,3 +3,5 @@ matplotlib
 PyYAML
 pillow
 opencv-python
+streamlit
+pandas
