@@ -1,0 +1,484 @@
+{
+  "stage": "project_reproducibility_health_check",
+  "project_root": "/home/wlkl/water_agent_ws/water_agent_system",
+  "health_status": "pass",
+  "counts": {
+    "total_checks": 52,
+    "ok": 45,
+    "missing_required": 0,
+    "missing_optional": 0,
+    "ignored_large_file": 7
+  },
+  "checks": [
+    {
+      "category": "directory",
+      "path": "configs",
+      "expected_type": "directory",
+      "required": true,
+      "exists": true,
+      "status": "ok",
+      "note": ""
+    },
+    {
+      "category": "directory",
+      "path": "data/dem",
+      "expected_type": "directory",
+      "required": true,
+      "exists": true,
+      "status": "ok",
+      "note": ""
+    },
+    {
+      "category": "directory",
+      "path": "data/masks",
+      "expected_type": "directory",
+      "required": true,
+      "exists": true,
+      "status": "ok",
+      "note": ""
+    },
+    {
+      "category": "directory",
+      "path": "data/fusion",
+      "expected_type": "directory",
+      "required": true,
+      "exists": true,
+      "status": "ok",
+      "note": ""
+    },
+    {
+      "category": "directory",
+      "path": "data/hydrology",
+      "expected_type": "directory",
+      "required": true,
+      "exists": true,
+      "status": "ok",
+      "note": ""
+    },
+    {
+      "category": "directory",
+      "path": "data/meteorology",
+      "expected_type": "directory",
+      "required": true,
+      "exists": true,
+      "status": "ok",
+      "note": ""
+    },
+    {
+      "category": "directory",
+      "path": "data/reasoning",
+      "expected_type": "directory",
+      "required": true,
+      "exists": true,
+      "status": "ok",
+      "note": ""
+    },
+    {
+      "category": "directory",
+      "path": "data/warnings",
+      "expected_type": "directory",
+      "required": true,
+      "exists": true,
+      "status": "ok",
+      "note": ""
+    },
+    {
+      "category": "directory",
+      "path": "data/audit_logs",
+      "expected_type": "directory",
+      "required": true,
+      "exists": true,
+      "status": "ok",
+      "note": ""
+    },
+    {
+      "category": "directory",
+      "path": "data/db",
+      "expected_type": "directory",
+      "required": true,
+      "exists": true,
+      "status": "ok",
+      "note": ""
+    },
+    {
+      "category": "directory",
+      "path": "outputs/json",
+      "expected_type": "directory",
+      "required": true,
+      "exists": true,
+      "status": "ok",
+      "note": ""
+    },
+    {
+      "category": "directory",
+      "path": "outputs/figures",
+      "expected_type": "directory",
+      "required": true,
+      "exists": true,
+      "status": "ok",
+      "note": ""
+    },
+    {
+      "category": "directory",
+      "path": "outputs/reports",
+      "expected_type": "directory",
+      "required": true,
+      "exists": true,
+      "status": "ok",
+      "note": ""
+    },
+    {
+      "category": "directory",
+      "path": "src/agent",
+      "expected_type": "directory",
+      "required": true,
+      "exists": true,
+      "status": "ok",
+      "note": ""
+    },
+    {
+      "category": "directory",
+      "path": "src/database",
+      "expected_type": "directory",
+      "required": true,
+      "exists": true,
+      "status": "ok",
+      "note": ""
+    },
+    {
+      "category": "directory",
+      "path": "scripts",
+      "expected_type": "directory",
+      "required": true,
+      "exists": true,
+      "status": "ok",
+      "note": ""
+    },
+    {
+      "category": "config",
+      "path": "configs/roi_mapping.yaml",
+      "expected_type": "file",
+      "required": true,
+      "exists": true,
+      "status": "ok",
+      "note": ""
+    },
+    {
+      "category": "config",
+      "path": "configs/weather_config.yaml",
+      "expected_type": "file",
+      "required": true,
+      "exists": true,
+      "status": "ok",
+      "note": ""
+    },
+    {
+      "category": "config",
+      "path": "configs/prediction_config.yaml",
+      "expected_type": "file",
+      "required": true,
+      "exists": true,
+      "status": "ok",
+      "note": ""
+    },
+    {
+      "category": "config",
+      "path": "configs/case_retrieval_config.yaml",
+      "expected_type": "file",
+      "required": true,
+      "exists": true,
+      "status": "ok",
+      "note": ""
+    },
+    {
+      "category": "config",
+      "path": "configs/physical_constraint_config.yaml",
+      "expected_type": "file",
+      "required": true,
+      "exists": true,
+      "status": "ok",
+      "note": ""
+    },
+    {
+      "category": "config",
+      "path": "configs/warning_config.yaml",
+      "expected_type": "file",
+      "required": true,
+      "exists": true,
+      "status": "ok",
+      "note": ""
+    },
+    {
+      "category": "config",
+      "path": "configs/agent_config.yaml",
+      "expected_type": "file",
+      "required": true,
+      "exists": true,
+      "status": "ok",
+      "note": ""
+    },
+    {
+      "category": "python_script",
+      "path": "run_offline_pipeline.py",
+      "expected_type": "file",
+      "required": true,
+      "exists": true,
+      "status": "ok",
+      "note": ""
+    },
+    {
+      "category": "python_script",
+      "path": "src/agent/pipeline_agent.py",
+      "expected_type": "file",
+      "required": true,
+      "exists": true,
+      "status": "ok",
+      "note": ""
+    },
+    {
+      "category": "python_script",
+      "path": "src/database/show_audit_db.py",
+      "expected_type": "file",
+      "required": true,
+      "exists": true,
+      "status": "ok",
+      "note": ""
+    },
+    {
+      "category": "python_script",
+      "path": "src/hydrology/calculate_area_volume.py",
+      "expected_type": "file",
+      "required": true,
+      "exists": true,
+      "status": "ok",
+      "note": ""
+    },
+    {
+      "category": "python_script",
+      "path": "src/meteorology/compute_weather_correction.py",
+      "expected_type": "file",
+      "required": true,
+      "exists": true,
+      "status": "ok",
+      "note": ""
+    },
+    {
+      "category": "python_script",
+      "path": "src/reasoning/deterministic_forecast.py",
+      "expected_type": "file",
+      "required": true,
+      "exists": true,
+      "status": "ok",
+      "note": ""
+    },
+    {
+      "category": "python_script",
+      "path": "src/reasoning/case_retrieval_correction.py",
+      "expected_type": "file",
+      "required": true,
+      "exists": true,
+      "status": "ok",
+      "note": ""
+    },
+    {
+      "category": "python_script",
+      "path": "src/reasoning/physical_constraint_check.py",
+      "expected_type": "file",
+      "required": true,
+      "exists": true,
+      "status": "ok",
+      "note": ""
+    },
+    {
+      "category": "python_script",
+      "path": "src/warning/generate_warning_decision.py",
+      "expected_type": "file",
+      "required": true,
+      "exists": true,
+      "status": "ok",
+      "note": ""
+    },
+    {
+      "category": "python_script",
+      "path": "src/warning/generate_warning_report.py",
+      "expected_type": "file",
+      "required": true,
+      "exists": true,
+      "status": "ok",
+      "note": ""
+    },
+    {
+      "category": "python_script",
+      "path": "scripts/check_project_health.py",
+      "expected_type": "file",
+      "required": true,
+      "exists": true,
+      "status": "ok",
+      "note": ""
+    },
+    {
+      "category": "tracked_input",
+      "path": "requirements.txt",
+      "expected_type": "file",
+      "required": true,
+      "exists": true,
+      "status": "ok",
+      "note": ""
+    },
+    {
+      "category": "tracked_input",
+      "path": "DATA_MANIFEST.md",
+      "expected_type": "file",
+      "required": true,
+      "exists": true,
+      "status": "ok",
+      "note": ""
+    },
+    {
+      "category": "tracked_input",
+      "path": "PROJECT_STATUS.md",
+      "expected_type": "file",
+      "required": true,
+      "exists": true,
+      "status": "ok",
+      "note": ""
+    },
+    {
+      "category": "tracked_input",
+      "path": "data/dem/ground_dem_metadata.json",
+      "expected_type": "file",
+      "required": true,
+      "exists": true,
+      "status": "ok",
+      "note": ""
+    },
+    {
+      "category": "tracked_input",
+      "path": "data/masks/manual_water_mask_metadata.json",
+      "expected_type": "file",
+      "required": true,
+      "exists": true,
+      "status": "ok",
+      "note": ""
+    },
+    {
+      "category": "tracked_input",
+      "path": "data/cases/mock_historical_cases.json",
+      "expected_type": "file",
+      "required": true,
+      "exists": true,
+      "status": "ok",
+      "note": ""
+    },
+    {
+      "category": "ignored_local_input",
+      "path": "data/dem/ground_dem.npy",
+      "expected_type": "file",
+      "required": true,
+      "exists": true,
+      "status": "ignored_large_file",
+      "note": "Ignored by .gitignore but required locally for this offline demo."
+    },
+    {
+      "category": "ignored_local_input",
+      "path": "data/dem/ground_dem_interpolated.npy",
+      "expected_type": "file",
+      "required": true,
+      "exists": true,
+      "status": "ignored_large_file",
+      "note": "Ignored by .gitignore but required locally for this offline demo."
+    },
+    {
+      "category": "ignored_local_input",
+      "path": "data/dem/ground_dem_valid_mask.npy",
+      "expected_type": "file",
+      "required": true,
+      "exists": true,
+      "status": "ignored_large_file",
+      "note": "Ignored by .gitignore but required locally for this offline demo."
+    },
+    {
+      "category": "ignored_local_input",
+      "path": "data/fusion/water_region_mask.npy",
+      "expected_type": "file",
+      "required": true,
+      "exists": true,
+      "status": "ignored_large_file",
+      "note": "Ignored by .gitignore but required locally for this offline demo."
+    },
+    {
+      "category": "ignored_local_input",
+      "path": "data/masks/manual_water_mask.npy",
+      "expected_type": "file",
+      "required": true,
+      "exists": true,
+      "status": "ignored_large_file",
+      "note": "Ignored by .gitignore but required locally for this offline demo."
+    },
+    {
+      "category": "ignored_local_input",
+      "path": "data/hydrology/water_depth_map.npy",
+      "expected_type": "file",
+      "required": true,
+      "exists": true,
+      "status": "ignored_large_file",
+      "note": "Ignored by .gitignore but required locally for this offline demo."
+    },
+    {
+      "category": "ignored_local_input",
+      "path": "data/hydrology/water_depth_valid_mask.npy",
+      "expected_type": "file",
+      "required": true,
+      "exists": true,
+      "status": "ignored_large_file",
+      "note": "Ignored by .gitignore but required locally for this offline demo."
+    },
+    {
+      "category": "expected_output",
+      "path": "outputs/json/agent_run_summary.json",
+      "expected_type": "file",
+      "required": false,
+      "exists": true,
+      "status": "ok",
+      "note": ""
+    },
+    {
+      "category": "expected_output",
+      "path": "outputs/json/final_forecast_result.json",
+      "expected_type": "file",
+      "required": false,
+      "exists": true,
+      "status": "ok",
+      "note": ""
+    },
+    {
+      "category": "expected_output",
+      "path": "outputs/json/warning_decision_result.json",
+      "expected_type": "file",
+      "required": false,
+      "exists": true,
+      "status": "ok",
+      "note": ""
+    },
+    {
+      "category": "expected_output",
+      "path": "outputs/reports/warning_report.md",
+      "expected_type": "file",
+      "required": false,
+      "exists": true,
+      "status": "ok",
+      "note": ""
+    },
+    {
+      "category": "expected_output",
+      "path": "outputs/figures/warning_summary.png",
+      "expected_type": "file",
+      "required": false,
+      "exists": true,
+      "status": "ok",
+      "note": ""
+    }
+  ],
+  "mvp_note": "Current reproducibility check is for the offline MVP simulation. It does not start real-time devices, ROS nodes, or rosbag replay.",
+  "timestamp": "2026-07-05T04:23:06.384132+00:00"
+}

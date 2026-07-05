@@ -86,7 +86,7 @@
   "mvp_note": "S8 MVP uses S7-C final forecast when available, with fallback to S7-A deterministic forecast. Current results are based on configured_mvp_simulation, offline_mock_weather, offline_mock_depth_history, offline_mock_case_library, and simplified_water_balance_mvp. It is not final real emergency dispatch advice.",
   "upstream_mvp_note": "S7-C uses simplified MVP water balance to validate physical constraint checking. It is not a full hydrodynamic model or final real forecast.",
   "warnings": [],
-  "timestamp": "2026-07-05T04:09:24.077970+00:00",
+  "timestamp": "2026-07-05T04:23:18.181868+00:00",
   "output_files": {
     "data_warning_decision": "/home/wlkl/water_agent_ws/water_agent_system/data/warnings/warning_decision_result.json",
     "output_warning_decision": "/home/wlkl/water_agent_ws/water_agent_system/outputs/json/warning_decision_result.json",

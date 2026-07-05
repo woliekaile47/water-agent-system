@@ -1,5 +1,74 @@
 # water_agent_system
 
+## Project Overview
+
+`water_agent_system` is an offline engineering MVP for urban road
+waterlogging detection and short-term warning. It is designed around
+cloud-edge collaboration, multimodal sensing, fusion, reasoning, and an
+Agent-based audit workflow.
+
+The current project focuses on reproducible offline execution. It does
+not start live LiDAR, camera, ROS nodes, or rosbag replay during the
+default Agent demo.
+
+## Current Version
+
+Current version tag:
+
+- `v0.4-full-s7-agent-integration`
+
+## Offline MVP Pipeline
+
+The reproducible offline demo runs this chain:
+
+```text
+S4 -> S5 -> S6 -> S7-A -> S7-B -> S7-C -> S8 -> Agent -> SQLite audit
+```
+
+The Agent stage order is:
+
+```text
+area_volume -> weather_correction -> deterministic_forecast ->
+case_retrieval -> physical_constraint -> warning_report
+```
+
+## Quick Start
+
+```bash
+cd ~/water_agent_ws/water_agent_system
+bash scripts/setup_env.sh
+source .venv/bin/activate
+python3 scripts/check_project_health.py
+bash scripts/run_full_offline_demo.sh
+```
+
+Key outputs:
+
+- `outputs/json/health_check_result.json`
+- `outputs/json/agent_run_summary.json`
+- `outputs/json/final_forecast_result.json`
+- `outputs/json/warning_decision_result.json`
+- `outputs/reports/warning_report.md`
+- `outputs/figures/warning_summary.png`
+
+## Important Notes
+
+- The current demo does not start real-time devices.
+- The current configured depth is an MVP simulation.
+- The current weather input is offline mock weather.
+- The current depth history is offline mock depth history.
+- The current case library is an offline mock case library.
+- The current physical constraint is a simplified MVP water-balance check.
+- Future work can replace these pieces with real point-cloud water-surface
+  DEM, a real meteorological API, rosbag replay, and real-time processing.
+
+## Git Tags
+
+- `v0.1-offline-agent-mvp`
+- `v0.2-case-retrieval-mvp`
+- `v0.3-physical-constraint-mvp`
+- `v0.4-full-s7-agent-integration`
+
 `water_agent_system` 是面向城市道路积水感知与预警的离线工程化原型。
 
 当前已实现说明书 **S2：无水 DEM 构建模块** 的两个离线版本：

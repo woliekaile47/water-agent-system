@@ -102,7 +102,7 @@
     "orange": 50.0
   },
   "mvp_note": "S7-B uses offline_mock_case_library to validate case retrieval correction. It is not final real historical-case correction.",
-  "timestamp": "2026-07-05T04:09:18.741526+00:00",
+  "timestamp": "2026-07-05T04:23:13.182735+00:00",
   "output_files": {
     "data_case_retrieval_result": "/home/wlkl/water_agent_ws/water_agent_system/data/reasoning/case_retrieval_result.json",
     "output_case_retrieval_result": "/home/wlkl/water_agent_ws/water_agent_system/outputs/json/case_retrieval_result.json",
