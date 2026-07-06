@@ -1,0 +1,5 @@
+output_dir=C:\Users\p3383\Documents\Codex\2026-07-04\gen-j\work\teacher_report_materials
+markdown_success=True
+docx_attempted=True
+docx_success=True
+docx_reason=

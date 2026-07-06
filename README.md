@@ -660,3 +660,33 @@ This remains an MVP simulation. The current chain uses
 `offline_mock_depth_history`, `offline_mock_case_library`, and
 `simplified_water_balance_mvp`. It is not a real-time emergency dispatch
 system and not a final hydrodynamic/SWMM forecast.
+
+## 老师汇报材料
+
+本项目已生成老师汇报用材料，默认输出位置优先使用 Windows 共享桌面：
+
+- `/mnt/hgfs/WinDesktop/water_agent_report`
+- `/mnt/hgfs/Desktop/water_agent_report`
+
+如果上述共享目录不存在，则输出到项目目录：
+
+- `outputs/final_report_for_windows`
+
+材料包括：
+
+- `项目汇报报告.md`
+- `老师汇报讲稿.md`
+- `演示操作说明.md`
+- `项目当前状态总结.md`
+
+如果系统支持 `pandoc` 或 `python-docx`，同时会生成对应 `.docx` 文件。
+
+Streamlit dashboard（可视化看板）运行方式：
+
+```bash
+cd ~/water_agent_ws/water_agent_system
+streamlit run dashboard/app.py
+```
+
+dashboard 只读取离线输出文件，不启动实时 LiDAR、摄像头、ROS 节点或 rosbag replay。
+
