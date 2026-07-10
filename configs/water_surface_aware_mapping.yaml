@@ -1,0 +1,29 @@
+water_surface_aware_mapping:
+  dry_case_id: sim_dry_baseline_001
+  sensors_config: simulation/config/sensors.yaml
+  mask_threshold: 127
+  connectivity: 8
+  min_image_component_pixels: 10
+  shoreline_sample_stride_px: 2
+  image_edge_band_px: 2
+  ray_min_m: 0.10
+  ray_max_m: 50.0
+  ray_step_m: 0.05
+  bisection_iterations: 20
+  shoreline_water_level:
+    method: robust_median
+    min_samples_per_component: 10
+    outlier_method: mad
+    mad_threshold: 3.5
+    iqr_multiplier: 1.5
+    trim_fraction: 0.10
+  reconstruction:
+    connectivity: 8
+    lowland_margin_m: 0.0
+    min_seed_cells_per_basin: 1
+    min_candidate_camera_precision: 0.90
+    min_candidate_camera_overlap_pixels: 10
+    ambiguous_candidate_camera_precision: 0.20
+    seed_source: phase2a_ground_point_projection
+  convergence_tolerance_m: 0.001
+  note: "One unified configuration for 5/10/20/40 cm; no per-case tuning and no GT prediction inputs."

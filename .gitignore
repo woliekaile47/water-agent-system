@@ -39,6 +39,7 @@ data/simulation/**/manifest.json
 # Keep them on disk for Phase 2B comparisons, but do not commit generated
 # NPY, PNG, JSON, CSV, or report files.
 outputs/simulation_evaluation/
+outputs/simulation_evaluation_v2/
 
 # Large generated arrays
 *.npy
