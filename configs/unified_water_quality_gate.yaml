@@ -1,0 +1,10 @@
+unified_water_quality_gate:
+  min_projection_coverage: 0.40
+  max_component_count: 4
+  min_largest_component_ratio: 0.80
+  min_boundary_samples: 20
+  max_boundary_mad_m: 0.025
+  max_boundary_iqr_m: 0.075
+  require_valid_inner_outer_bracket: true
+  max_physical_depth_m: 0.60
+  eligible_for_downstream: false

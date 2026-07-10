@@ -1,0 +1,9 @@
+camera_mask_projection:
+  dry_case_id: sim_dry_baseline_001
+  sensors_config: simulation/config/sensors.yaml
+  camera_frame: camera_optical_frame
+  map_frame: map
+  transform: T_camera_optical_map
+  mask_threshold: 127
+  sampling: nearest
+  note: "Prediction allow-list only: dry DEM, camera mask, CameraInfo/extrinsics, and grid geometry."

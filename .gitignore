@@ -35,6 +35,11 @@ data/simulation/**/*.png
 data/simulation/**/resolved_world.sdf
 data/simulation/**/manifest.json
 
+# Phase 2 simulation evaluation outputs are reproducible local artifacts.
+# Keep them on disk for Phase 2B comparisons, but do not commit generated
+# NPY, PNG, JSON, CSV, or report files.
+outputs/simulation_evaluation/
+
 # Large generated arrays
 *.npy
 *.npz

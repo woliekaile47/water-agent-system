@@ -1,0 +1,13 @@
+boundary_waterline_inversion:
+  method: inner_outer_bracket_midpoint
+  connectivity: 8
+  min_component_cells: 5
+  min_boundary_samples: 10
+  outer_ring_cells: 1
+  outlier_method: mad
+  mad_threshold: 3.5
+  iqr_multiplier: 1.5
+  inner_high_quantile: 0.90
+  outer_low_quantile: 0.10
+  bracket_order_tolerance_m: 0.01
+  max_bracket_width_m: 0.10
