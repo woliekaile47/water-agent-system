@@ -18,6 +18,23 @@ log/
 *.pcd
 *.ply
 
+# Phase 1 simulation cases are reproducible generated artifacts. Keep only
+# the directory placeholder; source, configuration, and tests live under
+# simulation/ and remain tracked.
+data/simulation/*
+!data/simulation/.gitkeep
+
+# Explicit generated simulation artifact types (defence in depth)
+data/simulation/**/rosbag/
+data/simulation/**/*.db3
+data/simulation/**/*.mcap
+data/simulation/**/*.obj
+data/simulation/**/*.mtl
+data/simulation/**/*.npy
+data/simulation/**/*.png
+data/simulation/**/resolved_world.sdf
+data/simulation/**/manifest.json
+
 # Large generated arrays
 *.npy
 *.npz

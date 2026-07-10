@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<!-- Runtime template documentation; set_scenario.py writes the loadable model into resolved_world.sdf. -->
+<sdf version="1.8">
+  <model name="road_basin">
+    <static>true</static>
+    <link name="road_link">
+      <collision name="road_collision"><geometry><mesh><uri>@ROAD_MESH_URI@</uri></mesh></geometry></collision>
+      <visual name="road_visual"><geometry><mesh><uri>@ROAD_MESH_URI@</uri></mesh></geometry></visual>
+    </link>
+  </model>
+</sdf>

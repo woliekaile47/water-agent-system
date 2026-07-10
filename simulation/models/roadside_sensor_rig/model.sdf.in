@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<!-- Runtime template documentation; set_scenario.py injects sensor blocks into resolved_world.sdf. -->
+<sdf version="1.8">
+  <model name="roadside_sensor_rig">
+    <static>true</static>
+    <pose>@RIG_POSE@</pose>
+    <link name="sensor_mount_link">@SENSOR_BLOCKS@</link>
+  </model>
+</sdf>

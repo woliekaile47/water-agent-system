@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<!-- Runtime template documentation; values come from scenarios.yaml and sensors.yaml. -->
+<sdf version="1.8">
+  <model name="water_surface">
+    <static>true</static>
+    <pose>0 0 @WATER_LEVEL_M@ 0 0 0</pose>
+    <link name="water_link">
+      <visual name="water_visual">
+        <geometry><box><size>@ROAD_LENGTH_M@ @ROAD_WIDTH_M@ 0.004</size></box></geometry>
+      </visual>
+    </link>
+  </model>
+</sdf>

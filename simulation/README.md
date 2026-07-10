@@ -1,0 +1,230 @@
+# Phase 1 Waterlogging Simulation
+
+This ROS 2 package implements the minimum Gazebo Fortress loop for the
+two-stage perception migration. It is isolated from the existing S1-S8
+algorithms and never starts the real Hikvision Camera or Leishen LiDAR drivers.
+
+## Supported environment
+
+- Ubuntu 22.04
+- ROS 2 Humble
+- Gazebo Fortress (`ign gazebo` 6.x)
+- `ros-humble-ros-gz`, `ros_gz_sim`, and `ros_gz_bridge`
+
+Camera rendering needs a valid graphical `DISPLAY`. Run GUI acceptance commands
+from the Ubuntu desktop terminal, not from a plain SSH session without X access.
+
+## Build
+
+Use an isolated workspace so the main project's existing `build/`, `install/`,
+and `log/` directories are not touched:
+
+```bash
+source /opt/ros/humble/setup.bash
+rm -rf /tmp/water_agent_sim_build
+mkdir -p /tmp/water_agent_sim_build/src
+ln -s /home/wlkl/water_agent_ws/water_agent_system/simulation \
+  /tmp/water_agent_sim_build/src/waterlogging_simulation
+cd /tmp/water_agent_sim_build
+colcon build --symlink-install
+source /tmp/water_agent_sim_build/install/setup.bash
+cd /home/wlkl/water_agent_ws/water_agent_system
+```
+
+## Scenarios
+
+All dimensions, slopes, basin geometry, water depth rule, sensor heights,
+sensor angles, intrinsics, topic names, frames, and the random seed live in:
+
+- `simulation/config/sensors.yaml`
+- `simulation/config/scenarios.yaml`
+
+Available cases:
+
+- `sim_dry_baseline_001` (0 cm, LiDAR ON, Camera ON)
+- `sim_water_5cm_001` (LiDAR OFF, Camera ON)
+- `sim_water_10cm_001` (LiDAR OFF, Camera ON)
+- `sim_water_20cm_001` (LiDAR OFF, Camera ON)
+- `sim_water_40cm_001` (LiDAR OFF, Camera ON)
+
+## Phase 1A LiDAR scope
+
+Every manifest records:
+
+```yaml
+lidar_simulation_mode: deterministic_geometry_generator
+```
+
+`/sim/lidar/points` is a repeatable multi-ring `PointCloud2` sampled from the
+same road elevation function used by the DEM. It is **not** a Gazebo ray / GPU
+LiDAR and does not model beam divergence, reflectivity, dropout, multi-return
+behavior, or sensor noise. Phase 1A uses it only to validate DEM construction,
+ROS interfaces, rosbag compatibility, and reproducibility. Gazebo GPU LiDAR
+and noise models are deferred to Phase 1B.
+
+## Phase 1A road physics scope
+
+The low-lying `road_basin.obj` is a visual mesh with per-vertex normals and a
+basic MTL material. It is used for Camera rendering and is generated from the
+same elevation function as Ground Truth. It is deliberately **not** used as a
+physics collision mesh. The road collision is a thin box placed below the
+lowest visual road elevation; the water surface is visual-only. This is enough
+for a fixed-scene perception loop with no vehicles, robots, or dynamic bodies,
+but it is not a high-accuracy physical contact model.
+
+`water_depth_cm` means maximum depth: the absolute horizontal water level is
+`min(ground_dem_gt) + water_depth_cm / 100`. There is no fluid simulation.
+
+## Launch
+
+Dry baseline:
+
+```bash
+source /opt/ros/humble/setup.bash
+source /tmp/water_agent_sim_build/install/setup.bash
+ros2 launch waterlogging_simulation waterlogging_sim.launch.py \
+  scenario:=sim_dry_baseline_001 project_root:=$PWD gui:=true
+```
+
+Water scene (replace the case for 10/20/40 cm):
+
+```bash
+ros2 launch waterlogging_simulation waterlogging_sim.launch.py \
+  scenario:=sim_water_5cm_001 project_root:=$PWD gui:=true
+```
+
+The launch generates a resolved SDF and Ground Truth before Gazebo starts.
+`gui:=false` is only suitable when a working virtual display/software-rendering
+environment has been configured; Camera rendering still needs OpenGL.
+
+## ROS 2 interfaces
+
+Gazebo plus `ros_gz_bridge`:
+
+- `/sim/camera/image_raw` — `sensor_msgs/msg/Image`
+- `/sim/camera/camera_info` — `sensor_msgs/msg/CameraInfo`
+- `/clock` — `rosgraph_msgs/msg/Clock`
+
+Ground Truth publisher:
+
+- `/sim/ground_truth/water_level` — `std_msgs/msg/Float32`; NaN for dry
+- `/sim/ground_truth/water_mask` — `sensor_msgs/msg/Image`, `mono8`
+- `/sim/ground_truth/depth_map` — `sensor_msgs/msg/Image`, `32FC1`, metres
+- `/sim/lidar/points` — deterministic geometry `sensor_msgs/msg/PointCloud2`, dry case only
+- `/tf` and `/tf_static`
+
+Formal device topics such as `/cx/lslidar_point_cloud` and
+`/hik_camera/image_raw` are not changed or used.
+
+## TF tree
+
+```text
+map
+├── road                         (/tf, identity and periodically refreshed)
+└── sensor_mount                 (/tf_static)
+    ├── lidar_link               (/tf_static)
+    └── camera_link              (/tf_static)
+        └── camera_optical_frame (/tf_static, ROS optical convention)
+```
+
+The road uses a right-handed map frame with x along the road, y across the
+road, and z upward. Distances and elevations are in metres.
+
+## Ground Truth generation
+
+The road OBJ and numerical DEM use the same deterministic elevation function:
+a configured longitudinal/cross slope minus a smooth elliptical depression.
+For water cases:
+
+```text
+depth_gt(x,y) = max(0, water_level_gt - ground_dem_gt(x,y))
+```
+
+The camera-space mask is generated by projecting the known horizontal water
+surface cells through the configured pinhole Camera. It is Ground Truth, not a
+vision-model prediction. Outputs are written to:
+
+```text
+data/simulation/<case_id>/
+├── manifest.json
+├── ground_truth/
+│   ├── ground_dem_gt.npy
+│   ├── dem_water_mask_gt.npy
+│   ├── depth_map_gt_m.npy
+│   ├── camera_water_mask_gt.png
+│   └── ground_truth_metadata.json
+├── metadata/
+│   ├── config_snapshot.yaml
+│   ├── road_basin.obj
+│   └── resolved_world.sdf
+└── rosbag/
+```
+
+Generate files without starting Gazebo:
+
+```bash
+python3 simulation/scripts/export_ground_truth.py \
+  --scenario sim_water_10cm_001 --project-root "$PWD"
+```
+
+## View and record
+
+From a second Ubuntu desktop terminal:
+
+```bash
+source /opt/ros/humble/setup.bash
+source install/setup.bash
+ros2 topic list
+rqt_image_view /sim/camera/image_raw
+rviz2
+```
+
+In RViz, set Fixed Frame to `map` and add a PointCloud2 display for
+`/sim/lidar/points` in the dry case.
+
+Record only simulation topics:
+
+```bash
+bash simulation/scripts/record_sim_bag.sh sim_dry_baseline_001 "$PWD"
+bash simulation/scripts/record_sim_bag.sh sim_water_5cm_001 "$PWD"
+```
+
+Stop recording with Ctrl-C. Bags are stored below the case's `rosbag/`
+directory. The script never records real device topic names.
+
+## Tests
+
+Tests are device-free and do not start Gazebo:
+
+```bash
+python3 -m pytest simulation/tests -q
+```
+
+They validate the five scenarios, two-stage sensor policy, unique topics and
+frames, non-negative depth, zero depth outside the mask, exact raster area and
+volume integration, deterministic geometry, required manifest fields, and
+Ground Truth/prediction separation.
+
+## Phase 1A manual acceptance
+
+Phase 1A completed GUI acceptance on an Ubuntu graphical desktop on
+2026-07-11. No real Camera or LiDAR driver was started or recorded.
+
+- The dry Gazebo world remained stable, and the simulated Camera displayed
+  normally.
+- The deterministic PointCloud2 displayed successfully in RViz with Fixed
+  Frame `map`, topic `/sim/lidar/points`, Best Effort QoS, and status `Ok`.
+- The 5, 10, 20, and 40 cm scenes all displayed normally, with the visible
+  inundated area increasing as the configured water level increased.
+- `/sim/lidar/points` was present in the dry scene and absent from every water
+  scene, confirming the two-stage sensor enable policy.
+- A 21.27 s dry bag contained 12,073 messages, occupied 570.9 MiB, and included
+  `/sim/lidar/points`.
+- A 20.18 s 5 cm bag contained 11,867 messages, occupied 564.5 MiB, and did not
+  include `/sim/lidar/points`.
+- Both bags contained the simulated Camera, Ground Truth, TF, and `/clock`
+  topics only; no real Camera or LiDAR topic was recorded.
+
+These bags and all generated case artifacts under `data/simulation/<case_id>/`
+are local verification outputs and are intentionally excluded from Git. Only
+`data/simulation/.gitkeep` preserves the output directory in the repository.

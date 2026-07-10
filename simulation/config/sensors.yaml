@@ -1,0 +1,90 @@
+schema_version: "1.0"
+simulation:
+  simulator: Gazebo Fortress
+  ros_distro: humble
+  gazebo_major_version: 6
+  lidar_simulation_mode: deterministic_geometry_generator
+  random_seed: 42
+  physics_step_s: 0.002
+
+road:
+  length_m: 18.0
+  width_m: 7.0
+  mesh_resolution_m: 0.20
+  dem_resolution_m: 0.10
+  longitudinal_slope: 0.004
+  cross_slope: -0.006
+  asphalt_thickness_m: 0.08
+  curb_height_m: 0.20
+  curb_width_m: 0.18
+
+basin:
+  center_x_m: 1.5
+  center_y_m: 0.0
+  half_length_m: 4.0
+  half_width_m: 2.2
+  depth_m: 0.45
+  shape_exponent: 2.0
+
+sensor_rig:
+  pose_map:
+    x_m: -7.0
+    y_m: -4.5
+    z_m: 0.0
+    roll_deg: 0.0
+    pitch_deg: 0.0
+    yaw_deg: 0.0
+  pole_height_m: 3.8
+
+lidar:
+  pose_on_rig:
+    x_m: 0.0
+    y_m: 0.0
+    z_m: 3.20
+    roll_deg: 0.0
+    pitch_deg: 0.0
+    yaw_deg: 32.7
+  horizontal_samples: 720
+  horizontal_min_deg: -60.0
+  horizontal_max_deg: 60.0
+  vertical_channels: 16
+  vertical_min_deg: -32.0
+  vertical_max_deg: 4.0
+  min_range_m: 0.3
+  max_range_m: 30.0
+  update_rate_hz: 10.0
+  pointcloud_stride_cells: 3
+
+camera:
+  pose_on_rig:
+    x_m: 0.0
+    y_m: 0.0
+    z_m: 3.50
+    roll_deg: 0.0
+    pitch_down_deg: 23.0
+    yaw_deg: 32.7
+  width_px: 640
+  height_px: 360
+  horizontal_fov_deg: 60.0
+  near_clip_m: 0.10
+  far_clip_m: 50.0
+  update_rate_hz: 20.0
+
+coordinate_frames:
+  map: map
+  road: road
+  sensor_mount: sensor_mount
+  lidar: lidar_link
+  camera: camera_link
+  camera_optical: camera_optical_frame
+
+topic_names:
+  lidar_points: /sim/lidar/points
+  camera_image: /sim/camera/image_raw
+  camera_info: /sim/camera/camera_info
+  water_level_gt: /sim/ground_truth/water_level
+  water_mask_gt: /sim/ground_truth/water_mask
+  depth_map_gt: /sim/ground_truth/depth_map
+  clock: /clock
+  tf: /tf
+  tf_static: /tf_static

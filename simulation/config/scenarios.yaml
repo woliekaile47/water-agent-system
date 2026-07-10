@@ -1,0 +1,31 @@
+schema_version: "1.0"
+defaults:
+  scenario_type: static_horizontal_water
+  water_level_mode: basin_min_plus_depth
+  random_seed: 42
+
+scenarios:
+  sim_dry_baseline_001:
+    water_depth_cm: 0
+    lidar_enabled: true
+    camera_enabled: true
+
+  sim_water_5cm_001:
+    water_depth_cm: 5
+    lidar_enabled: false
+    camera_enabled: true
+
+  sim_water_10cm_001:
+    water_depth_cm: 10
+    lidar_enabled: false
+    camera_enabled: true
+
+  sim_water_20cm_001:
+    water_depth_cm: 20
+    lidar_enabled: false
+    camera_enabled: true
+
+  sim_water_40cm_001:
+    water_depth_cm: 40
+    lidar_enabled: false
+    camera_enabled: true
