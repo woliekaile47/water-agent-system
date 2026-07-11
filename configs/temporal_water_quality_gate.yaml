@@ -1,0 +1,19 @@
+temporal_water_quality_gate:
+  high_confidence_water_threshold: 0.50
+  min_input_frames: 20
+  min_fps: 5.0
+  max_fps: 60.0
+  min_dynamic_tracks: 2
+  min_high_confidence_water_tracks: 1
+  min_evidence_coverage: 0.002
+  max_unknown_fraction_for_pass: 0.98
+  max_candidate_pixel_fraction: 0.35
+  max_water_components: 8
+  min_largest_component_ratio: 0.35
+  max_evidence_concentration: 0.80
+  max_exposure_anomaly_fraction: 0.25
+  min_order_sensitivity: 0.05
+  min_water_mask_time_stability: 0.02
+  min_feature_score_separation: 0.04
+  max_predicted_water_fraction: 0.35
+  eligible_for_downstream: false
