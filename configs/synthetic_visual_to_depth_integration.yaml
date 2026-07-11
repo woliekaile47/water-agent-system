@@ -1,0 +1,15 @@
+synthetic_visual_to_depth_integration:
+  algorithm_version: phase2d_a_v1
+  temporal_detector_config: configs/temporal_water_mask_detector.yaml
+  temporal_quality_gate_config: configs/temporal_water_quality_gate.yaml
+  surface_mapping_config: configs/water_surface_aware_mapping.yaml
+  surface_quality_gate_config: configs/water_surface_aware_quality_gate.yaml
+  dry_ground_dem: data/simulation/sim_dry_baseline_001/ground_truth/ground_dem_gt.npy
+  sensors_config: simulation/config/sensors.yaml
+  output_root: outputs/synthetic_visual_to_depth_integration
+  prediction_policy:
+    camera_mask_source: phase2c2a_rule_mask
+    learned_classifier_role: diagnostics_only_not_used_for_geometry
+    unknown_semantics: no_temporal_evidence_not_confirmed_dry
+    allow_ground_truth_during_prediction: false
+    eligible_for_downstream: false

@@ -49,6 +49,7 @@ outputs/dynamic_visual_simulation/
 outputs/temporal_water_detection/
 outputs/temporal_event_classifier/
 outputs/temporal_water_detection_model/
+outputs/synthetic_visual_to_depth_integration/
 
 # Large generated arrays
 *.npy
