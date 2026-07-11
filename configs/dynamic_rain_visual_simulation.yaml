@@ -1,0 +1,96 @@
+dynamic_rain_visual_simulation:
+  schema_version: "1.0"
+  generator_version: "phase2c1_v1"
+  fps: 20
+  duration_s: 10
+  frame_count: 200
+  deterministic_created_at: "2026-07-11T00:00:00+00:00"
+  cases:
+    - sim_dry_baseline_001
+    - sim_water_5cm_001
+    - sim_water_10cm_001
+    - sim_water_20cm_001
+    - sim_water_40cm_001
+  base_image:
+    bag_glob: "data/simulation/sim_dry_baseline_001/rosbag/*"
+    topic: "/sim/camera/image_raw"
+    skip_camera_frames: 10
+    median_frame_count: 5
+  output_root: "data/simulation_dynamic"
+  preview_stride_frames: 10
+  rain_levels:
+    light:
+      random_seed: 41
+      event_rate_hz: 1.5
+      dry_event_fraction: 0.70
+      water_event_fraction: 0.30
+      dry_radius_px: [3, 6]
+      dry_lifetime_frames: [2, 4]
+      water_initial_radius_px: [2, 4]
+      water_expansion_rate_px_per_frame: [1.0, 1.8]
+      water_lifetime_frames: [12, 20]
+      brightness_disturbance: 0.025
+      gaussian_noise_sigma: 1.2
+      rain_streaks_per_frame: 3
+    moderate:
+      random_seed: 42
+      event_rate_hz: 4.0
+      dry_event_fraction: 0.55
+      water_event_fraction: 0.45
+      dry_radius_px: [4, 8]
+      dry_lifetime_frames: [2, 5]
+      water_initial_radius_px: [2, 5]
+      water_expansion_rate_px_per_frame: [1.3, 2.3]
+      water_lifetime_frames: [16, 28]
+      brightness_disturbance: 0.045
+      gaussian_noise_sigma: 2.0
+      rain_streaks_per_frame: 7
+    heavy:
+      random_seed: 43
+      event_rate_hz: 8.0
+      dry_event_fraction: 0.45
+      water_event_fraction: 0.55
+      dry_radius_px: [5, 10]
+      dry_lifetime_frames: [3, 5]
+      water_initial_radius_px: [3, 6]
+      water_expansion_rate_px_per_frame: [1.7, 2.8]
+      water_lifetime_frames: [20, 36]
+      brightness_disturbance: 0.070
+      gaussian_noise_sigma: 3.0
+      rain_streaks_per_frame: 14
+  event_model:
+    center_margin_px: 4
+    dry_spoke_count: [4, 8]
+    dry_satellite_count: [1, 4]
+    water_damping_factor: [0.88, 0.95]
+    water_ring_count: [1, 3]
+    water_ellipse_ratio: [0.65, 1.0]
+    water_intensity: [16.0, 34.0]
+    dry_intensity: [20.0, 45.0]
+    water_energy_outside_mask_fraction: 0.20
+  environment_perturbations:
+    global_brightness:
+      enabled: true
+      amplitude: 0.025
+      period_s: 8.0
+    exposure_flicker:
+      enabled: true
+      amplitude: 0.010
+      period_frames: 13
+    gaussian_noise:
+      enabled: true
+    rain_streaks:
+      enabled: true
+      length_px: [4, 10]
+      intensity: 9.0
+    water_reflection_flicker:
+      enabled: true
+      intensity: 7.0
+      spatial_period_px: 22.0
+    compression_artifact:
+      enabled: true
+      downscale_factor: 2
+      blend: 0.08
+    camera_jitter:
+      enabled: false
+      max_offset_px: 1

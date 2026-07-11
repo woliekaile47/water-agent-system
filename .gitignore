@@ -41,6 +41,12 @@ data/simulation/**/manifest.json
 outputs/simulation_evaluation/
 outputs/simulation_evaluation_v2/
 
+# Phase 2C-1 generated visual sequences and previews. Preserve only the
+# dataset root placeholder; frames, labels, manifests and summaries are local.
+data/simulation_dynamic/*
+!data/simulation_dynamic/.gitkeep
+outputs/dynamic_visual_simulation/
+
 # Large generated arrays
 *.npy
 *.npz
