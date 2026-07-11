@@ -124,3 +124,50 @@ def evaluate_events(classifications: list[dict], truth_events: list[dict], max_c
         "water_event_coverage": _ratio(matched_water_gt, water_gt),
         "false_water_events_on_dry_sequence": sum(item["classification"] == "water_ripple" for item in predictions) if water_gt == 0 else 0,
     }
+
+
+def evaluate_labeled_track_classifications(
+    classifications: list[dict], track_labels: list[dict],
+) -> dict[str, Any]:
+    """Evaluate classifications after an independent robust track/event matching step."""
+    label_by_track = {item["track_id"]: item["label"] for item in track_labels}
+    classes = ("dry_splash", "water_ripple")
+    result = {}
+    confusion = {
+        truth: {prediction: 0 for prediction in ("dry_splash", "water_ripple", "uncertain")}
+        for truth in ("dry_splash", "water_ripple", "background_noise")
+    }
+    for item in classifications:
+        truth = label_by_track.get(item["track_id"], "background_noise")
+        if truth == "uncertain":
+            continue
+        confusion[truth][item["classification"]] += 1
+    for class_name in classes:
+        tp = sum(
+            label_by_track.get(item["track_id"]) == class_name and item["classification"] == class_name
+            for item in classifications
+        )
+        fp = sum(
+            label_by_track.get(item["track_id"]) != class_name and item["classification"] == class_name
+            for item in classifications
+        )
+        fn = sum(
+            label_by_track.get(item["track_id"]) == class_name and item["classification"] != class_name
+            for item in classifications
+        )
+        precision, recall = _ratio(tp, tp + fp), _ratio(tp, tp + fn)
+        result[class_name] = {
+            "precision": precision, "recall": recall,
+            "f1": _ratio(2 * precision * recall, precision + recall),
+            "tp": int(tp), "fp": int(fp), "fn": int(fn),
+        }
+    return {
+        "per_class": result,
+        "macro_f1": float(np.mean([result[name]["f1"] for name in classes])),
+        "confusion_matrix": confusion,
+        "uncertain_rate": _ratio(sum(item["classification"] == "uncertain" for item in classifications), len(classifications)),
+        "background_noise_false_water": sum(
+            label_by_track.get(item["track_id"], "background_noise") == "background_noise"
+            and item["classification"] == "water_ripple" for item in classifications
+        ),
+    }

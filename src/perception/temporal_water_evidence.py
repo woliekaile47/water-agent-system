@@ -59,3 +59,98 @@ def build_temporal_water_evidence(
         "predicted_unknown_mask": unknown,
         "evidence_count_map": count.astype(np.float32),
     }, diagnostics
+
+
+def build_model_water_evidence(
+    classifications: list[dict[str, Any]], image_shape: tuple[int, int], config: dict[str, Any],
+    probability_field: str = "model_water_probability",
+) -> tuple[dict[str, np.ndarray], dict[str, Any]]:
+    """Build conservative probability-weighted evidence without static imagery or GT."""
+    height, width = image_shape
+    positive = np.zeros((height, width), dtype=np.float32)
+    negative = np.zeros((height, width), dtype=np.float32)
+    support_count = np.zeros((height, width), dtype=np.float32)
+    contributions = []
+    for item in classifications:
+        center_u, center_v = item["center_mean"]
+        sigma = max(
+            float(config["minimum_kernel_sigma_px"]),
+            min(float(config["maximum_propagation_radius_px"]) / 2.5, np.sqrt(max(float(item["maximum_area"]), 1.0) / np.pi) * 1.3),
+        )
+        support = min(float(config["maximum_propagation_radius_px"]), sigma * 2.5)
+        x0, x1 = max(0, int(center_u - support)), min(width, int(center_u + support) + 1)
+        y0, y1 = max(0, int(center_v - support)), min(height, int(center_v + support) + 1)
+        if x0 >= x1 or y0 >= y1:
+            continue
+        yy, xx = np.mgrid[y0:y1, x0:x1]
+        kernel = np.exp(-0.5 * (((xx - center_u) ** 2 + (yy - center_v) ** 2) / (sigma * sigma))).astype(np.float32)
+        water_probability = float(item.get(probability_field, item.get("model_water_probability", 0.0)))
+        if item["classification"] == "water_ripple":
+            weight = min(float(config["maximum_single_track_weight"]), water_probability)
+            weight *= 0.5 + 0.5 * min(1.0, item["duration_frames"] / 15.0)
+            contribution = kernel * weight
+            positive[y0:y1, x0:x1] += contribution
+            support_count[y0:y1, x0:x1] += (kernel >= 0.10).astype(np.float32)
+            contributions.append(float(np.sum(contribution)))
+        elif item["classification"] == "dry_splash":
+            dry_probability = float(item.get("model_dry_probability", 1.0 - water_probability))
+            negative[y0:y1, x0:x1] += kernel * dry_probability * float(config["dry_negative_weight"])
+    net = np.maximum(positive - negative, 0.0)
+    probability = 1.0 - np.exp(-net / max(float(config["probability_scale"]), 1e-6))
+    known = support_count >= float(config["unknown_evidence_threshold"])
+    water = (
+        (probability >= float(config["water_probability_threshold"]))
+        & (support_count >= int(config["minimum_supporting_tracks"])) & known
+    )
+    kernel_size = int(config.get("morphology_close_kernel", 0))
+    if kernel_size > 1 and np.any(water):
+        water = cv2.morphologyEx(water.astype(np.uint8), cv2.MORPH_CLOSE, np.ones((kernel_size, kernel_size), np.uint8)).astype(bool)
+    unknown = ~known & ~water
+    total_contribution = max(sum(contributions), 1e-9)
+    diagnostics = {
+        "water_track_count": sum(item["classification"] == "water_ripple" for item in classifications),
+        "dry_track_count": sum(item["classification"] == "dry_splash" for item in classifications),
+        "uncertain_track_count": sum(item["classification"] == "uncertain" for item in classifications),
+        "evidence_coverage_fraction": float(np.mean(known)), "unknown_fraction": float(np.mean(unknown)),
+        "predicted_water_fraction": float(np.mean(water)),
+        "maximum_probability": float(np.max(probability)) if probability.size else 0.0,
+        "maximum_single_track_contribution_fraction": float(max(contributions, default=0.0) / total_contribution),
+        "unknown_region_semantics": "no_temporal_evidence_not_confirmed_dry",
+    }
+    return {
+        "predicted_water_probability": probability.astype(np.float32),
+        "predicted_water_mask": water, "predicted_unknown_mask": unknown,
+        "evidence_count_map": support_count.astype(np.float32),
+    }, diagnostics
+
+
+def build_rule_preserving_hybrid_evidence(
+    rule_evidence: dict[str, np.ndarray], model_evidence: dict[str, np.ndarray],
+    model_diagnostics: dict[str, Any],
+) -> tuple[dict[str, np.ndarray], dict[str, Any]]:
+    """Keep the validated rule mask; use model evidence as corroboration, never erasure."""
+    rule_mask = np.asarray(rule_evidence["predicted_water_mask"], dtype=bool)
+    probability = np.maximum(
+        np.asarray(rule_evidence["predicted_water_probability"], dtype=np.float32),
+        np.asarray(model_evidence["predicted_water_probability"], dtype=np.float32),
+    )
+    unknown = (
+        np.asarray(rule_evidence["predicted_unknown_mask"], dtype=bool)
+        & np.asarray(model_evidence["predicted_unknown_mask"], dtype=bool)
+        & ~rule_mask
+    )
+    count = (
+        np.asarray(rule_evidence["evidence_count_map"], dtype=np.float32)
+        + np.asarray(model_evidence["evidence_count_map"], dtype=np.float32)
+    )
+    return {
+        "predicted_water_probability": probability,
+        "predicted_water_mask": rule_mask.copy(),
+        "predicted_unknown_mask": unknown,
+        "evidence_count_map": count,
+    }, {
+        **model_diagnostics,
+        "hybrid_policy": "rule_mask_preserved_model_probability_corroboration",
+        "predicted_water_fraction": float(np.mean(rule_mask)),
+        "unknown_fraction": float(np.mean(unknown)),
+    }

@@ -47,6 +47,8 @@ data/simulation_dynamic/*
 !data/simulation_dynamic/.gitkeep
 outputs/dynamic_visual_simulation/
 outputs/temporal_water_detection/
+outputs/temporal_event_classifier/
+outputs/temporal_water_detection_model/
 
 # Large generated arrays
 *.npy

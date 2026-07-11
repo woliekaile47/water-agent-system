@@ -100,4 +100,5 @@ def preprocess_temporal_frames(
         "positive_residual": positive,
         "negative_residual": negative,
         "temporal_residual_preview": preview,
+        "exposure_offsets": exposure_offsets.astype(np.float32),
     }, diagnostics

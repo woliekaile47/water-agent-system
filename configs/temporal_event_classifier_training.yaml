@@ -1,0 +1,52 @@
+temporal_event_classifier_training:
+  model_version: phase2c2b_logistic_v1
+  feature_schema_version: temporal_track_features_v2
+  splits:
+    train_seeds: [41, 42, 43, 101, 102]
+    validation_seeds: [111, 112]
+    test_seeds: [201, 202, 203]
+  matching:
+    max_center_distance_px: 28.0
+    minimum_temporal_iou: 0.05
+    minimum_lifetime_overlap: 0.20
+    minimum_spatial_score: 0.05
+    ambiguity_margin: 0.08
+  sampling:
+    negative_to_positive_ratio: 5.0
+    maximum_negative_per_sequence: 300
+    keep_all_water: true
+  model:
+    l2_regularization: 0.02
+    learning_rate: 0.08
+    iterations: 1800
+    class_weight_dry: 1.0
+    class_weight_water: 8.0
+    probability_clip: 1.0e-6
+  threshold_selection:
+    low_candidates: [0.20, 0.25, 0.30, 0.35, 0.40, 0.45]
+    high_candidates: [0.55, 0.60, 0.65, 0.70, 0.75, 0.80]
+    uncertain_penalty: 0.10
+    false_water_noise_penalty: 0.20
+  evidence:
+    maximum_propagation_radius_px: 22.0
+    minimum_kernel_sigma_px: 4.0
+    probability_scale: 1.6
+    water_probability_threshold: 0.30
+    unknown_evidence_threshold: 0.08
+    morphology_close_kernel: 5
+    minimum_supporting_tracks: 1
+    maximum_single_track_weight: 0.85
+    dry_negative_weight: 0.12
+    hybrid_model_weight: 0.75
+  quality_gate:
+    max_uncertain_fraction_for_pass: 0.85
+    min_confident_track_fraction: 0.05
+    max_ood_track_fraction: 0.35
+    ood_z_threshold: 5.0
+    max_nonfinite_feature_fraction: 0.0
+    max_dynamic_candidate_pixel_fraction: 0.35
+    max_single_track_contribution: 0.70
+    min_window_mask_iou: 0.02
+    max_rule_model_disagreement: 0.75
+    min_probability_separation: 0.05
+    max_predicted_water_fraction: 0.35

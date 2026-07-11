@@ -39,7 +39,7 @@ def run_temporal_prediction(
         detector_config["candidates"],
     )
     tracks = track_dynamic_events(candidates, detector_config["tracking"])
-    features = extract_all_track_features(tracks)
+    features = extract_all_track_features(tracks, preprocessed.get("exposure_offsets"))
     classifications = classify_tracks(features, detector_config["classification"])
     evidence, evidence_diagnostics = build_temporal_water_evidence(
         classifications,
@@ -70,5 +70,53 @@ def run_temporal_prediction(
         "water_mask_time_stability": stability,
         "feature_score_separation": feature_separation,
         "mode": mode,
+        "ground_truth_used": False,
+    }
+
+
+def run_temporal_model_prediction(
+    frames_dir: str, model_dir: str, detector_config: dict[str, Any],
+    training_config: dict[str, Any], thresholds: dict[str, float], mode: str = "full",
+) -> dict[str, Any]:
+    """Run rule/model/hybrid inference from RGB frames and frozen model files only."""
+    from src.perception.temporal_event_classifier_inference import (
+        build_hybrid_classifications, infer_track_classifications,
+    )
+    from src.perception.temporal_event_classifier_model import load_model
+    from src.perception.temporal_water_evidence import (
+        build_model_water_evidence, build_rule_preserving_hybrid_evidence,
+    )
+
+    baseline = run_temporal_prediction(frames_dir, detector_config, mode)
+    model = load_model(model_dir)
+    model_classifications = infer_track_classifications(
+        baseline["features"], model, thresholds, detector_config["classification"],
+    )
+    hybrid_classifications = build_hybrid_classifications(
+        model_classifications, thresholds, float(training_config["evidence"]["hybrid_model_weight"]),
+    )
+    shape = (baseline["loader"]["height"], baseline["loader"]["width"])
+    model_evidence, model_diagnostics = build_model_water_evidence(
+        model_classifications, shape, training_config["evidence"], "model_water_probability",
+    )
+    hybrid_model_evidence, hybrid_model_diagnostics = build_model_water_evidence(
+        hybrid_classifications, shape, training_config["evidence"], "hybrid_water_probability",
+    )
+    hybrid_evidence, hybrid_diagnostics = build_rule_preserving_hybrid_evidence(
+        baseline["evidence"], hybrid_model_evidence, hybrid_model_diagnostics,
+    )
+    midpoint = max(1, baseline["loader"]["frame_count"] // 2)
+    early = [item for item in model_classifications if item["start_frame"] < midpoint]
+    early_evidence, _ = build_model_water_evidence(
+        early, shape, training_config["evidence"], "model_water_probability",
+    )
+    return {
+        "baseline": baseline, "model_classifications": model_classifications,
+        "hybrid_classifications": hybrid_classifications,
+        "model_evidence": model_evidence, "model_evidence_diagnostics": model_diagnostics,
+        "hybrid_evidence": hybrid_evidence, "hybrid_evidence_diagnostics": hybrid_diagnostics,
+        "model_window_mask_iou": _mask_iou(
+            early_evidence["predicted_water_mask"], model_evidence["predicted_water_mask"],
+        ),
         "ground_truth_used": False,
     }
