@@ -1,0 +1,34 @@
+shoreline_topology_ablation:
+  experiment_version: phase2d_b2b_v1
+  methods:
+    - baseline
+    - largest_component
+    - small_component_filter
+    - conditional_hole_fill
+    - morphological_closing
+    - outer_boundary_only
+    - largest_component_conditional_hole_fill
+    - small_component_filter_conditional_hole_fill
+    - largest_component_outer_boundary_only
+  fixed_parameters:
+    connectivity: 8
+    small_component_min_area_px: 100
+    conditional_hole_max_area_px: 500
+    conditional_hole_max_water_area_fraction: 0.02
+    morphological_closing_kernel_px: 5
+    morphological_closing_iterations: 1
+  source_prediction_root: outputs/synthetic_visual_to_depth_integration
+  source_evaluation_json: outputs/synthetic_visual_to_depth_integration/dataset_evaluation/dataset_evaluations.json
+  source_geometry_diagnostics: outputs/synthetic_visual_to_depth_integration/geometry_diagnostics/geometry_diagnostics.json
+  dry_ground_dem: data/simulation/sim_dry_baseline_001/ground_truth/ground_dem_gt.npy
+  sensors_config: simulation/config/sensors.yaml
+  mapping_config: configs/water_surface_aware_mapping.yaml
+  geometry_gate_config: configs/water_surface_aware_quality_gate.yaml
+  output_root: outputs/synthetic_visual_to_depth_integration/shoreline_topology_ablation
+  policy:
+    parameters_fixed_before_gt_evaluation: true
+    per_case_parameter_selection: false
+    oracle_method_selection: false
+    temporal_prediction_rerun: false
+    authoritative_measurement: false
+    eligible_for_downstream: false
