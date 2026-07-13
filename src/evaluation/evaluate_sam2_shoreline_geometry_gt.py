@@ -182,6 +182,114 @@ def boundary_metrics(predicted: np.ndarray, truth: np.ndarray) -> dict[str, Any]
     }
 
 
+def enclosed_hole_metrics(mask: np.ndarray) -> dict[str, Any]:
+    """Describe internal holes without changing the evaluated mask."""
+    water = np.asarray(mask, dtype=bool)
+    background = ~water
+    height, width = water.shape
+    holes: list[np.ndarray] = []
+    for component in connected_components(background, 4):
+        rows, cols = np.where(component)
+        if not rows.size:
+            continue
+        touches_border = bool(
+            np.any(rows == 0)
+            or np.any(rows == height - 1)
+            or np.any(cols == 0)
+            or np.any(cols == width - 1)
+        )
+        if not touches_border:
+            holes.append(component)
+    full_boundary = extract_boundary_mask(water)
+    outer_boundary = outer_boundary_mask(water)
+    hole_union = np.zeros_like(water)
+    for hole in holes:
+        hole_union |= hole
+    internal_boundary = np.zeros_like(water)
+    padded_holes = np.pad(hole_union, 1, mode="constant", constant_values=False)
+    for drow in (-1, 0, 1):
+        for dcol in (-1, 0, 1):
+            if drow == 0 and dcol == 0:
+                continue
+            internal_boundary |= water & padded_holes[
+                1 + drow : 1 + drow + height,
+                1 + dcol : 1 + dcol + width,
+            ]
+    return {
+        "enclosed_hole_count": len(holes),
+        "enclosed_hole_area_pixels": int(sum(np.count_nonzero(hole) for hole in holes)),
+        "full_boundary_pixel_count": int(np.count_nonzero(full_boundary)),
+        "outer_boundary_pixel_count": int(np.count_nonzero(outer_boundary)),
+        "internal_hole_boundary_pixel_count": int(np.count_nonzero(internal_boundary)),
+        "internal_hole_boundary_definition": "water pixels 8-neighbor adjacent to enclosed background holes",
+        "mask_modified": False,
+    }
+
+
+def candidate_basin_ground_truth_analysis(
+    ground_dem: np.ndarray,
+    estimated_water_level_m: float,
+    reconstruction_config: dict[str, Any],
+    sensors: dict[str, Any],
+    predicted_seed_diagnostics: dict[str, Any],
+    true_dem_mask: np.ndarray,
+    true_depth: np.ndarray,
+) -> dict[str, Any]:
+    """Evaluate fixed prediction-side candidate basins without changing selection."""
+    dem = np.asarray(ground_dem, dtype=np.float64)
+    truth = np.asarray(true_dem_mask, dtype=bool)
+    cell_size = float(sensors["road"]["dem_resolution_m"])
+    cell_area = cell_size * cell_size
+    candidate = np.isfinite(dem) & (
+        dem
+        < float(estimated_water_level_m)
+        - float(reconstruction_config.get("lowland_margin_m", 0.0))
+    )
+    components = connected_components(
+        candidate, int(reconstruction_config.get("connectivity", 8))
+    )
+    support = predicted_seed_diagnostics.get("candidate_camera_support", [])
+    basins: list[dict[str, Any]] = []
+    for index, component in enumerate(components):
+        item = support[index] if index < len(support) else {}
+        predicted_depth = np.maximum(0.0, float(estimated_water_level_m) - dem)
+        gt_overlap = component & truth
+        gt_cells = int(np.count_nonzero(gt_overlap))
+        projected_pixels = int(item.get("camera_projected_pixels", 0))
+        projection_coverage = float(item.get("projection_coverage", 0.0))
+        basins.append({
+            "component_index": index,
+            "cell_count": int(np.count_nonzero(component)),
+            "area_m2": float(np.count_nonzero(component) * cell_area),
+            "predicted_level_volume_m3": float(np.sum(predicted_depth[component]) * cell_area),
+            "seed_overlap_cells": int(item.get("seed_overlap_cells", 0)),
+            "selected_by_frozen_prediction": bool(item.get("selected_by_seed", False)),
+            "camera_projected_pixels": projected_pixels,
+            "camera_projection_coverage": projection_coverage,
+            "camera_overlap_pixels": int(item.get("camera_overlap_pixels", 0)),
+            "gt_water_cell_count": gt_cells,
+            "gt_water_fraction_of_basin": float(gt_cells / max(1, np.count_nonzero(component))),
+            "gt_water_recall_contribution": float(gt_cells / max(1, np.count_nonzero(truth))),
+            "gt_depth_volume_m3_in_basin": float(
+                np.sum(np.asarray(true_depth, dtype=np.float64)[gt_overlap]) * cell_area
+            ),
+            "gt_support_status": "gt_supported_water_basin" if gt_cells else "no_gt_water_support",
+            "camera_visibility_status": (
+                "camera_projectable"
+                if projected_pixels > 0 and projection_coverage > 0.0
+                else "no_valid_camera_projection"
+            ),
+        })
+    return {
+        "data_role": "independent_evaluation",
+        "candidate_definition": "Ground DEM below frozen estimated water level",
+        "candidate_basin_count": len(components),
+        "frozen_selection_unchanged": True,
+        "unselected_basins_added_to_prediction": False,
+        "basins": basins,
+    }
+
+
 def water_level_metrics(
     estimated_level_m: float,
     true_level_m: float,

@@ -22,7 +22,9 @@ from src.evaluation.evaluate_sam2_shoreline_geometry_gt import (
     area_volume_metrics,
     binary_mask_metrics,
     boundary_metrics,
+    candidate_basin_ground_truth_analysis,
     depth_metrics,
+    enclosed_hole_metrics,
     error_source_analysis,
     gt_shoreline_geometry_counterfactual,
     load_ground_truth_evaluation_inputs,
@@ -48,6 +50,13 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--sensors-config", type=Path, default=Path("simulation/config/sensors.yaml"))
     parser.add_argument("--mapping-config", type=Path, default=Path("configs/water_surface_aware_mapping.yaml"))
+    parser.add_argument(
+        "--gate-config",
+        type=Path,
+        default=Path("configs/water_surface_aware_quality_gate.yaml"),
+    )
+    parser.add_argument("--sequence-id", default=None)
+    parser.add_argument("--frame-index", type=int, default=59)
     parser.add_argument(
         "--output-dir",
         type=Path,
@@ -204,6 +213,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         prediction_dir / "water_level_estimation.json",
         prediction_dir / "shoreline_ray_intersections.json",
         prediction_dir / "prediction_side_quality_gate.json",
+        prediction_dir / "camera_reprojected_mask.png",
         sam_input_dir / "selected_component_mask.npy",
     ]
     missing = [str(path) for path in required_prediction_files if not path.is_file()]
@@ -277,6 +287,9 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
 
     sensors = load_yaml(_absolute(root, args.sensors_config))
     mapping = load_yaml(_absolute(root, args.mapping_config), "water_surface_aware_mapping")
+    gate_config = load_yaml(
+        _absolute(root, args.gate_config), "water_surface_aware_quality_gate"
+    )
     gt_counterfactual = gt_shoreline_geometry_counterfactual(
         truth["camera_mask"], truth["ground_dem"], sensors, mapping, truth["water_level_m"]
     )
@@ -304,8 +317,139 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
     })
     _write_json(output_dir / "error_source_analysis.json", source_analysis)
 
+    reprojected_camera_mask = np.asarray(
+        Image.open(prediction_dir / "camera_reprojected_mask.png").convert("L")
+    ) > 127
+    observed_holes = enclosed_hole_metrics(prediction_camera_mask)
+    reprojected_holes = enclosed_hole_metrics(reprojected_camera_mask)
+    candidate_analysis = candidate_basin_ground_truth_analysis(
+        truth["ground_dem"],
+        float(prediction_level["estimated_water_level_m"]),
+        mapping["reconstruction"],
+        sensors,
+        prediction_result["seed_diagnostics"],
+        truth["dem_mask"],
+        truth["depth_map"],
+    )
+    _write_json(output_dir / "candidate_basin_analysis.json", candidate_analysis)
+
+    self_consistency = prediction_result["self_consistency"]
+    full_boundary_p95 = self_consistency.get("boundary_reprojection_p95_px")
+    outer_boundary_p95 = self_consistency.get("outer_boundary_reprojection_p95_px")
+    boundary_threshold = float(gate_config["max_boundary_reprojection_p95_px"])
+    unselected = [
+        basin for basin in candidate_analysis["basins"]
+        if not basin["selected_by_frozen_prediction"]
+    ]
+    unsupported_unselected = [
+        basin for basin in unselected if basin["gt_water_cell_count"] == 0
+    ]
+    gt_supported_unselected = [
+        basin for basin in unselected if basin["gt_water_cell_count"] > 0
+    ]
+    gate_rejection = {
+        "data_role": "independent_evaluation",
+        "frozen_gate_status": prediction_gate.get("status"),
+        "frozen_gate_reasons": prediction_gate.get("reasons", []),
+        "gate_thresholds_modified": False,
+        "boundary_reprojection_error_above_threshold": {
+            "existing_threshold_px": boundary_threshold,
+            "full_boundary_p50_px": self_consistency.get("boundary_reprojection_p50_px"),
+            "full_boundary_p95_px": full_boundary_p95,
+            "outer_boundary_p50_px": self_consistency.get("outer_boundary_reprojection_p50_px"),
+            "outer_boundary_p95_px": outer_boundary_p95,
+            "full_boundary_passes_existing_threshold": bool(
+                full_boundary_p95 is not None and full_boundary_p95 <= boundary_threshold
+            ),
+            "outer_boundary_passes_existing_threshold": bool(
+                outer_boundary_p95 is not None and outer_boundary_p95 <= boundary_threshold
+            ),
+            "observed_mask_holes": observed_holes,
+            "reprojected_mask_holes": reprojected_holes,
+            "analysis_only_no_gate_change": True,
+        },
+        "ambiguous_candidate_basin": {
+            "candidate_basin_count": candidate_analysis["candidate_basin_count"],
+            "selected_basin_count": sum(
+                basin["selected_by_frozen_prediction"] for basin in candidate_analysis["basins"]
+            ),
+            "unselected_basin_count": len(unselected),
+            "gt_supported_unselected_basin_count": len(gt_supported_unselected),
+            "unsupported_unselected_basin_count": len(unsupported_unselected),
+            "unselected_basins_were_not_added": True,
+        },
+        "candidate_basin_outside_camera_coverage": {
+            "unselected_basins": unselected,
+            "no_valid_projection_basin_count": sum(
+                basin["camera_visibility_status"] == "no_valid_camera_projection"
+                for basin in unselected
+            ),
+            "visibility_interpretation": (
+                "No valid pixels in configured Camera projection; the current geometry "
+                "does not model occlusion separately, so outside-FOV and occlusion cannot "
+                "be distinguished beyond this projection result."
+            ),
+            "seed_only_strategy_effect": (
+                "conservative_omission_of_gt_supported_unobservable_basin"
+                if gt_supported_unselected
+                else "prevented_camera_unsupported_expansion"
+            ),
+        },
+    }
+    _write_json(output_dir / "gate_rejection_analysis.json", gate_rejection)
+
+    if (
+        camera["iou"] >= 0.90
+        and dem_mask["iou"] >= 0.95
+        and level["absolute_water_level_error_m"] <= 0.01
+        and area_volume["area_relative_error"] <= 0.05
+        and area_volume["volume_relative_error"] <= 0.10
+    ):
+        accuracy_status = "pass"
+    elif (
+        camera["iou"] >= 0.80
+        and dem_mask["iou"] >= 0.75
+        and level["absolute_water_level_error_m"] <= 0.05
+    ):
+        accuracy_status = "partially_accurate"
+    else:
+        accuracy_status = "fail"
+
+    conservative_unobservable_omission = bool(
+        gt_supported_unselected
+        and dem_mask["precision"] >= 0.99
+        and camera["iou"] >= 0.80
+        and level["absolute_water_level_error_m"] <= 0.02
+    )
+    if camera["iou"] < 0.80:
+        dominant_error = "segmentation_scope"
+    elif camera["boundary"]["symmetric_outer_boundary"]["p95_px"] > 5.0:
+        dominant_error = "shoreline_localization"
+    elif level["absolute_water_level_error_m"] > 0.02:
+        dominant_error = "water_level_estimation"
+    elif prediction_gate.get("status") == "reject" and conservative_unobservable_omission:
+        dominant_error = "conservative_quality_gate"
+    elif reconstruction_at_predicted_level["iou"] < 0.95:
+        dominant_error = "dem_reconstruction"
+    elif prediction_gate.get("status") == "reject":
+        dominant_error = "conservative_quality_gate"
+    else:
+        dominant_error = "mixed"
+
+    source_analysis["base_signal_dominant_error_source"] = source_analysis[
+        "dominant_error_source"
+    ]
+    source_analysis["dominant_error_source"] = dominant_error
+    source_analysis["candidate_visibility_refinement_applied"] = True
+    _write_json(output_dir / "error_source_analysis.json", source_analysis)
+
     save_mask_comparison(output_dir / "camera_mask_vs_gt.png", prediction_camera_mask, truth["camera_mask"])
     save_boundary_comparison(output_dir / "camera_boundary_vs_gt.png", prediction_camera_mask, truth["camera_mask"])
+    save_boundary_comparison(
+        output_dir / "camera_outer_boundary_vs_gt.png",
+        prediction_camera_mask,
+        truth["camera_mask"],
+    )
     save_dem_comparison(output_dir / "dem_mask_vs_gt.png", prediction_dem_mask, truth["dem_mask"])
     save_depth_error(output_dir / "depth_error_map.png", prediction_depth, truth["depth_map"])
     save_histogram(
@@ -327,17 +471,26 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
     unchanged = hashes_before == hashes_after
     if not unchanged:
         raise RuntimeError("Saved prediction artifacts changed during independent evaluation")
+    sequence_id = args.sequence_id or "/".join((
+        args.case_id,
+        str(truth["sequence_manifest"]["rain_level"]),
+        f"seed_{int(truth['sequence_manifest']['random_seed'])}",
+    ))
     summary = {
         "data_role": "independent_evaluation",
         "case_id": args.case_id,
-        "sequence_id": "sim_water_5cm_001/heavy/seed_43",
-        "frame_index": 59,
+        "sequence_id": sequence_id,
+        "frame_index": int(args.frame_index),
         "ground_truth_validation": truth["validation"],
         "camera_mask": camera,
         "water_level": level,
         "dem_depth": dem_depth,
         "area_volume": area_volume,
         "error_source_analysis": source_analysis,
+        "gate_rejection_analysis": gate_rejection,
+        "candidate_basin_analysis": candidate_analysis,
+        "prediction_accuracy_status": accuracy_status,
+        "dominant_error_source": dominant_error,
         "prediction_side_gate_status": prediction_gate["status"],
         "prediction_artifacts_unchanged": unchanged,
         "prediction_hashes_before": hashes_before,
@@ -388,6 +541,24 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
 - manual prompt scope：{source_analysis['manual_prompt_scope_interpretation']}
 - prediction-side reject consistent with GT：{source_analysis['prediction_side_reject_consistent_with_gt_evaluation']}
 - prediction artifacts unchanged：{unchanged}
+- prediction_accuracy_status：{accuracy_status}
+- dominant_error_source：{dominant_error}
+
+## Frozen gate rejection audit
+
+- existing boundary threshold：{boundary_threshold:.3f} px
+- full boundary P95：{full_boundary_p95:.6f} px
+- outer boundary P95：{outer_boundary_p95:.6f} px
+- observed enclosed holes / pixels：{observed_holes['enclosed_hole_count']} / {observed_holes['enclosed_hole_area_pixels']}
+- observed internal-hole boundary pixels：{observed_holes['internal_hole_boundary_pixel_count']}
+- candidate basins：{candidate_analysis['candidate_basin_count']}
+- GT-supported unselected basins：{len(gt_supported_unselected)}
+- unselected basins added：false
+
+The frozen seed-only basin selection was not changed by evaluation. A basin
+with no valid Camera projection remains excluded even when independent GT later
+shows that it contains water; this is a conservative observable-region result,
+not permission to fill the basin during prediction.
 
 当前结果仍为离线独立评价，不具备 authoritative 或 downstream 语义。
 """
@@ -398,6 +569,8 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
             "prediction_rerun": False,
             "prediction_modified": False,
             "prediction_artifacts_unchanged": unchanged,
+            "prediction_accuracy_status": accuracy_status,
+            "dominant_error_source": dominant_error,
             "elapsed_seconds": summary["evaluation_elapsed_seconds"],
         }, indent=2) + "\n",
         encoding="utf-8",
@@ -412,7 +585,7 @@ def main() -> int:
         "camera_mask_iou": summary["camera_mask"]["iou"],
         "water_level_absolute_error_m": summary["water_level"]["absolute_water_level_error_m"],
         "dem_mask_iou": summary["dem_depth"]["dem_mask"]["iou"],
-        "dominant_error_source": summary["error_source_analysis"]["dominant_error_source"],
+        "dominant_error_source": summary["dominant_error_source"],
         "prediction_artifacts_unchanged": summary["prediction_artifacts_unchanged"],
     }, indent=2))
     return 0

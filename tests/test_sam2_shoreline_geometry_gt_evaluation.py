@@ -53,6 +53,66 @@ def test_boundary_metrics_preserve_direction_and_exclude_holes_from_outer_bounda
     assert hole_metrics["symmetric_boundary"]["p95_px"] > 0.0
 
 
+def test_enclosed_hole_metrics_separate_internal_and_outer_boundaries() -> None:
+    mask = np.zeros((15, 15), dtype=bool)
+    mask[2:13, 2:13] = True
+    mask[6:9, 6:9] = False
+    before = mask.copy()
+    metrics = evaluation.enclosed_hole_metrics(mask)
+    assert metrics["enclosed_hole_count"] == 1
+    assert metrics["enclosed_hole_area_pixels"] == 9
+    assert metrics["internal_hole_boundary_pixel_count"] > 0
+    assert metrics["full_boundary_pixel_count"] > metrics["outer_boundary_pixel_count"]
+    assert metrics["mask_modified"] is False
+    assert np.array_equal(mask, before)
+    solid = np.zeros((15, 15), dtype=bool)
+    solid[2:13, 2:13] = True
+    solid_metrics = evaluation.enclosed_hole_metrics(solid)
+    assert solid_metrics["enclosed_hole_count"] == 0
+    assert solid_metrics["internal_hole_boundary_pixel_count"] == 0
+
+
+def test_candidate_basin_gt_analysis_does_not_change_frozen_selection() -> None:
+    dem = np.zeros((3, 5), dtype=np.float64)
+    dem[:, 2] = 1.0
+    truth = dem < 0.5
+    true_depth = np.where(truth, 0.2, 0.0)
+    support = {
+        "candidate_camera_support": [
+            {
+                "seed_overlap_cells": 1,
+                "selected_by_seed": True,
+                "camera_projected_pixels": 10,
+                "projection_coverage": 1.0,
+                "camera_overlap_pixels": 9,
+            },
+            {
+                "seed_overlap_cells": 0,
+                "selected_by_seed": False,
+                "camera_projected_pixels": 0,
+                "projection_coverage": 0.0,
+                "camera_overlap_pixels": 0,
+            },
+        ]
+    }
+    result = evaluation.candidate_basin_ground_truth_analysis(
+        dem,
+        0.5,
+        {"connectivity": 4, "lowland_margin_m": 0.0},
+        {"road": {"dem_resolution_m": 1.0}},
+        support,
+        truth,
+        true_depth,
+    )
+    assert result["candidate_basin_count"] == 2
+    assert result["frozen_selection_unchanged"] is True
+    assert result["unselected_basins_added_to_prediction"] is False
+    assert result["basins"][0]["selected_by_frozen_prediction"] is True
+    assert result["basins"][1]["selected_by_frozen_prediction"] is False
+    assert result["basins"][1]["camera_visibility_status"] == "no_valid_camera_projection"
+    assert result["basins"][1]["gt_support_status"] == "gt_supported_water_basin"
+
+
 def test_depth_metrics_use_declared_evaluation_domains() -> None:
     predicted_depth = np.asarray([[0.2, 0.0], [0.4, 0.0]], dtype=np.float64)
     true_depth = np.asarray([[0.1, 0.3], [0.0, 0.0]], dtype=np.float64)
