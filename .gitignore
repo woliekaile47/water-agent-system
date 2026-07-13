@@ -51,6 +51,12 @@ outputs/temporal_event_classifier/
 outputs/temporal_water_detection_model/
 outputs/synthetic_visual_to_depth_integration/
 
+# Phase 2D-C manually prompted SAM 2 geometry inputs and generated diagnostics
+# are local experiment artifacts. Source adapters, tests, and documents remain tracked.
+data/sam2_geometry_inputs/
+outputs/sam2_shoreline_geometry/
+outputs/sam2_shoreline_geometry_gt_evaluation/
+
 # Large generated arrays
 *.npy
 *.npz
