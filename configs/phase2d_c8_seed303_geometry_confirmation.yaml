@@ -1,0 +1,24 @@
+phase2d_c8_seed303_geometry_confirmation:
+  protocol_version: phase2d_c8_seed303_geometry_confirmation_v1
+  evaluation_role: final_confirmation_not_threshold_selection
+  seed: 303
+  anchor_frame_index: 149
+  window_start: 129
+  window_end: 169
+  ground_truth_used_for_prediction: false
+  candidate_gate_thresholds_frozen_before_confirmation: true
+  authoritative: false
+  eligible_for_downstream: false
+  samples:
+    - {sample_id: c8c3_001, case_id: sim_water_5cm_001, rain_level: light, seed: 303, role: seed303_independent_confirmation, frames_dir: data/simulation_dynamic/sim_water_5cm_001/light/seed_303/frames, prompt_path: outputs/phase2d_c8_seed303_prompt_freeze/c8c3_001/automatic_prompt.json}
+    - {sample_id: c8c3_002, case_id: sim_water_5cm_001, rain_level: moderate, seed: 303, role: seed303_independent_confirmation, frames_dir: data/simulation_dynamic/sim_water_5cm_001/moderate/seed_303/frames, prompt_path: outputs/phase2d_c8_seed303_prompt_freeze/c8c3_002/automatic_prompt.json}
+    - {sample_id: c8c3_003, case_id: sim_water_5cm_001, rain_level: heavy, seed: 303, role: seed303_independent_confirmation, frames_dir: data/simulation_dynamic/sim_water_5cm_001/heavy/seed_303/frames, prompt_path: outputs/phase2d_c8_seed303_prompt_freeze/c8c3_003/automatic_prompt.json}
+    - {sample_id: c8c3_004, case_id: sim_water_10cm_001, rain_level: light, seed: 303, role: seed303_independent_confirmation, frames_dir: data/simulation_dynamic/sim_water_10cm_001/light/seed_303/frames, prompt_path: outputs/phase2d_c8_seed303_prompt_freeze/c8c3_004/automatic_prompt.json}
+    - {sample_id: c8c3_005, case_id: sim_water_10cm_001, rain_level: moderate, seed: 303, role: seed303_independent_confirmation, frames_dir: data/simulation_dynamic/sim_water_10cm_001/moderate/seed_303/frames, prompt_path: outputs/phase2d_c8_seed303_prompt_freeze/c8c3_005/automatic_prompt.json}
+    - {sample_id: c8c3_006, case_id: sim_water_10cm_001, rain_level: heavy, seed: 303, role: seed303_independent_confirmation, frames_dir: data/simulation_dynamic/sim_water_10cm_001/heavy/seed_303/frames, prompt_path: outputs/phase2d_c8_seed303_prompt_freeze/c8c3_006/automatic_prompt.json}
+    - {sample_id: c8c3_007, case_id: sim_water_20cm_001, rain_level: light, seed: 303, role: seed303_independent_confirmation, frames_dir: data/simulation_dynamic/sim_water_20cm_001/light/seed_303/frames, prompt_path: outputs/phase2d_c8_seed303_prompt_freeze/c8c3_007/automatic_prompt.json}
+    - {sample_id: c8c3_008, case_id: sim_water_20cm_001, rain_level: moderate, seed: 303, role: seed303_independent_confirmation, frames_dir: data/simulation_dynamic/sim_water_20cm_001/moderate/seed_303/frames, prompt_path: outputs/phase2d_c8_seed303_prompt_freeze/c8c3_008/automatic_prompt.json}
+    - {sample_id: c8c3_009, case_id: sim_water_20cm_001, rain_level: heavy, seed: 303, role: seed303_independent_confirmation, frames_dir: data/simulation_dynamic/sim_water_20cm_001/heavy/seed_303/frames, prompt_path: outputs/phase2d_c8_seed303_prompt_freeze/c8c3_009/automatic_prompt.json}
+    - {sample_id: c8c3_010, case_id: sim_water_40cm_001, rain_level: light, seed: 303, role: seed303_independent_confirmation, frames_dir: data/simulation_dynamic/sim_water_40cm_001/light/seed_303/frames, prompt_path: outputs/phase2d_c8_seed303_prompt_freeze/c8c3_010/automatic_prompt.json}
+    - {sample_id: c8c3_011, case_id: sim_water_40cm_001, rain_level: moderate, seed: 303, role: seed303_independent_confirmation, frames_dir: data/simulation_dynamic/sim_water_40cm_001/moderate/seed_303/frames, prompt_path: outputs/phase2d_c8_seed303_prompt_freeze/c8c3_011/automatic_prompt.json}
+    - {sample_id: c8c3_012, case_id: sim_water_40cm_001, rain_level: heavy, seed: 303, role: seed303_independent_confirmation, frames_dir: data/simulation_dynamic/sim_water_40cm_001/heavy/seed_303/frames, prompt_path: outputs/phase2d_c8_seed303_prompt_freeze/c8c3_012/automatic_prompt.json}

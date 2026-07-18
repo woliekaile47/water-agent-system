@@ -34,6 +34,7 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--project-root", type=Path, default=PROJECT_ROOT)
     parser.add_argument("--pilot-config", type=Path, required=True)
+    parser.add_argument("--config-key", default="phase2d_c7_video_pilot")
     parser.add_argument("--geometry-root", type=Path, required=True)
     parser.add_argument("--sensors-config", type=Path, default=Path("simulation/config/sensors.yaml"))
     parser.add_argument("--output-root", type=Path, required=True)
@@ -61,14 +62,18 @@ def verify_frozen_geometry_outputs(
     samples: list[dict[str, Any]],
     window_start: int,
     window_end: int,
+    expected_total_frame_count: int,
 ) -> dict[str, Any]:
     """Freeze and verify every scalar prediction artifact before any GT read."""
     dataset_path = geometry_root / "geometry_stability_summary.json"
     dataset = read_json(dataset_path)
     if dataset.get("ground_truth_used") is not False or dataset.get("sam2_rerun_count") != 0:
         raise ValueError("C7-3 dataset provenance is not prediction-only")
-    if dataset.get("gate_thresholds_modified") is not False or dataset.get("frame_count") != 123:
-        raise ValueError("C7-3 dataset protocol differs from the frozen pilot")
+    if (
+        dataset.get("gate_thresholds_modified") is not False
+        or dataset.get("frame_count") != expected_total_frame_count
+    ):
+        raise ValueError("Geometry dataset protocol differs from the frozen matrix")
     expected = list(range(window_start, window_end + 1))
     verified: dict[str, Any] = {}
     for sample in samples:
@@ -211,14 +216,18 @@ def main() -> int:
     output_root = args.output_root.expanduser().resolve()
     if output_root.exists():
         raise FileExistsError(f"refusing to overwrite C7-4 evaluation output: {output_root}")
-    config = yaml.safe_load(args.pilot_config.read_text(encoding="utf-8"))["phase2d_c7_video_pilot"]
+    config = yaml.safe_load(args.pilot_config.read_text(encoding="utf-8"))[args.config_key]
     samples = config["samples"]
     window_start = int(config["window_start"])
     window_end = int(config["window_end"])
 
     # Protocol boundary: all prediction files are verified before the first GT loader call.
     frozen = verify_frozen_geometry_outputs(
-        geometry_root, samples, window_start, window_end
+        geometry_root,
+        samples,
+        window_start,
+        window_end,
+        len(samples) * (window_end - window_start + 1),
     )
 
     sensors = load_yaml(root / args.sensors_config)
@@ -261,6 +270,7 @@ def main() -> int:
 
     summary = {
         "protocol_version": "phase2d_c7_video_geometry_scalar_gt_evaluation_v1",
+        "input_config_key": args.config_key,
         "sample_count": len(samples),
         "frame_count": len(all_flat),
         "all_frozen_predictions_verified_before_first_ground_truth_read": True,

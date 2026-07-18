@@ -31,6 +31,7 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--project-root", type=Path, default=PROJECT_ROOT)
     parser.add_argument("--pilot-config", type=Path, required=True)
+    parser.add_argument("--config-key", default="phase2d_c7_video_pilot")
     parser.add_argument("--propagation-root", type=Path, required=True)
     parser.add_argument(
         "--ground-dem",
@@ -232,7 +233,7 @@ def main() -> int:
     output_root = args.output_root.expanduser().resolve()
     if output_root.exists():
         raise FileExistsError(f"refusing to overwrite geometry stability output: {output_root}")
-    config = yaml.safe_load(args.pilot_config.read_text(encoding="utf-8"))["phase2d_c7_video_pilot"]
+    config = yaml.safe_load(args.pilot_config.read_text(encoding="utf-8"))[args.config_key]
     samples = config["samples"]
     window_start = int(config["window_start"])
     window_end = int(config["window_end"])
@@ -300,6 +301,7 @@ def main() -> int:
 
     final = {
         "protocol_version": "phase2d_c7_video_geometry_stability_v1",
+        "input_config_key": args.config_key,
         "sample_count": len(samples),
         "frame_count": len(all_rows),
         "window_start": window_start,

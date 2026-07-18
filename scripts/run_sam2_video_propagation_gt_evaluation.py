@@ -34,6 +34,7 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--project-root", type=Path, default=PROJECT_ROOT)
     parser.add_argument("--pilot-config", type=Path, required=True)
+    parser.add_argument("--config-key", default="phase2d_c7_video_pilot")
     parser.add_argument("--propagation-root", type=Path, required=True)
     parser.add_argument("--output-root", type=Path, required=True)
     return parser.parse_args()
@@ -228,7 +229,7 @@ def main() -> int:
     if output_root.exists():
         raise FileExistsError(f"refusing to overwrite evaluation output: {output_root}")
     config_document = yaml.safe_load(config_path.read_text(encoding="utf-8"))
-    config = config_document["phase2d_c7_video_pilot"]
+    config = config_document[args.config_key]
     samples = config["samples"]
     window_start = int(config["window_start"])
     window_end = int(config["window_end"])
