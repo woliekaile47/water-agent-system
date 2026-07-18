@@ -12,13 +12,22 @@ phase2d_c7_video_pilot:
   samples:
     - sample_id: c7_5cm_heavy_seed302
       role: shallow_heavy_failure_case
+      case_id: sim_water_5cm_001
+      rain_level: heavy
+      seed: 302
       frames_dir: data/simulation_dynamic/sim_water_5cm_001/heavy/seed_302/frames
       prompt_path: outputs/temporal_sam2_prompt_heldout_c6c_seed302_frame99/c6c2_003/automatic_prompt.json
     - sample_id: c7_20cm_moderate_seed302
       role: stable_reference_case
+      case_id: sim_water_20cm_001
+      rain_level: moderate
+      seed: 302
       frames_dir: data/simulation_dynamic/sim_water_20cm_001/moderate/seed_302/frames
       prompt_path: outputs/temporal_sam2_prompt_heldout_c6c_seed302_frame99/c6c2_008/automatic_prompt.json
     - sample_id: c7_40cm_light_seed302
       role: partial_coverage_case
+      case_id: sim_water_40cm_001
+      rain_level: light
+      seed: 302
       frames_dir: data/simulation_dynamic/sim_water_40cm_001/light/seed_302/frames
       prompt_path: outputs/temporal_sam2_prompt_heldout_c6c_seed302_frame99/c6c2_010/automatic_prompt.json
