@@ -1,0 +1,24 @@
+phase2d_c7_video_pilot:
+  protocol_version: phase2d_c7_video_pilot_v1
+  selection_rule: "fixed representative C6C cases; seed 302; frames 79-119; frozen anchor frame 99"
+  selection_frozen_before_video_propagation: true
+  ground_truth_opened_for_selection: false
+  window_start: 79
+  window_end: 119
+  anchor_frame_index: 99
+  jpeg_quality: 95
+  jpeg_subsampling: 0
+  sam2_candidate_semantics: unknown_candidate
+  samples:
+    - sample_id: c7_5cm_heavy_seed302
+      role: shallow_heavy_failure_case
+      frames_dir: data/simulation_dynamic/sim_water_5cm_001/heavy/seed_302/frames
+      prompt_path: outputs/temporal_sam2_prompt_heldout_c6c_seed302_frame99/c6c2_003/automatic_prompt.json
+    - sample_id: c7_20cm_moderate_seed302
+      role: stable_reference_case
+      frames_dir: data/simulation_dynamic/sim_water_20cm_001/moderate/seed_302/frames
+      prompt_path: outputs/temporal_sam2_prompt_heldout_c6c_seed302_frame99/c6c2_008/automatic_prompt.json
+    - sample_id: c7_40cm_light_seed302
+      role: partial_coverage_case
+      frames_dir: data/simulation_dynamic/sim_water_40cm_001/light/seed_302/frames
+      prompt_path: outputs/temporal_sam2_prompt_heldout_c6c_seed302_frame99/c6c2_010/automatic_prompt.json
