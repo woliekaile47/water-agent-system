@@ -1,0 +1,121 @@
+phase2d_c8_quality_gate_protocol:
+  protocol_version: phase2d_c8_quality_gate_redesign_v1
+  status: design_only
+  production_gate_modified: false
+  prediction_modified: false
+  authoritative_output_enabled: false
+  downstream_enabled: false
+
+  project_target:
+    primary_metric: water_level_absolute_error_cm
+    maximum_water_level_absolute_error_cm: 3.0
+    area_relative_error_limit: null
+    volume_relative_error_limit: null
+    note: Area and volume remain secondary research metrics until project limits are approved.
+
+  result_scopes:
+    camera_visible_estimate:
+      observation_scope: camera_observable_region
+      area_volume_semantics: camera_visible_estimate
+      may_be_valid_when_global_scene_is_partial: true
+    global_scene_estimate:
+      observation_scope: full_monitored_scene
+      area_volume_semantics: complete_estimate
+      requires_zero_unobservable_candidate_basins: true
+      requires_zero_ambiguous_candidate_basins: true
+
+  prediction_side_signal_groups:
+    hard_safety:
+      - prediction_files_complete
+      - estimated_water_level_finite
+      - depth_values_finite_and_nonnegative
+      - maximum_depth_within_physical_limit
+      - water_level_estimation_converged
+      - reconstruction_seed_valid
+      - selected_basin_present
+    camera_semantic_quality:
+      - automatic_prompt_status
+      - camera_reprojection_iou
+      - camera_mask_edge_touch_ratio
+      - main_component_area_ratio
+      - fragment_and_hole_diagnostics
+      - shallow_heavy_rain_risk
+    shoreline_geometry:
+      - shoreline_intersection_success_rate
+      - valid_shoreline_sample_count
+      - shoreline_height_mad_m
+      - shoreline_height_iqr_m
+      - outer_boundary_reprojection_p95_px
+    temporal_stability:
+      - adjacent_water_level_change_p95_cm
+      - water_level_window_std_cm
+      - water_area_coefficient_of_variation
+      - water_volume_coefficient_of_variation
+      - adjacent_mask_iou
+    observability:
+      - water_surface_projection_coverage
+      - camera_observable_candidate_basin_count
+      - unobservable_candidate_basin_count
+      - ambiguous_candidate_basin_count
+
+  decision_contract:
+    hard_safety_failure: reject_all_scopes
+    semantic_or_geometry_failure: reject_camera_visible_estimate
+    temporal_instability: reject_camera_visible_estimate
+    unobservable_or_ambiguous_basin:
+      camera_visible_estimate: may_remain_diagnostic_if_other_checks_pass
+      global_scene_estimate: reject_as_incomplete
+    boundary_metric:
+      role: diagnostic_component_not_single_decision
+      current_runtime_threshold_px: 3.0
+      redesigned_threshold_px: null
+      direct_pixel_to_centimeter_conversion_allowed: false
+
+  forbidden_prediction_inputs:
+    - camera_water_mask_gt
+    - dem_water_mask_gt
+    - depth_map_gt
+    - water_level_gt
+    - area_gt
+    - volume_gt
+    - nominal_depth_cm
+    - evaluation_status
+    - evaluation_metrics
+
+  evidence_registry:
+    development_evidence:
+      - id: c5_manual_prompt_36_samples
+        role: background_calibration_not_final_confirmation
+        sample_count: 36
+        source: docs/experiments/phase2d_c5_heldout_multiframe_validation.md
+      - id: c6b_seed301_automatic_prompt
+        role: automatic_prompt_failure_discovery
+        sample_count: 12
+        source: docs/experiments/phase2d_c6b3_automatic_prompt_gt_evaluation.md
+      - id: c6c_seed302_fixed_automatic_prompt
+        role: fixed_rule_independent_seed_evidence
+        sample_count: 12
+        source: docs/experiments/phase2d_c6c2_independent_validation.md
+      - id: c7_seed302_video_window
+        role: temporal_and_geometry_design_evidence
+        frame_count: 123
+        source: docs/experiments/phase2d_c7_video_geometry_gt_evaluation.md
+    final_confirmation:
+      required: true
+      status: data_not_yet_frozen
+      required_matrix:
+        water_depths_cm: [5, 10, 20, 40]
+        rain_levels: [light, moderate, heavy]
+        seed: 303
+        fixed_frame_rule: choose_before_opening_rgb_or_ground_truth
+        minimum_sample_count: 12
+      must_not_be_used_to_select_thresholds: true
+
+  release_conditions:
+    - redesigned_gate_implemented_in_parallel_without_overwriting_legacy_gate
+    - all_prediction_inputs_are_ground_truth_independent
+    - thresholds_frozen_before_final_confirmation
+    - final_confirmation_matrix_passes_approved_project_targets
+    - camera_visible_and_global_scene_semantics_verified
+    - dry_false_water_safety_verified
+    - rejected_results_remain_ineligible_for_downstream
