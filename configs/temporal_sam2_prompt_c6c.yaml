@@ -1,0 +1,24 @@
+temporal_sam2_prompt:
+  schema_version: phase2d_c6_prompt_v1
+  algorithm_version: phase2d_c6c_v1
+  connectivity: 8
+  box_margin_px: 12
+  partial_gate_box_margin_ratio: 0.50
+  partial_gate_box_margin_cap_px: 96
+  min_component_area_px: 16
+  ambiguous_component_probability_mass_ratio: 0.80
+  max_ambiguous_component_count: 0
+  target_positive_points: 5
+  min_positive_points: 3
+  min_positive_boundary_distance_px: 3.0
+  min_positive_spacing_px: 10.0
+  min_positive_probability: 0.50
+  target_negative_points: 8
+  min_negative_points: 6
+  min_negative_direction_sectors: 4
+  dry_track_min_confidence: 0.50
+  use_dry_splash_negatives_when_temporal_partial: false
+  negative_ring_inner_distance_px: 4.0
+  negative_ring_outer_distance_px: 30.0
+  max_box_area_fraction: 0.75
+  max_box_border_touch_ratio: 0.50

@@ -51,11 +51,17 @@ def _select_positive_points(
     target: int,
     min_boundary_distance: float,
     min_spacing: float,
-) -> tuple[list[list[int]], list[float]]:
+    min_probability: float,
+) -> tuple[list[list[int]], list[float], int]:
     distance = cv2.distanceTransform(component.astype(np.uint8), cv2.DIST_L2, 5)
-    ys, xs = np.where(component & (distance >= min_boundary_distance))
+    safe_core = (
+        component
+        & (distance >= min_boundary_distance)
+        & (probability >= min_probability)
+    )
+    ys, xs = np.where(safe_core)
     if ys.size == 0:
-        return [], []
+        return [], [], 0
     candidates = np.column_stack((xs, ys)).astype(np.int32)
     selected: list[np.ndarray] = []
     selected_boundary_distances: list[float] = []
@@ -87,7 +93,11 @@ def _select_positive_points(
         selected.append(chosen.copy())
         selected_boundary_distances.append(float(distance[chosen[1], chosen[0]]))
         available[chosen_index] = False
-    return [[int(point[0]), int(point[1])] for point in selected], selected_boundary_distances
+    return (
+        [[int(point[0]), int(point[1])] for point in selected],
+        selected_boundary_distances,
+        int(candidates.shape[0]),
+    )
 
 
 def _valid_negative_pixel(
@@ -112,6 +122,8 @@ def _select_negative_points(
     probability: np.ndarray,
     classifications: list[dict[str, Any]],
     config: dict[str, Any],
+    *,
+    allow_dry_track_negatives: bool,
 ) -> tuple[list[list[int]], list[str], list[int]]:
     ys, xs = np.where(component)
     center_x = float(np.mean(xs))
@@ -136,7 +148,7 @@ def _select_negative_points(
     maximum_negative_distance = float(config["negative_ring_outer_distance_px"])
 
     dry_candidates: list[tuple[float, int, int, int]] = []
-    for item in classifications:
+    for item in classifications if allow_dry_track_negatives else []:
         if item.get("classification") != "dry_splash":
             continue
         confidence = float(item.get("confidence", 0.0))
@@ -281,17 +293,32 @@ def generate_temporal_sam2_prompt(
     box_border_touch_ratio = 0.0
     positive_points: list[list[int]] = []
     positive_boundary_distances: list[float] = []
+    positive_candidate_count = 0
     negative_points: list[list[int]] = []
     negative_sources: list[str] = []
     negative_sectors: list[int] = []
+    gate_status = str(temporal_quality_gate.get("status", "unavailable"))
+    partial_gate = gate_status not in ("pass", "reject")
+    box_margin_xy = [int(config["box_margin_px"]), int(config["box_margin_px"])]
+    allow_dry_track_negatives = not partial_gate or bool(
+        config.get("use_dry_splash_negatives_when_temporal_partial", True)
+    )
     if selected_record is not None:
         x, y, component_width, component_height = selected_record["bbox_xywh"]
-        margin = int(config["box_margin_px"])
+        base_margin = int(config["box_margin_px"])
+        margin_x = base_margin
+        margin_y = base_margin
+        if partial_gate:
+            partial_ratio = float(config.get("partial_gate_box_margin_ratio", 0.0))
+            partial_cap = int(config.get("partial_gate_box_margin_cap_px", base_margin))
+            margin_x = min(partial_cap, max(base_margin, int(np.ceil(component_width * partial_ratio))))
+            margin_y = min(partial_cap, max(base_margin, int(np.ceil(component_height * partial_ratio))))
+        box_margin_xy = [margin_x, margin_y]
         box = [
-            max(0, x - margin),
-            max(0, y - margin),
-            min(width - 1, x + component_width - 1 + margin),
-            min(height - 1, y + component_height - 1 + margin),
+            max(0, x - margin_x),
+            max(0, y - margin_y),
+            min(width - 1, x + component_width - 1 + margin_x),
+            min(height - 1, y + component_height - 1 + margin_y),
         ]
         box_area_fraction = float(
             ((box[2] - box[0] + 1) * (box[3] - box[1] + 1)) / max(1, width * height)
@@ -305,15 +332,22 @@ def generate_temporal_sam2_prompt(
             hard_reasons.append("box_excessively_touches_image_border")
         elif box_border_touch_ratio > 0:
             diagnostic_reasons.append("box_touches_image_border")
-        positive_points, positive_boundary_distances = _select_positive_points(
+        positive_points, positive_boundary_distances, positive_candidate_count = _select_positive_points(
             selected_component,
             probability,
             int(config["target_positive_points"]),
             float(config["min_positive_boundary_distance_px"]),
             float(config["min_positive_spacing_px"]),
+            float(config.get("min_positive_probability", 0.0)),
         )
         negative_points, negative_sources, negative_sectors = _select_negative_points(
-            water, unknown, selected_component, probability, classifications, config
+            water,
+            unknown,
+            selected_component,
+            probability,
+            classifications,
+            config,
+            allow_dry_track_negatives=allow_dry_track_negatives,
         )
     if len(positive_points) < int(config["min_positive_points"]):
         hard_reasons.append("insufficient_safe_positive_points")
@@ -363,10 +397,16 @@ def generate_temporal_sam2_prompt(
         "ambiguous_component_count": int(ambiguous_count),
         "box_area_fraction": box_area_fraction,
         "box_border_touch_ratio": box_border_touch_ratio,
+        "box_margin_xy_px": box_margin_xy,
+        "box_expansion_policy": "partial_gate_component_scaled" if partial_gate else "fixed_base_margin",
         "positive_point_count": len(positive_points),
         "positive_boundary_distances_px": positive_boundary_distances,
+        "positive_point_probabilities": [float(probability[y, x]) for x, y in positive_points],
+        "positive_probability_floor": float(config.get("min_positive_probability", 0.0)),
+        "positive_candidate_count_after_confidence_filter": int(positive_candidate_count),
         "negative_point_count": len(negative_points),
         "negative_point_sources": negative_sources,
+        "dry_splash_negatives_allowed": bool(allow_dry_track_negatives),
         "negative_direction_sector_count": len(negative_sectors),
         "negative_direction_sectors": negative_sectors,
         "unknown_fraction": float(np.mean(unknown)),

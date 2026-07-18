@@ -36,6 +36,11 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--project-root", type=Path, default=PROJECT_ROOT)
     parser.add_argument("--matrix-config", type=Path, default=PROJECT_ROOT / "configs" / "phase2d_c6b2_heldout_matrix.yaml")
+    parser.add_argument(
+        "--prompt-config",
+        type=Path,
+        default=PROJECT_ROOT / "configs" / "temporal_sam2_prompt.yaml",
+    )
     parser.add_argument("--output-root", required=True, type=Path)
     return parser.parse_args()
 
@@ -58,6 +63,7 @@ def main() -> int:
             "--image", str(root / sample["image"]),
             "--frame-index", str(sample["frame_index"]),
             "--expected-image-sha256", str(sample["image_sha256"]),
+            "--config", str(args.prompt_config.resolve()),
             "--output-dir", str(sample_output),
         ]
         completed = subprocess.run(command, capture_output=True, text=True, check=False)
