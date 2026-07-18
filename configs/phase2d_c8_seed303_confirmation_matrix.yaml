@@ -1,0 +1,136 @@
+phase2d_c8_seed303_confirmation_matrix:
+  protocol_version: phase2d_c8_seed303_input_freeze_v1
+  matrix_id: phase2d_c8_seed303_confirmation
+  evaluation_role: final_confirmation_not_threshold_selection
+  selection_frozen_before_rgb_inspection: true
+  rgb_opened_for_subjective_selection: false
+  ground_truth_opened_for_prediction: false
+  prediction_started: false
+  seed: 303
+  fps: 20
+  frame_count_per_sequence: 200
+  anchor_frame_index: 149
+  window_start: 129
+  window_end: 169
+  window_frame_count: 41
+  sample_count: 12
+  dynamic_generator_config:
+    path: configs/dynamic_rain_visual_simulation.yaml
+    sha256: 7c1700a064ae330c7cbc8e6792af7296caef3f61c3b1567ff1ae380515d067c0
+  automatic_prompt_config:
+    path: configs/temporal_sam2_prompt_c6c.yaml
+    sha256: d0839ece8863029a83a4ae4bbed4d0931cbad22c913bfd85c8b397e568aa12f5
+  frozen_candidate_gate_config:
+    path: configs/phase2d_c8_candidate_quality_gate.yaml
+    sha256: 75c92e7f4f21ef9c05a65d564a78a4634dc6b3c3c5382fb31b6b1a2f8c45c728
+  authoritative: false
+  eligible_for_downstream: false
+  samples:
+    - sample_id: c8c3_001
+      case_id: sim_water_5cm_001
+      rain_level: light
+      frames_dir: data/simulation_dynamic/sim_water_5cm_001/light/seed_303/frames
+      anchor_image: data/simulation_dynamic/sim_water_5cm_001/light/seed_303/frames/frame_000149.png
+      anchor_sha256: ddb1d15a609a9aacfab5a9160435f31baf43e73645cf3cbad935fcb171a55622
+      window_sha256: 5d8087ac78ef9105e8bf2e039522d9f394ec3d5f544db931468f6e95d4d4b2e4
+      manifest_sha256: ea22a960898ad7450edd551828fe5c493ddb5f35cebed414d6d11be6d81febc0
+      sequence_sha256: 44d8ea47afa51985f63a2dee1632ab1f5a0b9bce91b9c58af725bf69113f0013
+    - sample_id: c8c3_002
+      case_id: sim_water_5cm_001
+      rain_level: moderate
+      frames_dir: data/simulation_dynamic/sim_water_5cm_001/moderate/seed_303/frames
+      anchor_image: data/simulation_dynamic/sim_water_5cm_001/moderate/seed_303/frames/frame_000149.png
+      anchor_sha256: 0228d2a65b9c8c781222ec07f9532488bc7dfa600b489c1c09dd640ec9bc3f54
+      window_sha256: f6121a5c8c799e3290413301c9c23302db8eff8d76e1924e2e482f99bf21ac71
+      manifest_sha256: 741daf2128bc80b710be562169389c4740c279c974b7d511d5825c60fe1c11ce
+      sequence_sha256: d220874179ecb85339ad970589cd217ef3f79f171ddd7b39a828994640293349
+    - sample_id: c8c3_003
+      case_id: sim_water_5cm_001
+      rain_level: heavy
+      frames_dir: data/simulation_dynamic/sim_water_5cm_001/heavy/seed_303/frames
+      anchor_image: data/simulation_dynamic/sim_water_5cm_001/heavy/seed_303/frames/frame_000149.png
+      anchor_sha256: 959e3ec58709512fcd81f12e09fe82cc5d68bc2ae3a510a4a8bd20c048ff5b8b
+      window_sha256: 5b68171d7cce0d177b597ffcf81718f0957df79944b6ad93999c76e83aed3834
+      manifest_sha256: c75633590f3c88037e7920391a7575f7fa1b9c7c146c68e6dda200635b7053e1
+      sequence_sha256: d2e11df463e706b88a8ac4c01f75f7b606d063f2137f752642558f710af2b7c7
+    - sample_id: c8c3_004
+      case_id: sim_water_10cm_001
+      rain_level: light
+      frames_dir: data/simulation_dynamic/sim_water_10cm_001/light/seed_303/frames
+      anchor_image: data/simulation_dynamic/sim_water_10cm_001/light/seed_303/frames/frame_000149.png
+      anchor_sha256: 42fc180a8295fa034f7a021b91b8873dccbe0cbd5b9063d3004ba7a44522bc4d
+      window_sha256: 4ebce17515ad1e19bacd997c4dc49f801bea08903ad6a25fb7ed61e683a4a046
+      manifest_sha256: af04c35a329cca720fce817e326aa8f0190e4d9de9e69abbdd6f53a778c83022
+      sequence_sha256: c338c0124f398f3e5f8d5d04a5ddacc725d2e9343936f4f390df5b1e8011a60c
+    - sample_id: c8c3_005
+      case_id: sim_water_10cm_001
+      rain_level: moderate
+      frames_dir: data/simulation_dynamic/sim_water_10cm_001/moderate/seed_303/frames
+      anchor_image: data/simulation_dynamic/sim_water_10cm_001/moderate/seed_303/frames/frame_000149.png
+      anchor_sha256: 7a2e4ba394552900445718f09e227f4b9448119e2064177192e18116f8ecbd5a
+      window_sha256: db95df31b1505f511f337bf50a8ea68981ab045a0bb3f0b05b3173d512a8f5bf
+      manifest_sha256: d9ff43ab155048fec9ce46c18eafde681ec258553d286ed1ba2b38759426e718
+      sequence_sha256: f15895cb26a395f9cb68629a198e32b925426efdb3f66e1a7c216a806650dee2
+    - sample_id: c8c3_006
+      case_id: sim_water_10cm_001
+      rain_level: heavy
+      frames_dir: data/simulation_dynamic/sim_water_10cm_001/heavy/seed_303/frames
+      anchor_image: data/simulation_dynamic/sim_water_10cm_001/heavy/seed_303/frames/frame_000149.png
+      anchor_sha256: fa72c4373ac192ffd596aa82b8f8eba6a57cd56d2cde07d1ae97fdce0f619d27
+      window_sha256: 9281c2504781abed66a7dbca23b76c3fc315908fd6a7380c266ff4e637f87917
+      manifest_sha256: b077fadff1ac30a2c13a04d7b1ae5376e4e20c0462436d607893f6289de84d2b
+      sequence_sha256: b7007f0d01f383ad34a951402dddcc437ee2a7973bb19ab9e921da9a40767af7
+    - sample_id: c8c3_007
+      case_id: sim_water_20cm_001
+      rain_level: light
+      frames_dir: data/simulation_dynamic/sim_water_20cm_001/light/seed_303/frames
+      anchor_image: data/simulation_dynamic/sim_water_20cm_001/light/seed_303/frames/frame_000149.png
+      anchor_sha256: 775da12c727b8eb99e8decb9b2c1bd7d3bc256a5b08ccdb1d054775a675644a6
+      window_sha256: cef390265ad82a08a8b333a481aca6dc3aa139a4bb564a1bfe2b15149bdf26e0
+      manifest_sha256: f6309701e418a7047205dc54e03a4ed010013e1a4ae489df46d74a62cabc9071
+      sequence_sha256: 8f994d6cb4fa50f16c283c2307070bf4dd37b1bfc262090f5a63fa7a3e84112e
+    - sample_id: c8c3_008
+      case_id: sim_water_20cm_001
+      rain_level: moderate
+      frames_dir: data/simulation_dynamic/sim_water_20cm_001/moderate/seed_303/frames
+      anchor_image: data/simulation_dynamic/sim_water_20cm_001/moderate/seed_303/frames/frame_000149.png
+      anchor_sha256: c442b25dad5729137359f17d6a460cdeb05571cfc3c2b0716af69cf1614009f1
+      window_sha256: 720a67b915604780aacba25f537143e720c32d241ffb8894465c36e0e17d1761
+      manifest_sha256: e334a2f17fafc9e44b08158dc4c1b6bba60626737be52bb748c05149406a4ba9
+      sequence_sha256: a27fb16161a9e9332f10c229b0f12902a3ffc2e52b9e515eb6bf3b932aed4989
+    - sample_id: c8c3_009
+      case_id: sim_water_20cm_001
+      rain_level: heavy
+      frames_dir: data/simulation_dynamic/sim_water_20cm_001/heavy/seed_303/frames
+      anchor_image: data/simulation_dynamic/sim_water_20cm_001/heavy/seed_303/frames/frame_000149.png
+      anchor_sha256: 46df3d8fac004e6dc1a72d69e94d7bfef51f92bfd6c97e214110abcf63d2a269
+      window_sha256: f89801ce592c5bb6234042030670d9e195ddce2a37888d5316ff6511b5df6517
+      manifest_sha256: 73c9f43ef06054a80ef52109c9f520c978f347669b66aa1774f6ab2b290cfee2
+      sequence_sha256: 79ef2f64c5a316157bab80e4218ed9597e06e2001a932572c9a54ff25a355d9e
+    - sample_id: c8c3_010
+      case_id: sim_water_40cm_001
+      rain_level: light
+      frames_dir: data/simulation_dynamic/sim_water_40cm_001/light/seed_303/frames
+      anchor_image: data/simulation_dynamic/sim_water_40cm_001/light/seed_303/frames/frame_000149.png
+      anchor_sha256: 83b131a50f67f299ea7518ee45b2fd0950868fe74fd0c2a6a3ed7bf9d1253b5c
+      window_sha256: 11f698a6cfa2f9a33fdf0f16b6585c97ec5a86960df76fe97848bcba6153829f
+      manifest_sha256: d282f80d61fd098c1f262d6b0ab747b22e9382d14719ec46b62907170718d8c3
+      sequence_sha256: a2bb3b5c1aafb919e509d3b01d3b92035d9b0ee77d61496153ff4082fb9f289f
+    - sample_id: c8c3_011
+      case_id: sim_water_40cm_001
+      rain_level: moderate
+      frames_dir: data/simulation_dynamic/sim_water_40cm_001/moderate/seed_303/frames
+      anchor_image: data/simulation_dynamic/sim_water_40cm_001/moderate/seed_303/frames/frame_000149.png
+      anchor_sha256: 6bdca919b254fa362042f08ea04439b7471a50ae10612bed074ecf7fc7e16ba4
+      window_sha256: 826ba40703bb26b01e5aae396531e44d321364435906e1f88f89840bf949a5a8
+      manifest_sha256: 6a8354392ea17d5d725b82851ceb0018c20c634c653f3cf37ad5a8bc506c27d9
+      sequence_sha256: 014e70994ac5b8b5146b556bbd169df01570c070c9ed98749df48e81ff586431
+    - sample_id: c8c3_012
+      case_id: sim_water_40cm_001
+      rain_level: heavy
+      frames_dir: data/simulation_dynamic/sim_water_40cm_001/heavy/seed_303/frames
+      anchor_image: data/simulation_dynamic/sim_water_40cm_001/heavy/seed_303/frames/frame_000149.png
+      anchor_sha256: 6713aef982421473c082d707378f946b89908d1edcffcf55da9cf4b446d8f194
+      window_sha256: b4d14ee3659a5fc90070a1ac71a13172272c5b1aab6690edb2b5abb0063d5ace
+      manifest_sha256: d404ceb57005d434d7dc89ba1c77c012667195836c325b5de5c37a5cc1ebe09e
+      sequence_sha256: b4db318f81a6ae38451cf2bc3f1137d144ff70c010cf332b73856e8abc866336
