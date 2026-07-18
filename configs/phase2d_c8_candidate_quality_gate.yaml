@@ -1,0 +1,36 @@
+phase2d_c8_candidate_quality_gate:
+  protocol_version: phase2d_c8_candidate_gate_v1
+  status: offline_research_candidate
+  replaces_runtime_gate: false
+  eligible_for_downstream: false
+
+  frame_thresholds:
+    min_shoreline_intersection_success_rate: 0.65
+    min_seed_ray_success_ratio: 0.65
+    min_valid_shoreline_samples: 20
+    max_shoreline_mad_m: 0.020
+    max_shoreline_iqr_m: 0.060
+    min_camera_reprojection_iou: 0.90
+    max_physical_depth_m: 0.60
+    advisory_outer_boundary_p95_px: 5.0
+
+  sequence_thresholds:
+    max_water_level_window_std_cm: 0.50
+    max_adjacent_water_level_change_p95_cm: 1.00
+    max_water_area_coefficient_of_variation: 0.10
+    max_water_volume_coefficient_of_variation: 0.20
+
+  boundary_policy:
+    may_reject_by_itself: false
+    role: advisory_diagnostic
+    note: Pixel boundary error is not directly converted to water-level centimeters.
+
+  scope_policy:
+    unobservable_or_ambiguous_basin:
+      camera_visible_estimate: preserve_if_other_checks_pass
+      global_scene_estimate: partial
+
+  evidence_sequences:
+    - c7_5cm_heavy_seed302
+    - c7_20cm_moderate_seed302
+    - c7_40cm_light_seed302

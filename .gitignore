@@ -57,6 +57,7 @@ outputs/sam2_auto_prompt_failure_audit_*/
 outputs/sam2_video_pilot*/
 outputs/sam2_video_geometry_stability_*/
 outputs/sam2_video_geometry_gt_evaluation_*/
+outputs/phase2d_c8_candidate_gate_*/
 
 # Phase 2D-C manually prompted SAM 2 geometry inputs and generated diagnostics
 # are local experiment artifacts. Source adapters, tests, and documents remain tracked.
