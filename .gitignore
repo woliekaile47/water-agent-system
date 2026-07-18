@@ -50,6 +50,8 @@ outputs/temporal_water_detection/
 outputs/temporal_event_classifier/
 outputs/temporal_water_detection_model/
 outputs/synthetic_visual_to_depth_integration/
+outputs/temporal_sam2_prompt_heldout_*/
+outputs/sam2_auto_prompt_heldout_*/
 
 # Phase 2D-C manually prompted SAM 2 geometry inputs and generated diagnostics
 # are local experiment artifacts. Source adapters, tests, and documents remain tracked.
