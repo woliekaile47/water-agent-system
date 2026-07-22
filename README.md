@@ -2,22 +2,61 @@
 
 ## Project Overview
 
-`water_agent_system` is an offline engineering MVP for urban road
-waterlogging detection and short-term warning. It is designed around
-cloud-edge collaboration, multimodal sensing, fusion, reasoning, and an
-Agent-based audit workflow.
+`water_agent_system` is a two-stage road-waterlogging perception research
+prototype. A dry-road LiDAR survey builds the ground DEM; during rainfall,
+Camera video, automatic temporal prompts, SAM 2 video propagation, shoreline
+geometry, and the ground DEM estimate water level, depth, area, and volume.
 
-The current project focuses on reproducible offline execution. It does
-not start live LiDAR, camera, ROS nodes, or rosbag replay during the
-default Agent demo.
+The current release is a reproducible **synthetic shadow demo**. It does not
+start live LiDAR, Camera, ROS nodes, Gazebo, or rosbag replay during the
+competition demo, and it cannot generate authoritative warnings.
 
 ## Current Version
 
 Current version tag:
 
-- `v0.4-full-s7-agent-integration`
+- `v1.1-competition-synthetic-shadow-demo`
 
-## Offline MVP Pipeline
+## Current Two-Stage Perception Pipeline
+
+```text
+dry LiDAR survey -> ground DEM
+synthetic rainfall Camera video -> temporal evidence -> automatic SAM 2 prompt
+-> SAM 2 video propagation -> outer shoreline -> ray/DEM intersection
+-> water level -> depth/area/volume -> candidate quality gate
+-> canonical shadow state -> read-only monitoring dashboard
+```
+
+Seed 303 final confirmation contains 12 sequences and 492 frames. The frozen
+candidate gate passed 361 frames and rejected 131; all 361 passed frames were
+within the 3 cm water-level-error research target, with no observed false pass
+in that synthetic confirmation set. This result does not replace real-road
+validation.
+
+The single-Camera result distinguishes `global_scene_estimate` from
+`camera_visible_estimate`. An unobservable secondary basin is not filled from
+the DEM prior alone.
+
+## Competition Synthetic Demo
+
+The dedicated competition entry point only displays frozen simulation-road
+Camera frames and C8/C9 prediction-side artifacts. It rejects Ground Truth,
+manual-prompt, dormitory/cardboard, and non-simulation input paths.
+
+```bash
+cd ~/water_agent_ws/water_agent_system
+bash scripts/run_phase2d_c10_competition_demo.sh
+```
+
+Open `http://localhost:8501`. The four fixed moderate-rain scenes show 5, 10,
+20, and 40 cm simulation settings. The 5 cm case remains rejected, and the
+40 cm case remains a partial Camera-visible estimate.
+
+## Legacy Offline MVP Pipeline
+
+The original S1-S8 pipeline remains available as a historical engineering
+baseline and regression target. It is not the default competition perception
+demo.
 
 The reproducible offline demo runs this chain:
 
@@ -66,6 +105,9 @@ cd ~/water_agent_ws/water_agent_system
 streamlit run dashboard/app.py
 ```
 
+For competition presentation, prefer the dedicated simulation-only entry point
+shown above; it does not include the historical dormitory comparison pages.
+
 If the browser does not open automatically, open the local URL printed by
 Streamlit, usually `http://localhost:8501`. The dashboard only reads
 offline output files and does not start LiDAR, camera, ROS nodes, or
@@ -73,6 +115,15 @@ rosbag replay.
 
 ## Important Notes
 
+- The current competition result is synthetic and non-authoritative.
+- Automatic temporal prompts and SAM 2 video propagation are implemented;
+  the competition path does not require per-frame manual clicks.
+- Dynamic rainfall simulation is an offline research and regression tool, not
+  a future production runtime dependency.
+- The 5 cm shallow-water condition remains the main visual limitation.
+- Single-Camera coverage cannot safely recover unobservable basins; multi-Camera
+  coverage is a future direction.
+- Formal S5-S8 warning activation remains disabled.
 - The current demo does not start real-time devices.
 - The current configured depth is an MVP simulation.
 - The current weather input is offline mock weather.
@@ -89,6 +140,8 @@ rosbag replay.
 - `v0.3-physical-constraint-mvp`
 - `v0.4-full-s7-agent-integration`
 - `v0.5-reproducible-offline-demo`
+- `v1.0-project-demo-ready`
+- `v1.1-competition-synthetic-shadow-demo`
 
 ## Real LiDAR Surface DEM Depth Inversion
 

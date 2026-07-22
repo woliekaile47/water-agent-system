@@ -1,5 +1,45 @@
 # Project Status
 
+## Current Two-Stage Perception Status
+
+Release target: `v1.1-competition-synthetic-shadow-demo`.
+
+| Phase | Status | Current implementation |
+|---|---|---|
+| Phase 1A | Complete | Gazebo Fortress road/Camera environment, deterministic geometry PointCloud2, Ground Truth and reproducible dry/5/10/20/40 cm scenarios |
+| Phase 2A | Complete baseline | Camera mask projected to ground DEM with independent Ground Truth evaluation |
+| Phase 2B | Complete | Water-surface-aware shoreline ray/DEM intersection, robust water-level estimation, basin reconstruction and observability semantics |
+| Phase 2C | Research support complete | Dynamic rainfall visual simulation and interpretable temporal baselines retained for data generation, automatic prompt evidence and regression |
+| Phase 2D-C6 | Complete | Fixed Ground-Truth-free temporal rules automatically generate SAM 2 box, positive points and negative points |
+| Phase 2D-C7 | Complete | SAM 2 bidirectional video propagation plus per-frame shoreline/DEM geometry and temporal stability diagnostics |
+| Phase 2D-C8 | Complete synthetic confirmation | Frozen candidate gate confirmed on Seed 303: 12 sequences, 492 frames, 361 pass and 131 reject |
+| Phase 2D-C9 | Complete shadow integration | Canonical water state, S5-S8 shadow envelopes, independent shadow audit/API payload and Dashboard monitoring |
+| Phase 2D-C10 | Competition demo accepted | Dedicated simulation-road-only Dashboard, source allowlist, one-command launcher and manual visual acceptance |
+| Real-road validation | Not complete | Devices are unavailable during the school holiday; no production or real-rain accuracy claim |
+| Formal warning deployment | Not complete | `authoritative=false` and `eligible_for_downstream=false`; warning actions remain disabled |
+
+### Current Evidence
+
+- Seed 303 confirmation: 492 frames across 5/10/20/40 cm and three rain levels.
+- Candidate gate: 361 pass, 131 reject.
+- All 361 passed frames were within the 3 cm water-level-error research target;
+  no false pass was observed in that synthetic confirmation set.
+- 5 cm remains conservative and difficult; only 9/123 frames passed, while
+  5 cm heavy passed 0/41.
+- 40 cm Camera-visible estimates passed, but global status remains `partial`
+  where an independent basin is outside Camera coverage.
+- C9 end-to-end shadow acceptance passed 22/22 invariants and 9/9 injected
+  fault checks without modifying formal S5-S8 files or the formal audit DB.
+
+### Competition Demo Boundary
+
+The dedicated demo reads only frozen simulation-road Camera, SAM 2, geometry,
+and candidate-gate artifacts. It rejects Ground Truth, manual-prompt,
+dormitory/cardboard and non-simulation source paths. It does not start ROS,
+Gazebo, Camera, LiDAR, RTSP, the formal Agent, or warning actions.
+
+## Legacy S1-S8 Status
+
 | Stage | Status | Current implementation |
 |---|---|---|
 | S1 | Complete | ROS2 LiDAR + camera prototype acquisition chain |
