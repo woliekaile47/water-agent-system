@@ -1,0 +1,10 @@
+phase2d_c9_canonical_water_state:
+  schema_version: canonical_water_state_v1
+  deployment_mode: shadow
+  active_runtime_gate: legacy_runtime_gate
+  candidate_gate: phase2d_c8_candidate_gate_v1
+  allow_downstream_in_shadow: false
+  authoritative: false
+  eligible_for_downstream: false
+  observation_scope: camera_observable_region
+  note: Candidate values are audit-only until Phase 2D-C-9 integration and fault tests pass.
