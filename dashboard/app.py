@@ -40,6 +40,7 @@ PAGES = [
     "DEM-space mask（数字高程掩膜）诊断",
     "S7/S8：短临预警链路",
     "Agent（智能体）与审计",
+    "C9 Shadow：统一状态监控",
 ]
 
 
@@ -283,6 +284,52 @@ def page_agent_audit() -> None:
     st.caption("这里只显示数据库路径和存在性，不强制读取 SQLite 文件。")
 
 
+def page_c9_shadow_monitoring() -> None:
+    st.title("C9 Shadow：统一水状态与旁路监控")
+    section_note(
+        "本页只读取 Phase 2D-C-9 的 sidecar snapshot。所有结果均为非 authoritative，"
+        "不能生成正式预警，也不会改变现有 S5-S8 或 Agent 行为。"
+    )
+    status = read_json("outputs/phase2d_c9_monitoring_snapshot/current_shadow_status.json")
+    api_payload = read_json("outputs/phase2d_c9_monitoring_snapshot/canonical_shadow_api_payload.json")
+    if not isinstance(status, dict):
+        st.warning("缺少 C9 shadow monitoring snapshot；请先运行离线 snapshot builder。")
+        return
+    monitor = status.get("monitor", {})
+    status_badge("monitor_status", monitor.get("monitor_status", "unavailable"))
+    metric_grid(
+        [
+            ("canonical records", monitor.get("canonical_record_count", 0), "统一状态记录数量"),
+            ("samples", monitor.get("canonical_sample_count", 0), "样本数量"),
+            ("formal DB unchanged", status.get("formal_audit_db_unchanged"), "正式审计数据库未改变"),
+            ("warning generated", status.get("formal_warning_generated"), "正式预警生成状态"),
+        ]
+    )
+    st.subheader("新旧门控对照")
+    st.json(monitor.get("legacy_candidate_status_matrix", {}), expanded=True)
+    st.subheader("S5-S8 Shadow 状态")
+    st.json(
+        {
+            "S5": monitor.get("s5_status_counts", {}),
+            "S7": monitor.get("s7_status_counts", {}),
+            "S8": monitor.get("s8_status_counts", {}),
+        },
+        expanded=True,
+    )
+    st.error(
+        "Shadow 安全边界：authoritative=false，eligible_for_downstream=false，"
+        "warning actions unavailable。"
+    )
+    if isinstance(api_payload, dict):
+        st.subheader("只读 API 数据契约")
+        st.caption("当前只生成框架无关 JSON payload，未启动 HTTP 服务。")
+        st.json(api_payload, expanded=False)
+    show_json(
+        "outputs/phase2d_c9_monitoring_snapshot/current_shadow_status.json",
+        "current_shadow_status.json",
+    )
+
+
 def main() -> None:
     st.set_page_config(
         page_title="water_agent_system dashboard",
@@ -304,6 +351,7 @@ def main() -> None:
         PAGES[5]: page_mask_diagnosis,
         PAGES[6]: page_s7_s8,
         PAGES[7]: page_agent_audit,
+        PAGES[8]: page_c9_shadow_monitoring,
     }
     page_map[page]()
 

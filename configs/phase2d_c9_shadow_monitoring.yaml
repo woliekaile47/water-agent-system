@@ -1,0 +1,14 @@
+phase2d_c9_shadow_monitoring:
+  protocol_version: phase2d_c9c_shadow_monitoring_v1
+  mode: read_only_sidecar
+  run_id: phase2d_c9c_seed303
+  canonical_root: outputs/phase2d_c9_canonical_shadow_seed303
+  s5_s8_shadow_root: outputs/phase2d_c9_s5_s8_shadow_seed303
+  output_root: outputs/phase2d_c9_monitoring_snapshot
+  formal_audit_db: data/db/water_agent_audit.db
+  sidecar_audit_db_name: canonical_shadow_audit.db
+  start_http_server: false
+  modify_formal_agent: false
+  allow_warning_actions: false
+  authoritative: false
+  eligible_for_downstream: false
