@@ -113,12 +113,39 @@ def section_note(text: str) -> None:
 
 
 def status_badge(label: str, value: Any) -> None:
-    if str(value).lower() in {"reject", "false", "none"}:
+    level = status_badge_level(value)
+    if level == "error":
         st.error(f"{label}: {value}")
-    elif str(value).lower() in {"warning", "low_risk", "suspected_water"}:
+    elif level == "warning":
         st.warning(f"{label}: {value}")
     else:
         st.success(f"{label}: {value}")
+
+
+def status_badge_level(value: Any) -> str:
+    """Map result semantics to a non-misleading dashboard badge level."""
+
+    normalized = str(value).strip().lower()
+    if normalized in {
+        "reject",
+        "false",
+        "none",
+        "unavailable",
+        "fail",
+        "failed",
+        "blocked",
+    }:
+        return "error"
+    if normalized in {
+        "warning",
+        "low_risk",
+        "suspected_water",
+        "partial",
+        "not_ready",
+        "warning_suppressed",
+    }:
+        return "warning"
+    return "success"
 
 
 def file_summary(paths: list[str]) -> None:
