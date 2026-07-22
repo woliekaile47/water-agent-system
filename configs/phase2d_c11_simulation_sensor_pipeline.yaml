@@ -1,0 +1,28 @@
+lidar_topic: /sim/lidar/points
+camera_topic: /sim/camera/image_raw
+grid_size: 0.10
+max_frames: 80
+dem_roi:
+  x_min: -9.0
+  x_max: 9.0
+  y_min: -3.5
+  y_max: 3.5
+  z_min: -1.0
+  z_max: 0.5
+
+ground_dem:
+  enabled: true
+  method: low_percentile_grid_tf_aware
+  generate_figures: false
+  target_frame: map
+  static_tf_topic: /tf_static
+  ground_z_min: -0.7
+  ground_z_max: 0.35
+  grid_height_percentile: 20
+  min_points_per_cell: 3
+  max_frames: 80
+  interpolation:
+    enabled: true
+    method: local_plane
+    max_neighbor_distance_cells: 50
+    neighbor_count: 8

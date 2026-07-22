@@ -132,6 +132,46 @@ def interpolate_nearest(
     return result, fill_mask
 
 
+def interpolate_local_plane(
+    dem: np.ndarray,
+    valid_mask: np.ndarray,
+    max_neighbor_distance_cells: int,
+    neighbor_count: int = 8,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Fill gaps by weighted local-plane fits over nearby observed DEM cells."""
+    result = dem.copy()
+    fill_mask = np.zeros(valid_mask.shape, dtype=bool)
+    valid_positions = np.argwhere(valid_mask).astype(np.float64)
+    if valid_positions.shape[0] < 3:
+        return result, fill_mask
+    valid_values = dem[valid_mask].astype(np.float64)
+    maximum_distance2 = float(max(0, int(max_neighbor_distance_cells)) ** 2)
+    k = max(3, min(int(neighbor_count), int(valid_positions.shape[0])))
+    for y, x in np.argwhere(~valid_mask):
+        target = np.array([float(y), float(x)], dtype=np.float64)
+        delta = valid_positions - target
+        distance2 = np.sum(delta * delta, axis=1)
+        nearest = np.argpartition(distance2, k - 1)[:k]
+        if float(np.min(distance2[nearest])) > maximum_distance2:
+            continue
+        positions = valid_positions[nearest]
+        values = valid_values[nearest]
+        design = np.column_stack((positions[:, 0], positions[:, 1], np.ones(k)))
+        weights = 1.0 / np.maximum(distance2[nearest], 1e-6)
+        weighted_design = design * np.sqrt(weights)[:, None]
+        weighted_values = values * np.sqrt(weights)
+        coefficients, _, rank, _ = np.linalg.lstsq(weighted_design, weighted_values, rcond=None)
+        if rank < 3 or not np.isfinite(coefficients).all():
+            closest = int(nearest[np.argmin(distance2[nearest])])
+            estimate = valid_values[closest]
+        else:
+            estimate = float(coefficients[0] * y + coefficients[1] * x + coefficients[2])
+        if np.isfinite(estimate):
+            result[y, x] = np.float32(estimate)
+            fill_mask[y, x] = True
+    return result, fill_mask
+
+
 def save_heatmap(
     array: np.ndarray,
     output_path: str | Path,
@@ -218,12 +258,16 @@ def build_ground_dem_from_bag(
     ground_z_max = float(ground_config["ground_z_max"])
     percentile = float(ground_config.get("grid_height_percentile", 20))
     min_points_per_cell = int(ground_config.get("min_points_per_cell", 3))
+    target_frame = ground_config.get("target_frame")
+    static_tf_topic = str(ground_config.get("static_tf_topic", "/tf_static"))
 
     points, read_stats = read_pointcloud_xyz(
         dry_bag,
         topic_name=str(config["lidar_topic"]),
         max_frames=max_frames,
         log_prefix="[S2-B][reader]",
+        target_frame=str(target_frame) if target_frame else None,
+        static_tf_topic=static_tf_topic,
     )
     roi_points = filter_roi(points, roi)
     ground_mask = (roi_points[:, 2] >= ground_z_min) & (roi_points[:, 2] <= ground_z_max)
@@ -253,32 +297,46 @@ def build_ground_dem_from_bag(
     interpolation_enabled = bool(interpolation_config.get("enabled", True))
     interpolation_method = str(interpolation_config.get("method", "nearest"))
     max_neighbor_distance_cells = int(interpolation_config.get("max_neighbor_distance_cells", 3))
-    if interpolation_enabled and interpolation_method != "nearest":
-        raise ValueError(f"当前只支持 nearest 插值，不支持: {interpolation_method}")
     if interpolation_enabled:
-        interpolated, interpolation_fill_mask = interpolate_nearest(
-            ground_dem,
-            valid_mask,
-            max_neighbor_distance_cells,
-        )
+        if interpolation_method == "nearest":
+            interpolated, interpolation_fill_mask = interpolate_nearest(
+                ground_dem,
+                valid_mask,
+                max_neighbor_distance_cells,
+            )
+        elif interpolation_method == "local_plane":
+            interpolated, interpolation_fill_mask = interpolate_local_plane(
+                ground_dem,
+                valid_mask,
+                max_neighbor_distance_cells,
+                int(interpolation_config.get("neighbor_count", 8)),
+            )
+        else:
+            raise ValueError(f"Unsupported ground DEM interpolation method: {interpolation_method}")
     else:
         interpolated = ground_dem.copy()
         interpolation_fill_mask = np.zeros(valid_mask.shape, dtype=bool)
+    interpolated_valid_mask = np.isfinite(interpolated)
 
     dem_dir = root / "data" / "dem"
     fig_dir = root / "outputs" / "figures"
     dem_dir.mkdir(parents=True, exist_ok=True)
-    fig_dir.mkdir(parents=True, exist_ok=True)
+    generate_figures = bool(ground_config.get("generate_figures", True))
+    if generate_figures:
+        fig_dir.mkdir(parents=True, exist_ok=True)
     paths = {
         "ground_dem": dem_dir / "ground_dem.npy",
         "ground_dem_valid_mask": dem_dir / "ground_dem_valid_mask.npy",
         "ground_dem_point_count": dem_dir / "ground_dem_point_count.npy",
         "ground_dem_interpolated": dem_dir / "ground_dem_interpolated.npy",
         "ground_dem_metadata": dem_dir / "ground_dem_metadata.json",
-        "ground_dem_heatmap": fig_dir / "ground_dem_heatmap.png",
-        "ground_dem_interpolated_heatmap": fig_dir / "ground_dem_interpolated_heatmap.png",
-        "ground_dem_point_count_figure": fig_dir / "ground_dem_point_count.png",
     }
+    if generate_figures:
+        paths.update({
+            "ground_dem_heatmap": fig_dir / "ground_dem_heatmap.png",
+            "ground_dem_interpolated_heatmap": fig_dir / "ground_dem_interpolated_heatmap.png",
+            "ground_dem_point_count_figure": fig_dir / "ground_dem_point_count.png",
+        })
 
     metadata: dict[str, Any] = {
         "stage": "S2-B_ground_dem_build",
@@ -298,6 +356,9 @@ def build_ground_dem_from_bag(
         "source_bag": str(Path(dry_bag).expanduser()),
         "lidar_topic": str(config["lidar_topic"]),
         "max_frames": max_frames,
+        "pointcloud_source_frames": read_stats.get("source_frames", []),
+        "target_frame": read_stats.get("target_frame"),
+        "static_tf_topic": read_stats.get("static_tf_topic"),
         "rosbag_read_stats": read_stats,
         "roi_point_count": int(roi_points.shape[0]),
         "ground_point_count": int(ground_points.shape[0]),
@@ -305,8 +366,16 @@ def build_ground_dem_from_bag(
             "enabled": interpolation_enabled,
             "method": interpolation_method,
             "max_neighbor_distance_cells": max_neighbor_distance_cells,
+            "neighbor_count": int(interpolation_config.get("neighbor_count", 8)),
             "filled_cell_count": int(np.count_nonzero(interpolation_fill_mask)),
+            "interpolated_valid_cell_count": int(np.count_nonzero(interpolated_valid_mask)),
+            "interpolated_valid_ratio": float(np.count_nonzero(interpolated_valid_mask) / interpolated.size),
             "note": "Interpolated cells are gap-filled estimates, not direct observations.",
+        },
+        "figure_generation": {
+            "enabled": generate_figures,
+            "status": "enabled" if generate_figures else "skipped_by_config",
+            "note": "Figures are optional diagnostics and do not affect DEM numerical outputs.",
         },
         "created_at": datetime.now(timezone.utc).isoformat(),
     }
@@ -322,33 +391,34 @@ def build_ground_dem_from_bag(
         json.dump(metadata, f, ensure_ascii=False, indent=2)
         f.write("\n")
 
-    save_heatmap(
-        ground_dem,
-        paths["ground_dem_heatmap"],
-        metadata,
-        title="S2-B Ground DEM (z_p20 observed cells)",
-        label="ground elevation z_p20 (m)",
-        valid_mask=valid_mask,
-        cmap_name="terrain",
-    )
-    save_heatmap(
-        interpolated,
-        paths["ground_dem_interpolated_heatmap"],
-        metadata,
-        title="S2-B Ground DEM (nearest interpolated)",
-        label="ground elevation z_p20 / nearest fill (m)",
-        valid_mask=np.isfinite(interpolated),
-        cmap_name="terrain",
-    )
-    save_heatmap(
-        point_count.astype(np.float32),
-        paths["ground_dem_point_count_figure"],
-        metadata,
-        title="S2-B Ground DEM point count per cell",
-        label="ground-filtered point count",
-        valid_mask=point_count > 0,
-        cmap_name="magma",
-    )
+    if generate_figures:
+        save_heatmap(
+            ground_dem,
+            paths["ground_dem_heatmap"],
+            metadata,
+            title="S2-B Ground DEM (z_p20 observed cells)",
+            label="ground elevation z_p20 (m)",
+            valid_mask=valid_mask,
+            cmap_name="terrain",
+        )
+        save_heatmap(
+            interpolated,
+            paths["ground_dem_interpolated_heatmap"],
+            metadata,
+            title=f"S2-B Ground DEM ({interpolation_method} interpolated)",
+            label=f"ground elevation z_p20 / {interpolation_method} fill (m)",
+            valid_mask=interpolated_valid_mask,
+            cmap_name="terrain",
+        )
+        save_heatmap(
+            point_count.astype(np.float32),
+            paths["ground_dem_point_count_figure"],
+            metadata,
+            title="S2-B Ground DEM point count per cell",
+            label="ground-filtered point count",
+            valid_mask=point_count > 0,
+            cmap_name="magma",
+        )
 
     print("[S2-B][ground] ground DEM shape:", metadata["dem_shape"])
     print("[S2-B][ground] valid cell count:", metadata["valid_cell_count"])

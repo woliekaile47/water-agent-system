@@ -1,0 +1,23 @@
+phase2d_c11_direct_e2e_20cm:
+  protocol_version: phase2d_c11_direct_e2e_20cm_v1
+  data_domain: simulation
+  seed: 303
+  fps: 20
+  anchor_frame_index: 149
+  window_start: 129
+  window_end: 169
+  ground_truth_used_for_prediction: false
+  runtime_root: outputs/phase2d_c11_simulation_e2e_runtime_direct_20cm/runtime
+  runtime_inputs:
+    geometry_case_dir: outputs/phase2d_c11_simulation_e2e_runtime_direct_20cm/s4_geometry/c8c3_008
+    ground_dem_dir: outputs/phase2d_c11_simulation_e2e_runtime_direct_20cm/s2/data/dem
+    candidate_gate_config: configs/phase2d_c8_candidate_quality_gate.yaml
+    case_library_json: data/cases/mock_historical_cases.json
+  samples:
+    - sample_id: c8c3_008
+      case_id: sim_water_20cm_001
+      rain_level: moderate
+      seed: 303
+      role: direct_simulation_e2e_demo
+      frames_dir: data/simulation_dynamic/sim_water_20cm_001/moderate/seed_303/frames
+      prompt_path: outputs/phase2d_c11_simulation_e2e_runtime_direct_20cm/s3_prompt/c8c3_008/automatic_prompt.json

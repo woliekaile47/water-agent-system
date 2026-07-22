@@ -16,7 +16,7 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 
-MVP_NOTE = (
+DEFAULT_MVP_NOTE = (
     "S7-A uses configured_mvp_simulation depth, offline_mock_weather, and "
     "offline_mock_depth_history to validate deterministic forecasting pipeline. "
     "It is not final real short-term waterlogging forecast."
@@ -190,7 +190,7 @@ def deterministic_forecast(config_path: str | Path, project_root: str | Path) ->
         "rainfall_intensity_mm_h": rainfall_intensity_mm_h,
         "rainfall_level_label": rainfall_level_label,
         "weather_correction_factor": weather_correction_factor,
-        "depth_history_source": "offline_mock_depth_history",
+        "depth_history_source": history_config.get("source", "offline_mock_depth_history"),
         "depth_history_records": history_records,
         "k_1min_cm_per_min": float(k_1min),
         "k_5min_cm_per_min": float(k_5min),
@@ -203,7 +203,7 @@ def deterministic_forecast(config_path: str | Path, project_root: str | Path) ->
         "forecast_results": forecast_results,
         "time_to_thresholds_min": time_to_thresholds,
         "warning_thresholds_cm": thresholds,
-        "mvp_note": MVP_NOTE,
+        "mvp_note": config.get("mvp_note", DEFAULT_MVP_NOTE),
         "config_note": config.get("note"),
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "warning": warnings,

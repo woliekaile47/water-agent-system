@@ -1,0 +1,14 @@
+roi_mapping:
+  mapping_method: "existing_standard_s4_depth_result"
+  description: "S5 consumes the frozen direct sensor-chain S4 depth map without configured-depth inversion."
+
+  dem:
+    ground_dem_path: "data/dem/ground_dem.npy"
+    ground_dem_interpolated_path: "data/dem/ground_dem_interpolated.npy"
+    ground_dem_valid_mask_path: "data/dem/ground_dem_valid_mask.npy"
+    metadata_path: "data/dem/ground_dem_metadata.json"
+
+  water_surface:
+    mode: "existing_standard_s4_result"
+    configured_depth_cm: null
+    note: "Depth originates from simulated RGB/SAM2 shoreline plus LiDAR-derived dry ground DEM."

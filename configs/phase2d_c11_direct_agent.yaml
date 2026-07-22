@@ -1,0 +1,56 @@
+agent:
+  name: "water_agent_direct_simulation_e2e"
+  mode: "offline_direct_sensor_pipeline"
+  description: "Existing S5-S8 Agent stages driven by standard S4 output from raw simulated sensors."
+  project_root: "."
+
+  pipeline:
+    stages:
+      - name: "area_volume"
+        command_stage: "area_volume_existing_s4"
+        config: "configs/phase2d_c11_direct_roi_mapping.yaml"
+        extra_args: ["--skip-figures"]
+      - name: "weather_correction"
+        command_stage: "weather_correction"
+        config: "configs/phase2d_c11_simulation_weather.yaml"
+        extra_args: ["--skip-figures"]
+      - name: "deterministic_forecast"
+        command_stage: "deterministic_forecast"
+        config: "configs/runtime_prediction.yaml"
+        extra_args: ["--skip-figures"]
+      - name: "case_retrieval"
+        command_stage: "case_retrieval"
+        config: "configs/case_retrieval_config.yaml"
+        extra_args: ["--skip-figures"]
+      - name: "physical_constraint"
+        command_stage: "physical_constraint"
+        config: "configs/physical_constraint_config.yaml"
+        extra_args: ["--skip-figures"]
+      - name: "warning_report"
+        command_stage: "warning_report"
+        config: "configs/phase2d_c11_simulation_warning.yaml"
+        extra_args: ["--skip-figures"]
+
+  outputs:
+    agent_dir: "data/agent"
+    audit_dir: "data/audit_logs"
+    db_dir: "data/db"
+    json_dir: "outputs/json"
+    report_dir: "outputs/reports"
+    figure_dir: "outputs/figures"
+
+  database:
+    sqlite_path: "data/db/water_agent_audit.db"
+
+  expected_outputs:
+    area_volume_result: "outputs/json/water_area_volume_result.json"
+    weather_correction_result: "outputs/json/weather_correction_result.json"
+    deterministic_forecast_result: "outputs/json/deterministic_forecast_result.json"
+    case_retrieval_result: "outputs/json/case_retrieval_result.json"
+    corrected_forecast_result: "outputs/json/corrected_forecast_result.json"
+    physical_constraint_result: "outputs/json/physical_constraint_result.json"
+    final_forecast_result: "outputs/json/final_forecast_result.json"
+    warning_decision_result: "outputs/json/warning_decision_result.json"
+    warning_report: "outputs/reports/warning_report.md"
+
+  mvp_note: "Direct raw-simulation sensor-chain smoke test. Non-authoritative; no external warning or device action."

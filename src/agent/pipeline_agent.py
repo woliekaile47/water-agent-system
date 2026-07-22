@@ -12,9 +12,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
-if str(PROJECT_ROOT) not in sys.path:
-    sys.path.insert(0, str(PROJECT_ROOT))
+CODE_ROOT = Path(__file__).resolve().parents[2]
+if str(CODE_ROOT) not in sys.path:
+    sys.path.insert(0, str(CODE_ROOT))
 
 from src.database import audit_db
 
@@ -65,22 +65,31 @@ def ensure_output_dirs(project_root: Path, outputs: dict[str, str]) -> None:
         resolve_project_path(project_root, outputs[key]).mkdir(parents=True, exist_ok=True)
 
 
-def run_stage(project_root: Path, stage: dict[str, Any]) -> dict[str, Any]:
+def run_stage(code_root: Path, runtime_root: Path, stage: dict[str, Any]) -> dict[str, Any]:
     stage_name = str(stage["name"])
     command_stage = str(stage["command_stage"])
-    config_path = str(stage["config"])
+    config_value = Path(str(stage["config"])).expanduser()
+    if config_value.is_absolute():
+        config_path = config_value
+    else:
+        code_config = code_root / config_value
+        runtime_config = runtime_root / config_value
+        config_path = code_config if code_config.exists() else runtime_config
     command = [
         sys.executable,
-        "run_offline_pipeline.py",
+        str(code_root / "run_offline_pipeline.py"),
         "--stage",
         command_stage,
         "--config",
-        config_path,
+        str(config_path),
+        "--project-root",
+        str(runtime_root),
     ]
+    command.extend(str(value) for value in stage.get("extra_args", []))
     start_time = utc_now()
     completed = subprocess.run(
         command,
-        cwd=project_root,
+        cwd=code_root,
         capture_output=True,
         text=True,
         encoding="utf-8",
@@ -95,7 +104,7 @@ def run_stage(project_root: Path, stage: dict[str, Any]) -> dict[str, Any]:
         "stage_name": stage_name,
         "command_stage": command_stage,
         "command": " ".join(command),
-        "config_path": config_path,
+        "config_path": str(config_path),
         "start_time": start_time,
         "end_time": end_time,
         "status": status,
@@ -185,20 +194,32 @@ def write_summary(
     return data_summary, output_summary
 
 
-def run_agent(config_path: str | Path, project_root: str | Path | None = None) -> dict[str, Any]:
+def run_agent(
+    config_path: str | Path,
+    project_root: str | Path | None = None,
+    *,
+    runtime_root: str | Path | None = None,
+) -> dict[str, Any]:
     config_file = Path(config_path).expanduser()
     if project_root is None:
-        root = Path.cwd().resolve()
+        code_root = Path.cwd().resolve()
     else:
-        root = Path(project_root).expanduser().resolve()
+        code_root = Path(project_root).expanduser().resolve()
     if not config_file.is_absolute():
-        config_file = root / config_file
+        config_file = code_root / config_file
     agent = load_agent_config(config_file)
 
-    configured_project_root = resolve_project_path(root, agent.get("project_root", ".")).resolve()
+    configured_code_root = resolve_project_path(code_root, agent.get("project_root", ".")).resolve()
+    if runtime_root is None:
+        configured_runtime_root = resolve_project_path(
+            configured_code_root,
+            agent.get("runtime_root", "."),
+        ).resolve()
+    else:
+        configured_runtime_root = Path(runtime_root).expanduser().resolve()
     outputs = agent["outputs"]
-    ensure_output_dirs(configured_project_root, outputs)
-    db_path = resolve_project_path(configured_project_root, agent["database"]["sqlite_path"])
+    ensure_output_dirs(configured_runtime_root, outputs)
+    db_path = resolve_project_path(configured_runtime_root, agent["database"]["sqlite_path"])
     audit_db.init_db(db_path)
 
     run_id = make_run_id()
@@ -228,7 +249,7 @@ def run_agent(config_path: str | Path, project_root: str | Path | None = None) -
     }
 
     for stage in agent["pipeline"]["stages"]:
-        stage_result = run_stage(configured_project_root, stage)
+        stage_result = run_stage(configured_code_root, configured_runtime_root, stage)
         stage_summaries.append(stage_result)
         audit_db.insert_stage_run(
             db_path=db_path,
@@ -249,7 +270,7 @@ def run_agent(config_path: str | Path, project_root: str | Path | None = None) -
             break
 
     if status == "success":
-        metrics = collect_metrics(configured_project_root, agent)
+        metrics = collect_metrics(configured_runtime_root, agent)
 
     end_time = utc_now()
     audit_db.update_pipeline_run_end(
@@ -277,7 +298,7 @@ def run_agent(config_path: str | Path, project_root: str | Path | None = None) -
         s7_pipeline_used=json.dumps(metrics.get("s7_pipeline_used", []), ensure_ascii=False),
     )
 
-    artifacts = collect_artifacts(configured_project_root)
+    artifacts = collect_artifacts(configured_runtime_root)
     for artifact in artifacts:
         audit_db.insert_artifact(
             db_path=db_path,
@@ -292,6 +313,8 @@ def run_agent(config_path: str | Path, project_root: str | Path | None = None) -
         "run_id": run_id,
         "agent_name": agent_name,
         "mode": mode,
+        "code_root": str(configured_code_root),
+        "runtime_root": str(configured_runtime_root),
         "start_time": start_time,
         "end_time": end_time,
         "status": status,
@@ -314,7 +337,7 @@ def run_agent(config_path: str | Path, project_root: str | Path | None = None) -
         "sqlite_db_path": str(db_path),
         "mvp_note": mvp_note,
     }
-    data_summary, output_summary = write_summary(configured_project_root, outputs, summary)
+    data_summary, output_summary = write_summary(configured_runtime_root, outputs, summary)
 
     print(f"[agent] run_id: {run_id}")
     print(f"[agent] status: {status}")
@@ -343,8 +366,9 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Run the water_agent_system offline pipeline Agent MVP.")
     parser.add_argument("--config", required=True, help="Path to configs/agent_config.yaml")
     parser.add_argument("--project_root", default=Path.cwd(), help="water_agent_system project root")
+    parser.add_argument("--runtime-root", help="Separate runtime data/output root")
     args = parser.parse_args()
-    summary = run_agent(args.config, args.project_root)
+    summary = run_agent(args.config, args.project_root, runtime_root=args.runtime_root)
     if summary["status"] != "success":
         raise SystemExit(1)
 

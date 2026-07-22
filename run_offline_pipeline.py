@@ -16,7 +16,8 @@ Current stages:
 - surface_depth_eval: S4-real accuracy evaluation against known simulated depth
 - surface_depth_quality_gate: S4-real quality gate before downstream warning use
 - boundary_waterline_depth: S4-real-B boundary-based waterline depth inversion
-- area_volume: S5 water area and volume calculation
+- area_volume: legacy S4 configured-depth plus S5 area and volume calculation
+- area_volume_existing_s4: S5 from an already-produced standard S4 depth result
 - weather_correction: S6 offline mock weather correction
 - deterministic_forecast: S7-A deterministic rule-engine forecast
 - case_retrieval: S7-B offline mock case retrieval correction
@@ -31,9 +32,9 @@ import argparse
 import sys
 from pathlib import Path
 
-PROJECT_ROOT = Path(__file__).resolve().parent
-if str(PROJECT_ROOT) not in sys.path:
-    sys.path.insert(0, str(PROJECT_ROOT))
+CODE_ROOT = Path(__file__).resolve().parent
+if str(CODE_ROOT) not in sys.path:
+    sys.path.insert(0, str(CODE_ROOT))
 
 from src.dem.build_dem import build_dem_from_bag
 from src.dem.build_ground_dem import build_ground_dem_from_bag
@@ -46,21 +47,15 @@ from src.hydrology.calculate_area_volume import calculate_area_volume
 from src.hydrology.invert_water_depth import invert_water_depth
 from src.hydrology.invert_surface_depth import invert_surface_depth
 from src.hydrology.invert_boundary_waterline_depth import invert_boundary_waterline_depth
-from src.hydrology.visualize_area_volume_summary import visualize_area_volume_summary
 from src.masks.create_dem_space_water_mask import create_dem_space_water_mask
 from src.meteorology.compute_weather_correction import compute_weather_correction
-from src.meteorology.visualize_weather_correction import visualize_weather_correction
 from src.reasoning.deterministic_forecast import deterministic_forecast
-from src.reasoning.visualize_forecast import visualize_forecast
 from src.reasoning.case_retrieval_correction import case_retrieval_correction
-from src.reasoning.visualize_case_retrieval import visualize_case_retrieval
 from src.reasoning.physical_constraint_check import physical_constraint_check
-from src.reasoning.visualize_physical_constraint import visualize_physical_constraint
 from src.vision.create_manual_mask import create_manual_mask
 from src.vision.extract_camera_frame import extract_camera_frame
 from src.warning.generate_warning_decision import generate_warning_decision
 from src.warning.generate_warning_report import generate_warning_report
-from src.warning.visualize_warning_summary import visualize_warning_summary
 from src.warning.write_audit_log import write_audit_log
 from src.agent.pipeline_agent import run_agent
 
@@ -85,6 +80,7 @@ def main() -> None:
             "surface_depth_quality_gate",
             "boundary_waterline_depth",
             "area_volume",
+            "area_volume_existing_s4",
             "weather_correction",
             "deterministic_forecast",
             "case_retrieval",
@@ -100,7 +96,20 @@ def main() -> None:
     parser.add_argument("--output", help="Output path, used by extract_camera stage")
     parser.add_argument("--frame-index", type=int, default=20, help="1-based camera frame index for extract_camera")
     parser.add_argument("--case", help="Case name for surface DEM stages")
+    parser.add_argument(
+        "--project-root",
+        help="Runtime data/output root. Defaults to the repository code root.",
+    )
+    parser.add_argument(
+        "--skip-figures",
+        action="store_true",
+        help="Skip optional visualization files while retaining numeric/JSON outputs.",
+    )
     args = parser.parse_args()
+
+    project_root = (
+        Path(args.project_root).expanduser().resolve() if args.project_root else CODE_ROOT
+    )
 
     surface_stages = {
         "build_ground_dem",
@@ -115,16 +124,20 @@ def main() -> None:
 
     config_path = Path(args.config).expanduser()
     if not config_path.is_absolute():
-        config_path = PROJECT_ROOT / config_path
+        code_config_path = CODE_ROOT / config_path
+        runtime_config_path = project_root / config_path
+        config_path = code_config_path if code_config_path.exists() else runtime_config_path
 
     print("[pipeline] water_agent_system offline pipeline")
     print(f"[pipeline] current stage: {args.stage}")
     print(f"[pipeline] config={config_path}")
+    print(f"[pipeline] code_root={CODE_ROOT}")
+    print(f"[pipeline] runtime_root={project_root}")
     if args.stage == "ground_dem":
         if not args.dry_bag:
             parser.error("--stage ground_dem requires --dry_bag")
         print(f"[pipeline] dry_bag={Path(args.dry_bag).expanduser()}")
-        metadata = build_ground_dem_from_bag(args.dry_bag, config_path, PROJECT_ROOT)
+        metadata = build_ground_dem_from_bag(args.dry_bag, config_path, project_root)
         print("[pipeline] S2-B ground DEM complete")
         print(f"[pipeline] ground DEM shape: {metadata['dem_shape']}")
         print(f"[pipeline] valid cell count: {metadata['valid_cell_count']}")
@@ -132,7 +145,7 @@ def main() -> None:
     elif args.stage == "build_ground_dem":
         if not args.case:
             parser.error("--stage build_ground_dem requires --case")
-        metadata = build_ground_dem_from_rosbag(config_path, PROJECT_ROOT, args.case)
+        metadata = build_ground_dem_from_rosbag(config_path, project_root, args.case)
         print("[pipeline] S4-real build_ground_dem complete")
         print(f"[pipeline] case_name: {metadata['case_name']}")
         print(f"[pipeline] scene_type: {metadata['scene_type']}")
@@ -149,7 +162,7 @@ def main() -> None:
         if not args.dry_bag:
             parser.error("--stage dem requires --dry_bag")
         print(f"[pipeline] dry_bag={Path(args.dry_bag).expanduser()}")
-        metadata = build_dem_from_bag(args.dry_bag, config_path, PROJECT_ROOT)
+        metadata = build_dem_from_bag(args.dry_bag, config_path, project_root)
         print("[pipeline] S2-A DEM complete")
         print(f"[pipeline] DEM shape: {metadata['dem_shape']}")
         print(f"[pipeline] valid cell count: {metadata['valid_cell_count']}")
@@ -169,13 +182,13 @@ def main() -> None:
             parser.error("--stage extract_camera requires --output")
         output_path = Path(args.output).expanduser()
         if not output_path.is_absolute():
-            output_path = PROJECT_ROOT / output_path
+            output_path = project_root / output_path
         metadata = extract_camera_frame(args.bag, output_path, args.frame_index)
         print("[pipeline] S3 extract_camera complete")
         print(f"[pipeline] output file: {metadata['output']}")
         return
     elif args.stage == "manual_mask":
-        metadata = create_manual_mask(config_path, PROJECT_ROOT)
+        metadata = create_manual_mask(config_path, project_root)
         print("[pipeline] S3 manual_mask complete")
         print(f"[pipeline] mask pixel count: {metadata['mask_pixel_count']}")
         print(f"[pipeline] mask area ratio: {metadata['mask_area_ratio']:.6f}")
@@ -184,7 +197,7 @@ def main() -> None:
             print(f"  - {path}")
         return
     elif args.stage == "create_dem_water_mask":
-        metadata = create_dem_space_water_mask(config_path, PROJECT_ROOT)
+        metadata = create_dem_space_water_mask(config_path, project_root)
         print("[pipeline] S3-playground create_dem_water_mask complete")
         print(f"[pipeline] scene_type: {metadata['scene_type']}")
         print(f"[pipeline] case_name: {metadata['case_name']}")
@@ -197,7 +210,7 @@ def main() -> None:
             print(f"  - {path}")
         return
     elif args.stage == "mask_to_dem":
-        metadata = map_mask_to_dem(config_path, PROJECT_ROOT)
+        metadata = map_mask_to_dem(config_path, project_root)
         print("[pipeline] S4 mask_to_dem complete")
         print(f"[pipeline] water region cell count: {metadata['water_region_cell_count']}")
         print("[pipeline] output file paths:")
@@ -205,7 +218,7 @@ def main() -> None:
             print(f"  - {path}")
         return
     elif args.stage == "water_depth":
-        metadata = invert_water_depth(config_path, PROJECT_ROOT)
+        metadata = invert_water_depth(config_path, project_root)
         print("[pipeline] S4 water_depth complete")
         print(f"[pipeline] configured depth cm: {metadata['configured_depth_cm']:.2f}")
         print(f"[pipeline] max depth cm: {metadata['max_depth_cm']:.2f}")
@@ -215,7 +228,7 @@ def main() -> None:
             print(f"  - {path}")
         return
     elif args.stage == "build_surface_dem":
-        metadata = build_surface_dem(config_path, PROJECT_ROOT, args.case)
+        metadata = build_surface_dem(config_path, project_root, args.case)
         print("[pipeline] S4-real build_surface_dem complete")
         print(f"[pipeline] case_name: {metadata['case_name']}")
         print(f"[pipeline] rosbag_path: {metadata['rosbag_path']}")
@@ -233,7 +246,7 @@ def main() -> None:
             print(f"  - {path}")
         return
     elif args.stage == "surface_depth":
-        metadata = invert_surface_depth(config_path, PROJECT_ROOT, args.case)
+        metadata = invert_surface_depth(config_path, project_root, args.case)
         print("[pipeline] S4-real surface_depth complete")
         print(f"[pipeline] case_name: {metadata['case_name']}")
         print(f"[pipeline] valid_depth_cell_count: {metadata['valid_depth_cell_count']}")
@@ -251,7 +264,7 @@ def main() -> None:
             print(f"  - {path}")
         return
     elif args.stage == "surface_depth_eval":
-        metadata = evaluate_surface_depth_accuracy(config_path, PROJECT_ROOT, args.case)
+        metadata = evaluate_surface_depth_accuracy(config_path, project_root, args.case)
         print("[pipeline] S4-real surface_depth_eval complete")
         print(f"[pipeline] case_name: {metadata['case_name']}")
         print(f"[pipeline] known_depth_cm: {metadata['known_depth_cm']}")
@@ -268,7 +281,7 @@ def main() -> None:
     elif args.stage == "surface_depth_quality_gate":
         if not args.case:
             parser.error("--stage surface_depth_quality_gate requires --case")
-        metadata = surface_depth_quality_gate(config_path, PROJECT_ROOT, args.case)
+        metadata = surface_depth_quality_gate(config_path, project_root, args.case)
         print("[pipeline] S4-real surface_depth_quality_gate complete")
         print(f"[pipeline] case_name: {metadata['case_name']}")
         print(f"[pipeline] quality_status: {metadata['quality_status']}")
@@ -288,7 +301,7 @@ def main() -> None:
     elif args.stage == "boundary_waterline_depth":
         if not args.case:
             parser.error("--stage boundary_waterline_depth requires --case")
-        metadata = invert_boundary_waterline_depth(config_path, PROJECT_ROOT, args.case)
+        metadata = invert_boundary_waterline_depth(config_path, project_root, args.case)
         print("[pipeline] S4-real-B boundary_waterline_depth complete")
         print(f"[pipeline] case_name: {metadata['case_name']}")
         print(f"[pipeline] boundary_valid_cell_count: {metadata['boundary_valid_cell_count']}")
@@ -310,9 +323,14 @@ def main() -> None:
             print(f"  - {path}")
         return
     elif args.stage == "area_volume":
-        depth_metadata = invert_water_depth(config_path, PROJECT_ROOT)
-        metadata = calculate_area_volume(config_path, PROJECT_ROOT)
-        summary_files = visualize_area_volume_summary(config_path, PROJECT_ROOT)
+        depth_metadata = invert_water_depth(config_path, project_root)
+        metadata = calculate_area_volume(config_path, project_root)
+        if args.skip_figures:
+            summary_files = {}
+        else:
+            from src.hydrology.visualize_area_volume_summary import visualize_area_volume_summary
+
+            summary_files = visualize_area_volume_summary(config_path, project_root)
         print("[pipeline] S5 area_volume complete")
         print(f"[pipeline] valid depth cell count: {metadata['valid_depth_cell_count']}")
         print(f"[pipeline] water area m2: {metadata['water_area_m2']:.4f}")
@@ -327,9 +345,34 @@ def main() -> None:
         for path in summary_files.values():
             print(f"  - {path}")
         return
+    elif args.stage == "area_volume_existing_s4":
+        metadata = calculate_area_volume(config_path, project_root)
+        if args.skip_figures:
+            summary_files = {}
+        else:
+            from src.hydrology.visualize_area_volume_summary import visualize_area_volume_summary
+
+            summary_files = visualize_area_volume_summary(config_path, project_root)
+        print("[pipeline] S5 area_volume from existing S4 result complete")
+        print(f"[pipeline] valid depth cell count: {metadata['valid_depth_cell_count']}")
+        print(f"[pipeline] water area m2: {metadata['water_area_m2']:.4f}")
+        print(f"[pipeline] water volume m3: {metadata['water_volume_m3']:.4f}")
+        print(f"[pipeline] max depth cm: {metadata['max_depth_cm']:.2f}")
+        print(f"[pipeline] mean depth cm: {metadata['mean_depth_cm']:.2f}")
+        print("[pipeline] output file paths:")
+        for path in metadata["output_files"].values():
+            print(f"  - {path}")
+        for path in summary_files.values():
+            print(f"  - {path}")
+        return
     elif args.stage == "weather_correction":
-        metadata = compute_weather_correction(config_path, PROJECT_ROOT)
-        summary_files = visualize_weather_correction(config_path, PROJECT_ROOT)
+        metadata = compute_weather_correction(config_path, project_root)
+        if args.skip_figures:
+            summary_files = {}
+        else:
+            from src.meteorology.visualize_weather_correction import visualize_weather_correction
+
+            summary_files = visualize_weather_correction(config_path, project_root)
         print("[pipeline] S6 weather_correction complete")
         print(
             "[pipeline] current rainfall intensity mm/h: "
@@ -350,8 +393,13 @@ def main() -> None:
             print(f"  - {path}")
         return
     elif args.stage == "deterministic_forecast":
-        metadata = deterministic_forecast(config_path, PROJECT_ROOT)
-        figure_files = visualize_forecast(config_path, PROJECT_ROOT)
+        metadata = deterministic_forecast(config_path, project_root)
+        if args.skip_figures:
+            figure_files = {}
+        else:
+            from src.reasoning.visualize_forecast import visualize_forecast
+
+            figure_files = visualize_forecast(config_path, project_root)
         print("[pipeline] S7-A deterministic_forecast complete")
         print(f"[pipeline] current mean depth cm: {metadata['current_mean_depth_cm']:.2f}")
         print(f"[pipeline] k_1min cm/min: {metadata['k_1min_cm_per_min']:.4f}")
@@ -378,8 +426,13 @@ def main() -> None:
             print(f"  - {path}")
         return
     elif args.stage == "case_retrieval":
-        metadata = case_retrieval_correction(config_path, PROJECT_ROOT)
-        figure_files = visualize_case_retrieval(config_path, PROJECT_ROOT)
+        metadata = case_retrieval_correction(config_path, project_root)
+        if args.skip_figures:
+            figure_files = {}
+        else:
+            from src.reasoning.visualize_case_retrieval import visualize_case_retrieval
+
+            figure_files = visualize_case_retrieval(config_path, project_root)
         print("[pipeline] S7-B case_retrieval complete")
         print("[pipeline] top_k retrieved case ids:")
         for case_id, score in zip(metadata["top_case_ids"], metadata["top_case_similarity_scores"]):
@@ -402,8 +455,13 @@ def main() -> None:
             print(f"  - {path}")
         return
     elif args.stage == "physical_constraint":
-        metadata = physical_constraint_check(config_path, PROJECT_ROOT)
-        figure_files = visualize_physical_constraint(config_path, PROJECT_ROOT)
+        metadata = physical_constraint_check(config_path, project_root)
+        if args.skip_figures:
+            figure_files = {}
+        else:
+            from src.reasoning.visualize_physical_constraint import visualize_physical_constraint
+
+            figure_files = visualize_physical_constraint(config_path, project_root)
         print("[pipeline] S7-C physical_constraint complete")
         for item in metadata["final_forecast_results"]:
             print(
@@ -422,10 +480,15 @@ def main() -> None:
             print(f"  - {path}")
         return
     elif args.stage == "warning_report":
-        metadata = generate_warning_decision(config_path, PROJECT_ROOT)
-        report_files = generate_warning_report(config_path, PROJECT_ROOT)
-        audit_files = write_audit_log(config_path, PROJECT_ROOT)
-        figure_files = visualize_warning_summary(config_path, PROJECT_ROOT)
+        metadata = generate_warning_decision(config_path, project_root)
+        report_files = generate_warning_report(config_path, project_root)
+        audit_files = write_audit_log(config_path, project_root)
+        if args.skip_figures:
+            figure_files = {}
+        else:
+            from src.warning.visualize_warning_summary import visualize_warning_summary
+
+            figure_files = visualize_warning_summary(config_path, project_root)
         print("[pipeline] S8 warning_report complete")
         print(f"[pipeline] forecast source: {metadata.get('forecast_source')}")
         print(f"[pipeline] S7 pipeline used: {metadata.get('s7_pipeline_used')}")
@@ -455,7 +518,7 @@ def main() -> None:
             print(f"  - {path}")
         return
     elif args.stage == "agent_pipeline":
-        metadata = run_agent(config_path, PROJECT_ROOT)
+        metadata = run_agent(config_path, CODE_ROOT, runtime_root=project_root)
         print("[pipeline] Agent MVP complete")
         print(f"[pipeline] run_id: {metadata['run_id']}")
         print(f"[pipeline] status: {metadata['status']}")
