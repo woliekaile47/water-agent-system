@@ -27,5 +27,24 @@ The dashboard shows:
 - DEM-space mask diagnosis,
 - S7/S8 warning results,
 - Agent summary and SQLite audit database path.
+- a simulation-road-only competition page built from the frozen Seed 303
+  dynamic-rain Camera, SAM 2 mask, DEM inversion, and candidate-gate outputs.
+
+Prepare the competition display snapshot before opening its page:
+
+```bash
+python3 scripts/build_phase2d_c10_competition_demo.py
+```
+
+For the competition, use the dedicated entry point so historical dormitory
+comparison pages are not part of the presentation navigation:
+
+```bash
+bash scripts/run_phase2d_c10_competition_demo.sh
+```
+
+The competition page rejects dormitory/cardboard, manual-prompt, Ground Truth,
+and non-simulation input paths. It remains display-only, non-authoritative, and
+ineligible for the formal warning chain.
 
 Missing files are shown as warnings instead of crashing the page.

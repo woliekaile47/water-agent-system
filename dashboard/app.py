@@ -41,6 +41,7 @@ PAGES = [
     "S7/S8：短临预警链路",
     "Agent（智能体）与审计",
     "C9 Shadow：统一状态监控",
+    "比赛演示：仿真道路积水闭环",
 ]
 
 
@@ -330,6 +331,102 @@ def page_c9_shadow_monitoring() -> None:
     )
 
 
+def page_competition_simulation_demo() -> None:
+    st.title("比赛演示：仿真道路积水闭环")
+    section_note(
+        "本页只展示固定的 Gazebo/动态降雨仿真道路数据及其预测结果。"
+        "不读取宿舍纸箱素材、人工提示盲测素材或 Ground Truth，"
+        "也不会启动设备、ROS、Gazebo 或正式预警。"
+    )
+    snapshot = read_json(
+        "outputs/phase2d_c10_competition_demo_snapshot/competition_demo_snapshot.json"
+    )
+    if not isinstance(snapshot, dict):
+        st.warning(
+            "缺少比赛演示快照；请先运行："
+            "`python3 scripts/build_phase2d_c10_competition_demo.py`"
+        )
+        return
+    cases = snapshot.get("cases", [])
+    if not isinstance(cases, list) or not cases:
+        st.error("比赛演示快照中没有可展示的仿真案例。")
+        return
+
+    source_policy = snapshot.get("source_policy", {})
+    metric_grid(
+        [
+            ("data source", "simulation road", "仿真道路与动态降雨 Camera"),
+            ("cases", snapshot.get("case_count", 0), "固定展示案例数量"),
+            ("Ground Truth used", snapshot.get("ground_truth_used"), "展示构建不读取 GT"),
+            ("downstream eligible", snapshot.get("eligible_for_downstream"), "不进入正式预警"),
+        ]
+    )
+    st.success(
+        "素材边界已冻结：simulation_only=true，"
+        "dormitory_or_cardboard_inputs_allowed=false。"
+    )
+
+    case_by_label = {
+        f"{case.get('display_name', case.get('sample_id'))} · {case.get('sample_id')}": case
+        for case in cases
+    }
+    selected_label = st.selectbox("选择仿真积水场景", list(case_by_label))
+    selected = case_by_label[selected_label]
+    assets = selected.get("assets", {})
+    prediction = selected.get("prediction_metrics", {})
+    quality = selected.get("quality", {})
+
+    st.caption(
+        f"仿真场景：{selected.get('case_id')} | rain={selected.get('rain_level')} | "
+        f"seed={selected.get('seed')} | frame={selected.get('anchor_frame_index')}"
+    )
+    image_columns = st.columns(3)
+    with image_columns[0]:
+        show_image(assets.get("input_image", ""), "仿真道路与积水 Camera 画面")
+    with image_columns[1]:
+        show_image(assets.get("predicted_mask", ""), "SAM 2 视频传播候选 mask")
+    with image_columns[2]:
+        show_image(assets.get("reprojected_mask", ""), "DEM 水域重投影到 Camera")
+
+    status_badge("camera_visible_status", quality.get("camera_visible_status", "unavailable"))
+    status_badge("global_scene_status", quality.get("global_scene_status", "unavailable"))
+    metric_grid(
+        [
+            ("estimated water level", format_number(prediction.get("estimated_water_level_m"), 4, " m"), "预测水面高程"),
+            ("mean depth", format_number(prediction.get("mean_depth_cm"), 2, " cm"), "预测平均水深"),
+            ("max depth", format_number(prediction.get("max_depth_cm"), 2, " cm"), "预测最大水深"),
+            ("area", format_number(prediction.get("water_area_m2"), 2, " m²"), "预测积水面积"),
+            ("volume", format_number(prediction.get("water_volume_m3"), 4, " m³"), "预测积水体积"),
+            ("Camera reprojection IoU", format_number(prediction.get("camera_reprojection_iou"), 3), "预测侧自一致性"),
+            ("outer boundary P95", format_number(prediction.get("outer_boundary_reprojection_p95_px"), 2, " px"), "岸线重投影诊断"),
+            ("unobserved basins", prediction.get("unobserved_candidate_basin_count", 0), "Camera 不可观测候选盆地"),
+        ]
+    )
+    reject_reasons = quality.get("visible_reject_reasons", [])
+    warnings = quality.get("warnings", [])
+    if reject_reasons:
+        st.error("质量门控拒绝原因：" + "；".join(str(item) for item in reject_reasons))
+    if warnings:
+        st.warning("诊断警告：" + "；".join(str(item) for item in warnings))
+
+    st.subheader("连续41帧几何结果")
+    plots = assets.get("plots", {})
+    plot_columns = st.columns(2)
+    with plot_columns[0]:
+        show_image(plots.get("water_level", ""), "水位随时间变化")
+        show_image(plots.get("area", ""), "面积随时间变化")
+    with plot_columns[1]:
+        show_image(plots.get("max_depth", ""), "最大水深随时间变化")
+        show_image(plots.get("volume", ""), "体积随时间变化")
+
+    st.error(
+        "比赛演示安全边界：authoritative=false，eligible_for_downstream=false。"
+        "当前结论仅适用于合成仿真旁路演示。"
+    )
+    with st.expander("查看冻结素材策略"):
+        st.json(source_policy, expanded=True)
+
+
 def main() -> None:
     st.set_page_config(
         page_title="water_agent_system dashboard",
@@ -352,6 +449,7 @@ def main() -> None:
         PAGES[6]: page_s7_s8,
         PAGES[7]: page_agent_audit,
         PAGES[8]: page_c9_shadow_monitoring,
+        PAGES[9]: page_competition_simulation_demo,
     }
     page_map[page]()
 

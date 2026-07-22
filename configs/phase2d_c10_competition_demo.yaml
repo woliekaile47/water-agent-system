@@ -1,0 +1,83 @@
+phase2d_c10_competition_demo:
+  protocol_version: phase2d_c10_competition_demo_v1
+  demo_mode: offline_simulation_road_only
+  source_type: gazebo_dynamic_rain_road_simulation
+  source_seed: 303
+  anchor_frame_index: 149
+  source_policy:
+    simulation_only: true
+    ground_truth_used_by_demo_builder: false
+    manual_prompt_inputs_allowed: false
+    dormitory_or_cardboard_inputs_allowed: false
+    real_devices_started: false
+    authoritative: false
+    eligible_for_downstream: false
+  cases:
+    - sample_id: c8c3_002
+      display_name: 5 cm / moderate rain
+      case_id: sim_water_5cm_001
+      rain_level: moderate
+      seed: 303
+      anchor_frame_index: 149
+      nominal_depth_cm_display_only: 5
+      input_image: data/simulation_dynamic/sim_water_5cm_001/moderate/seed_303/frames/frame_000149.png
+      predicted_mask: outputs/phase2d_c8_seed303_video_freeze/c8c3_002/masks_png/frame_000149.png
+      reprojected_mask: outputs/phase2d_c8_seed303_geometry_freeze/c8c3_002/anchor_reprojected_camera_mask.png
+      geometry_rows: outputs/phase2d_c8_seed303_geometry_freeze/c8c3_002/per_frame_geometry_summary.json
+      candidate_gate_rows: outputs/phase2d_c8_seed303_candidate_gate_freeze/c8c3_002/candidate_gate_per_frame.json
+      plots:
+        water_level: outputs/phase2d_c8_seed303_geometry_freeze/c8c3_002/water_level_over_time.png
+        max_depth: outputs/phase2d_c8_seed303_geometry_freeze/c8c3_002/max_depth_over_time.png
+        area: outputs/phase2d_c8_seed303_geometry_freeze/c8c3_002/area_over_time.png
+        volume: outputs/phase2d_c8_seed303_geometry_freeze/c8c3_002/volume_over_time.png
+    - sample_id: c8c3_005
+      display_name: 10 cm / moderate rain
+      case_id: sim_water_10cm_001
+      rain_level: moderate
+      seed: 303
+      anchor_frame_index: 149
+      nominal_depth_cm_display_only: 10
+      input_image: data/simulation_dynamic/sim_water_10cm_001/moderate/seed_303/frames/frame_000149.png
+      predicted_mask: outputs/phase2d_c8_seed303_video_freeze/c8c3_005/masks_png/frame_000149.png
+      reprojected_mask: outputs/phase2d_c8_seed303_geometry_freeze/c8c3_005/anchor_reprojected_camera_mask.png
+      geometry_rows: outputs/phase2d_c8_seed303_geometry_freeze/c8c3_005/per_frame_geometry_summary.json
+      candidate_gate_rows: outputs/phase2d_c8_seed303_candidate_gate_freeze/c8c3_005/candidate_gate_per_frame.json
+      plots:
+        water_level: outputs/phase2d_c8_seed303_geometry_freeze/c8c3_005/water_level_over_time.png
+        max_depth: outputs/phase2d_c8_seed303_geometry_freeze/c8c3_005/max_depth_over_time.png
+        area: outputs/phase2d_c8_seed303_geometry_freeze/c8c3_005/area_over_time.png
+        volume: outputs/phase2d_c8_seed303_geometry_freeze/c8c3_005/volume_over_time.png
+    - sample_id: c8c3_008
+      display_name: 20 cm / moderate rain
+      case_id: sim_water_20cm_001
+      rain_level: moderate
+      seed: 303
+      anchor_frame_index: 149
+      nominal_depth_cm_display_only: 20
+      input_image: data/simulation_dynamic/sim_water_20cm_001/moderate/seed_303/frames/frame_000149.png
+      predicted_mask: outputs/phase2d_c8_seed303_video_freeze/c8c3_008/masks_png/frame_000149.png
+      reprojected_mask: outputs/phase2d_c8_seed303_geometry_freeze/c8c3_008/anchor_reprojected_camera_mask.png
+      geometry_rows: outputs/phase2d_c8_seed303_geometry_freeze/c8c3_008/per_frame_geometry_summary.json
+      candidate_gate_rows: outputs/phase2d_c8_seed303_candidate_gate_freeze/c8c3_008/candidate_gate_per_frame.json
+      plots:
+        water_level: outputs/phase2d_c8_seed303_geometry_freeze/c8c3_008/water_level_over_time.png
+        max_depth: outputs/phase2d_c8_seed303_geometry_freeze/c8c3_008/max_depth_over_time.png
+        area: outputs/phase2d_c8_seed303_geometry_freeze/c8c3_008/area_over_time.png
+        volume: outputs/phase2d_c8_seed303_geometry_freeze/c8c3_008/volume_over_time.png
+    - sample_id: c8c3_011
+      display_name: 40 cm / moderate rain
+      case_id: sim_water_40cm_001
+      rain_level: moderate
+      seed: 303
+      anchor_frame_index: 149
+      nominal_depth_cm_display_only: 40
+      input_image: data/simulation_dynamic/sim_water_40cm_001/moderate/seed_303/frames/frame_000149.png
+      predicted_mask: outputs/phase2d_c8_seed303_video_freeze/c8c3_011/masks_png/frame_000149.png
+      reprojected_mask: outputs/phase2d_c8_seed303_geometry_freeze/c8c3_011/anchor_reprojected_camera_mask.png
+      geometry_rows: outputs/phase2d_c8_seed303_geometry_freeze/c8c3_011/per_frame_geometry_summary.json
+      candidate_gate_rows: outputs/phase2d_c8_seed303_candidate_gate_freeze/c8c3_011/candidate_gate_per_frame.json
+      plots:
+        water_level: outputs/phase2d_c8_seed303_geometry_freeze/c8c3_011/water_level_over_time.png
+        max_depth: outputs/phase2d_c8_seed303_geometry_freeze/c8c3_011/max_depth_over_time.png
+        area: outputs/phase2d_c8_seed303_geometry_freeze/c8c3_011/area_over_time.png
+        volume: outputs/phase2d_c8_seed303_geometry_freeze/c8c3_011/volume_over_time.png
