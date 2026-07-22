@@ -1,0 +1,18 @@
+phase2d_c11_simulation_e2e_runtime:
+  protocol_version: phase2d_c11a_simulation_e2e_runtime_v1
+  runtime_mode: simulation_e2e
+  data_domain: simulation
+  allow_simulation_s5_s6_routing: true
+  allow_simulation_global_s7_s8_routing: true
+  allow_formal_output_writes: false
+  allow_real_warning: false
+  allow_external_notification: false
+  allow_real_device_actions: false
+  allow_simulation_action_execution: false
+  warning_action_mode: simulation_record_only
+  formal_output_paths:
+    - outputs/json/water_area_volume_result.json
+    - outputs/json/weather_correction_result.json
+    - outputs/json/deterministic_forecast_result.json
+    - outputs/json/final_forecast_result.json
+    - outputs/json/warning_decision_result.json

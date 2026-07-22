@@ -70,6 +70,7 @@ outputs/phase2d_c9_s5_s8_shadow_*/
 outputs/phase2d_c9_monitoring_*/
 outputs/phase2d_c9_end_to_end_*/
 outputs/phase2d_c10_competition_demo_*/
+outputs/phase2d_c11_simulation_e2e_runtime_*/
 
 # Phase 2D-C manually prompted SAM 2 geometry inputs and generated diagnostics
 # are local experiment artifacts. Source adapters, tests, and documents remain tracked.
