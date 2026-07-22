@@ -68,6 +68,7 @@ outputs/phase2d_c8_seed303_gate_confirmation_*/
 outputs/phase2d_c9_canonical_shadow_*/
 outputs/phase2d_c9_s5_s8_shadow_*/
 outputs/phase2d_c9_monitoring_*/
+outputs/phase2d_c9_end_to_end_*/
 
 # Phase 2D-C manually prompted SAM 2 geometry inputs and generated diagnostics
 # are local experiment artifacts. Source adapters, tests, and documents remain tracked.

@@ -1,0 +1,26 @@
+phase2d_c9_end_to_end_acceptance:
+  protocol_version: phase2d_c9d_end_to_end_acceptance_v1
+  canonical_root: outputs/phase2d_c9_canonical_shadow_seed303
+  s5_s8_shadow_root: outputs/phase2d_c9_s5_s8_shadow_seed303
+  monitoring_root: outputs/phase2d_c9_monitoring_snapshot
+  output_root: outputs/phase2d_c9_end_to_end_acceptance
+  protected_formal_paths:
+    - outputs/json/water_area_volume_result.json
+    - outputs/json/weather_correction_result.json
+    - outputs/json/deterministic_forecast_result.json
+    - outputs/json/final_forecast_result.json
+    - outputs/json/warning_decision_result.json
+    - data/db/water_agent_audit.db
+  expected:
+    canonical_record_count: 492
+    sample_count: 12
+    candidate_pass_count: 361
+    candidate_reject_count: 131
+    global_partial_count: 123
+  acceptance_policy:
+    require_all_invariants_pass: true
+    require_all_faults_rejected: true
+    allow_formal_warning: false
+    allow_downstream: false
+    real_world_validated: false
+    competition_demo_scope: synthetic_shadow_demo
