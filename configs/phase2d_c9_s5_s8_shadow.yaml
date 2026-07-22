@@ -1,0 +1,18 @@
+phase2d_c9_s5_s8_shadow:
+  protocol_version: phase2d_c9b_s5_s8_shadow_v1
+  deployment_mode: shadow
+  fps: 20.0
+  s7_minimum_history_minutes: 10.0
+  execute_s5: false
+  execute_s6: false
+  execute_s7: false
+  execute_s8: false
+  allow_formal_output_writes: false
+  allow_warning_generation: false
+  eligible_for_downstream: false
+  formal_output_paths:
+    - outputs/json/water_area_volume_result.json
+    - outputs/json/weather_correction_result.json
+    - outputs/json/deterministic_forecast_result.json
+    - outputs/json/final_forecast_result.json
+    - outputs/json/warning_decision_result.json
