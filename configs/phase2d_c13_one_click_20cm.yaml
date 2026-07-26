@@ -1,0 +1,51 @@
+phase2d_c13_one_click:
+  protocol_version: phase2d_c13_one_click_simulation_e2e_v1
+  data_domain: simulation
+  runtime_config_key: phase2d_c11_direct_e2e_20cm
+  run_root_parent: outputs/phase2d_c13_one_click_runs
+  ground_truth_used_for_prediction: false
+
+  sensor_inputs:
+    dry_lidar_bag: data/simulation/sim_dry_baseline_001/rosbag/sim_dry_baseline_001__20260710T185621Z
+    ground_dem_pipeline_config: configs/phase2d_c11_simulation_sensor_pipeline.yaml
+
+  sample:
+    sample_id: c8c3_008
+    case_id: sim_water_20cm_001
+    rain_level: moderate
+    seed: 303
+    role: one_click_standard_pipeline_demo
+    frames_dir: data/simulation_dynamic/sim_water_20cm_001/moderate/seed_303/frames
+    fps: 20
+    window_start: 129
+    window_end: 169
+    anchor_frame_index: 149
+    anchor_image_sha256: c442b25dad5729137359f17d6a460cdeb05571cfc3c2b0716af69cf1614009f1
+
+  prediction_configs:
+    temporal_prompt: configs/temporal_sam2_prompt_c6c.yaml
+    temporal_detector: configs/temporal_water_mask_detector.yaml
+    temporal_quality_gate: configs/temporal_water_quality_gate.yaml
+    sensors: simulation/config/sensors.yaml
+    mask_to_dem_mapping: configs/water_surface_aware_mapping.yaml
+    geometry_quality_gate: configs/water_surface_aware_quality_gate.yaml
+    candidate_quality_gate: configs/phase2d_c8_candidate_quality_gate.yaml
+
+  standard_pipeline:
+    agent_config: configs/phase2d_c11_direct_agent.yaml
+    case_library_json: data/cases/mock_historical_cases.json
+
+  sam2:
+    model_config: configs/sam2.1/sam2.1_hiera_t.yaml
+    checkpoint: /home/wlkl/ai_models/sam2/checkpoints/sam2.1_hiera_tiny.pt
+    device: cuda
+    offload_video_to_cpu: false
+    offload_state_to_cpu: false
+
+  safety:
+    simulation_only: true
+    authoritative: false
+    eligible_for_real_warning: false
+    external_notification_allowed: false
+    real_device_action_allowed: false
+    real_api_calls_enabled: false
