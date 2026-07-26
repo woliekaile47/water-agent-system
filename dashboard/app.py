@@ -334,17 +334,23 @@ def page_c9_shadow_monitoring() -> None:
 def page_competition_simulation_demo() -> None:
     st.title("比赛演示：仿真道路积水闭环")
     section_note(
-        "本页只展示固定的 Gazebo/动态降雨仿真道路数据及其预测结果。"
+        "本页优先展示 WSL 本地完整 Agent 仿真闭环的最新验收结果。"
         "不读取宿舍纸箱素材、人工提示盲测素材或 Ground Truth，"
-        "也不会启动设备、ROS、Gazebo 或正式预警。"
+        "Dashboard 本身不会启动设备、ROS、Gazebo 或正式预警。"
     )
     snapshot = read_json(
-        "outputs/phase2d_c10_competition_demo_snapshot/competition_demo_snapshot.json"
+        "outputs/phase2d_wsl_competition_demo_snapshot/competition_demo_snapshot.json"
     )
+    snapshot_source = "WSL 本地完整仿真 Agent 闭环"
+    if not isinstance(snapshot, dict):
+        snapshot = read_json(
+            "outputs/phase2d_c10_competition_demo_snapshot/competition_demo_snapshot.json"
+        )
+        snapshot_source = "历史 C10 冻结仿真旁路"
     if not isinstance(snapshot, dict):
         st.warning(
             "缺少比赛演示快照；请先运行："
-            "`python3 scripts/build_phase2d_c10_competition_demo.py`"
+            "`bash scripts/run_wsl_competition_demo.sh`"
         )
         return
     cases = snapshot.get("cases", [])
@@ -361,6 +367,14 @@ def page_competition_simulation_demo() -> None:
             ("downstream eligible", snapshot.get("eligible_for_downstream"), "不进入正式预警"),
         ]
     )
+    st.caption(
+        f"展示来源：{snapshot_source}"
+        + (
+            f" | matrix={snapshot.get('matrix_id')}"
+            if snapshot.get("matrix_id")
+            else ""
+        )
+    )
     st.success(
         "素材边界已冻结：simulation_only=true，"
         "dormitory_or_cardboard_inputs_allowed=false。"
@@ -375,6 +389,7 @@ def page_competition_simulation_demo() -> None:
     assets = selected.get("assets", {})
     prediction = selected.get("prediction_metrics", {})
     quality = selected.get("quality", {})
+    pipeline = selected.get("pipeline", {})
 
     st.caption(
         f"仿真场景：{selected.get('case_id')} | rain={selected.get('rain_level')} | "
@@ -390,6 +405,23 @@ def page_competition_simulation_demo() -> None:
 
     status_badge("camera_visible_status", quality.get("camera_visible_status", "unavailable"))
     status_badge("global_scene_status", quality.get("global_scene_status", "unavailable"))
+    if pipeline:
+        metric_grid(
+            [
+                ("runtime", selected.get("runtime_environment", "legacy"), "本次结果的运行环境"),
+                ("Agent status", pipeline.get("agent_status", "N/A"), "质量门后的 Agent 状态"),
+                (
+                    "S5-S8 completed",
+                    pipeline.get("standard_pipeline_completed", False),
+                    "标准水文、推理与预警记录链路",
+                ),
+                (
+                    "SQLite audit",
+                    pipeline.get("sqlite_database_exists", False),
+                    "本次运行是否生成审计数据库",
+                ),
+            ]
+        )
     metric_grid(
         [
             ("estimated water level", format_number(prediction.get("estimated_water_level_m"), 4, " m"), "预测水面高程"),
@@ -403,11 +435,14 @@ def page_competition_simulation_demo() -> None:
         ]
     )
     reject_reasons = quality.get("visible_reject_reasons", [])
+    global_reasons = quality.get("global_scope_reasons", [])
     warnings = quality.get("warnings", [])
     if reject_reasons:
         st.error("质量门控拒绝原因：" + "；".join(str(item) for item in reject_reasons))
     if warnings:
         st.warning("诊断警告：" + "；".join(str(item) for item in warnings))
+    if global_reasons:
+        st.warning("全局场景限制：" + "；".join(str(item) for item in global_reasons))
 
     st.subheader("连续41帧几何结果")
     plots = assets.get("plots", {})
@@ -421,7 +456,7 @@ def page_competition_simulation_demo() -> None:
 
     st.error(
         "比赛演示安全边界：authoritative=false，eligible_for_downstream=false。"
-        "当前结论仅适用于合成仿真旁路演示。"
+        "当前结论仅适用于合成仿真闭环演示，不能生成正式道路预警。"
     )
     with st.expander("查看冻结素材策略"):
         st.json(source_policy, expanded=True)
