@@ -1,0 +1,34 @@
+weather:
+  provider: "open_meteo"
+  data_mode: "live_api_sandbox"
+  location_name: "shanghai_api_connectivity_demo_not_deployment_site"
+
+  location:
+    latitude: 31.2304
+    longitude: 121.4737
+    deployment_location_confirmed: false
+
+  api:
+    enabled: true
+    endpoint: "https://api.open-meteo.com/v1/forecast"
+    timeout_seconds: 8
+    fallback_on_error: true
+
+  safety:
+    allow_live_weather_api: true
+    allow_external_notification: false
+    allow_real_warning: false
+
+  fallback_current:
+    rainfall_intensity_mm_h: 0.0
+    observation_time: "configured_fallback_only"
+
+  fallback_forecast:
+    rainfall_15min_mm: 0.0
+    rainfall_30min_mm: 0.0
+    rainfall_60min_mm: 0.0
+
+  note: >-
+    Connectivity demonstration only. Coordinates are not the deployment site.
+    This config is not used by the fixed simulation pipeline and cannot send a
+    warning or notification.

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""S6: Compute an offline mock weather correction factor."""
+"""S6: Compute a weather correction factor from configured or live data."""
 
 from __future__ import annotations
 
@@ -14,6 +14,11 @@ from typing import Any
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
+
+from src.meteorology.open_meteo_provider import (  # noqa: E402
+    WeatherProviderError,
+    fetch_open_meteo_weather,
+)
 
 
 def load_weather_config(path: str | Path) -> dict[str, Any]:
@@ -42,11 +47,38 @@ def classify_rainfall(rainfall_intensity_mm_h: float) -> tuple[str, float]:
     return "heavy_rain", 1.8
 
 
-def compute_weather_correction(config_path: str | Path, project_root: str | Path) -> dict[str, Any]:
+def _fallback_weather_values(weather: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]:
+    current = weather.get("fallback_current", weather.get("current", {}))
+    forecast = weather.get("fallback_forecast", weather.get("forecast", {}))
+    return current, forecast
+
+
+def compute_weather_correction(
+    config_path: str | Path,
+    project_root: str | Path,
+    weather_fetcher=fetch_open_meteo_weather,
+) -> dict[str, Any]:
     root = Path(project_root).expanduser().resolve()
     weather = load_weather_config(config_path)
-    current = weather.get("current", {})
-    forecast = weather.get("forecast", {})
+    provider = weather.get("provider", "offline_mock")
+    api_status = "not_requested"
+    api_error = None
+    provider_metadata: dict[str, Any] = {}
+    if provider == "open_meteo":
+        try:
+            live = weather_fetcher(weather)
+            current = live["current"]
+            forecast = live["forecast"]
+            provider_metadata = live["provider_metadata"]
+            api_status = "success"
+        except WeatherProviderError as exc:
+            if weather.get("api", {}).get("fallback_on_error") is not True:
+                raise
+            current, forecast = _fallback_weather_values(weather)
+            api_status = "fallback"
+            api_error = str(exc)
+    else:
+        current, forecast = _fallback_weather_values(weather)
 
     rainfall_intensity = float(current.get("rainfall_intensity_mm_h", 0.0))
     rainfall_level_label, correction_factor = classify_rainfall(rainfall_intensity)
@@ -63,16 +95,28 @@ def compute_weather_correction(config_path: str | Path, project_root: str | Path
 
     data_output_json = meteorology_dir / "weather_correction_result.json"
     output_json = json_dir / "weather_correction_result.json"
-    mock_data_note = (
-        "offline_mock_weather: S6 MVP uses offline mock rainfall data to validate "
-        "the S6-S7 pipeline. It is not real-time meteorological API data."
-    )
+    if api_status == "success":
+        data_note = (
+            "live_weather_api_sandbox: read-only Open-Meteo data; no notification "
+            "or real warning action is permitted."
+        )
+    elif api_status == "fallback":
+        data_note = (
+            "weather_api_fallback: the live request failed and explicitly configured "
+            "fallback values were used."
+        )
+    else:
+        data_note = (
+            "offline_configured_weather: S6 uses configured rainfall data and does "
+            "not claim a live meteorological observation."
+        )
 
     result = {
         "stage": "S6_weather_correction",
-        "provider": weather.get("provider", "offline_mock"),
+        "provider": provider,
         "data_mode": weather.get("data_mode", "manual_config"),
         "location_name": weather.get("location_name", "unknown"),
+        "location": weather.get("location"),
         "observation_time": current.get("observation_time"),
         "current_rainfall_intensity_mm_h": rainfall_intensity,
         "rainfall_level_label": rainfall_level_label,
@@ -81,7 +125,14 @@ def compute_weather_correction(config_path: str | Path, project_root: str | Path
         "forecast_rainfall_30min_mm": forecast_30min,
         "forecast_rainfall_60min_mm": forecast_60min,
         "rule_source": "patent_specification_s6",
-        "mock_data_note": mock_data_note,
+        "mock_data_note": data_note,
+        "weather_data_note": data_note,
+        "api_request_attempted": provider == "open_meteo",
+        "api_status": api_status,
+        "api_error": api_error,
+        "provider_metadata": provider_metadata,
+        "external_notification_allowed": False,
+        "real_warning_allowed": False,
         "config_note": weather.get("note"),
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "output_files": {
@@ -109,7 +160,7 @@ def compute_weather_correction(config_path: str | Path, project_root: str | Path
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="S6 offline mock weather correction.")
+    parser = argparse.ArgumentParser(description="S6 configured/live weather correction.")
     parser.add_argument("--config", required=True, help="Path to configs/weather_config.yaml")
     parser.add_argument("--project_root", default=Path.cwd(), help="water_agent_system project root")
     args = parser.parse_args()
