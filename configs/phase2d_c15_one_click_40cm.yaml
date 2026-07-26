@@ -1,30 +1,30 @@
 phase2d_c13_one_click:
-  protocol_version: phase2d_c13_one_click_simulation_e2e_v1
+  protocol_version: phase2d_c15_multiscenario_acceptance_v1
   data_domain: simulation
   runtime_config_key: phase2d_c11_direct_e2e_20cm
   run_root_parent: outputs/phase2d_c13_one_click_runs
   ground_truth_used_for_prediction: false
   expected_outcome:
     camera_visible_status: pass
-    global_scene_status: complete
-    agent_should_run: true
+    global_scene_status: partial
+    agent_should_run: false
 
   sensor_inputs:
     dry_lidar_bag: data/simulation/sim_dry_baseline_001/rosbag/sim_dry_baseline_001__20260710T185621Z
     ground_dem_pipeline_config: configs/phase2d_c11_simulation_sensor_pipeline.yaml
 
   sample:
-    sample_id: c8c3_008
-    case_id: sim_water_20cm_001
+    sample_id: c8c3_011
+    case_id: sim_water_40cm_001
     rain_level: moderate
     seed: 303
-    role: one_click_standard_pipeline_demo
-    frames_dir: data/simulation_dynamic/sim_water_20cm_001/moderate/seed_303/frames
+    role: multiscenario_acceptance
+    frames_dir: data/simulation_dynamic/sim_water_40cm_001/moderate/seed_303/frames
     fps: 20
     window_start: 129
     window_end: 169
     anchor_frame_index: 149
-    anchor_image_sha256: c442b25dad5729137359f17d6a460cdeb05571cfc3c2b0716af69cf1614009f1
+    anchor_image_sha256: 6bdca919b254fa362042f08ea04439b7471a50ae10612bed074ecf7fc7e16ba4
 
   prediction_configs:
     temporal_prompt: configs/temporal_sam2_prompt_c6c.yaml

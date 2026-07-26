@@ -1,6 +1,8 @@
 [CmdletBinding()]
 param(
     [string]$RunId = ("simulation_e2e_" + (Get-Date -Format "yyyyMMdd_HHmmss")),
+    [string]$ConfigPath = "configs/phase2d_c13_one_click_20cm.yaml",
+    [switch]$ResumePrepared,
     [string]$VmHostName = "192.168.218.135",
     [string]$VmUser = "wlkl",
     [string]$VmKeyPath = "D:\yujian_exchange\ssh\codex_vm_ed25519",
@@ -18,6 +20,9 @@ $ProgressPreference = "SilentlyContinue"
 
 if ($RunId -notmatch "^[A-Za-z0-9][A-Za-z0-9_-]{0,79}$") {
     throw "RunId may contain only letters, digits, underscore and hyphen."
+}
+if ($ConfigPath -notmatch "^configs/[A-Za-z0-9_.-]+\.yaml$") {
+    throw "ConfigPath must be a YAML file directly below configs/."
 }
 foreach ($key in @($VmKeyPath, $WslKeyPath)) {
     if (-not (Test-Path -LiteralPath $key -PathType Leaf)) {
@@ -82,17 +87,27 @@ $wslInputArchive = "/tmp/water_agent_c13_${RunId}_input.tar.gz"
 $wslResultArchive = "/tmp/water_agent_c13_${RunId}_result.tar.gz"
 
 try {
-    Write-Host "[1/6] VM: building Ground DEM from the dry simulated LiDAR bag"
-    Write-Host "      and generating the automatic temporal SAM2 prompt..."
-    Invoke-VmBash @"
+    if (-not $ResumePrepared) {
+        Write-Host "[1/6] VM: building Ground DEM from the dry simulated LiDAR bag"
+        Write-Host "      and generating the automatic temporal SAM2 prompt..."
+        Invoke-VmBash @"
 set -eo pipefail
 cd '$VmRepo'
 source /opt/ros/humble/setup.bash
 set -u
 python3 scripts/run_simulation_agent_e2e_vm.py \
-  --config configs/phase2d_c13_one_click_20cm.yaml \
+  --config '$ConfigPath' \
   prepare --run-id '$RunId'
 "@
+    }
+    else {
+        Write-Host "[1/6] VM: reusing the already frozen prepare stage..."
+        Invoke-VmBash @"
+set -eo pipefail
+test -s '$vmRunDir/prepare_summary.json'
+test -s '$vmInputArchive'
+"@
+    }
 
     Write-Host "[2/6] Copying the frozen RGB window and automatic prompt to Windows..."
     Invoke-NativeChecked "scp" @(
@@ -154,7 +169,7 @@ cd '$VmRepo'
 source /opt/ros/humble/setup.bash
 set -u
 python3 scripts/run_simulation_agent_e2e_vm.py \
-  --config configs/phase2d_c13_one_click_20cm.yaml \
+  --config '$ConfigPath' \
   finalize --run-id '$RunId' --sam2-archive '$vmResultArchive'
 "@
 

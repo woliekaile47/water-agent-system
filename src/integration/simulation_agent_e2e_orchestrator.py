@@ -20,6 +20,8 @@ from typing import Any
 
 import yaml
 
+from src.evaluation.phase2d_c8_candidate_quality_gate import evaluate_candidate_gate
+
 CONFIG_KEY = "phase2d_c13_one_click"
 RUNTIME_CONFIG_KEY = "phase2d_c11_direct_e2e_20cm"
 RUN_ID_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]{0,79}$")
@@ -82,6 +84,24 @@ def validate_config(config: dict[str, Any]) -> None:
         raise ValueError("anchor frame must be inside the configured frame window")
     if end - start + 1 < 3:
         raise ValueError("video window must contain at least three frames")
+    outcome = config.get("expected_outcome", {})
+    if outcome.get("camera_visible_status") not in {"pass", "reject"}:
+        raise ValueError("expected_outcome.camera_visible_status must be pass or reject")
+    if outcome.get("global_scene_status") not in {
+        "complete",
+        "partial",
+        "unavailable",
+    }:
+        raise ValueError(
+            "expected_outcome.global_scene_status must be complete, partial or unavailable"
+        )
+    if not isinstance(outcome.get("agent_should_run"), bool):
+        raise ValueError("expected_outcome.agent_should_run must be boolean")
+    if outcome["agent_should_run"] and (
+        outcome["camera_visible_status"] != "pass"
+        or outcome["global_scene_status"] != "complete"
+    ):
+        raise ValueError("Agent may run only for a complete camera-visible estimate")
 
 
 def validate_run_id(run_id: str) -> str:
@@ -349,6 +369,9 @@ def prepare_run(repo_root: str | Path, config_path: str | Path, run_id: str) -> 
         "protocol_version": config["protocol_version"],
         "run_id": run_id,
         "run_dir": str(run_dir),
+        "sample_id": sample["sample_id"],
+        "config_path": str(config_file),
+        "config_sha256": sha256_file(config_file),
         "exchange_archive": str(archive),
         "exchange_archive_sha256": sha256_file(archive),
         "runtime_config": str(runtime_config_path),
@@ -396,6 +419,107 @@ def _load_if_exists(path: Path) -> dict[str, Any]:
     return read_json(path) if path.is_file() else {}
 
 
+def assert_prepared_run_matches_config(
+    prepare_summary: dict[str, Any],
+    config_file: Path,
+    config: dict[str, Any],
+) -> None:
+    if prepare_summary.get("config_sha256") != sha256_file(config_file):
+        raise ValueError("prepared run configuration hash does not match finalize config")
+    if prepare_summary.get("sample_id") != config["sample"]["sample_id"]:
+        raise ValueError("prepared run sample does not match finalize config")
+
+
+def evaluate_anchor_candidate_gate(
+    repo_root: Path,
+    run_dir: Path,
+    config: dict[str, Any],
+) -> tuple[dict[str, Any], dict[str, Any]]:
+    """Apply the existing frozen candidate gate to the configured anchor frame."""
+    sample = config["sample"]
+    geometry_dir = run_dir / "s4_geometry" / sample["sample_id"]
+    rows = read_json(geometry_dir / "per_frame_geometry_summary.json")
+    sequence = read_json(geometry_dir / "sequence_geometry_stability.json")
+    anchor_index = int(sample["anchor_frame_index"])
+    anchors = [row for row in rows if int(row["frame_index"]) == anchor_index]
+    if len(anchors) != 1:
+        raise ValueError(f"Expected exactly one anchor geometry row for {anchor_index}")
+    gate_path = resolve_repo_path(
+        repo_root, config["prediction_configs"]["candidate_quality_gate"]
+    )
+    gate_document = yaml.safe_load(gate_path.read_text(encoding="utf-8")) or {}
+    gate_config = gate_document["phase2d_c8_candidate_quality_gate"]
+    decision = evaluate_candidate_gate(anchors[0], sequence, gate_config)
+    if decision.get("ground_truth_used") is not False:
+        raise ValueError("candidate gate provenance is not GT-free")
+    return anchors[0], decision
+
+
+def assert_expected_outcome(
+    config: dict[str, Any],
+    decision: dict[str, Any],
+) -> None:
+    expected = config["expected_outcome"]
+    actual = {
+        "camera_visible_status": decision.get("camera_visible_status"),
+        "global_scene_status": decision.get("global_scene_status"),
+    }
+    for key, value in actual.items():
+        if value != expected[key]:
+            raise RuntimeError(
+                f"frozen candidate gate outcome mismatch for {key}: "
+                f"expected {expected[key]!r}, got {value!r}"
+            )
+
+
+def summarize_gate_blocked_run(
+    run_dir: Path,
+    config: dict[str, Any],
+    anchor: dict[str, Any],
+    decision: dict[str, Any],
+) -> dict[str, Any]:
+    expected = config["expected_outcome"]
+    return {
+        "status": "success",
+        "acceptance_outcome": "safely_blocked_as_expected",
+        "protocol_version": config["protocol_version"],
+        "run_dir": str(run_dir),
+        "standard_pipeline_completed": False,
+        "agent_status": "blocked_by_quality_gate",
+        "agent_should_run": False,
+        "expected_outcome_matched": True,
+        "estimated_water_level_m": anchor.get("estimated_water_level_m"),
+        "mean_depth_cm": anchor.get("mean_depth_cm"),
+        "max_depth_cm": anchor.get("max_depth_cm"),
+        "water_area_m2": anchor.get("water_area_m2"),
+        "water_volume_m3": anchor.get("water_volume_m3"),
+        "camera_reprojection_iou": anchor.get("camera_reprojection_iou"),
+        "outer_boundary_reprojection_p95_px": anchor.get(
+            "outer_boundary_reprojection_p95_px"
+        ),
+        "camera_visible_status": decision["camera_visible_status"],
+        "global_scene_status": decision["global_scene_status"],
+        "quality_reject_reasons": decision.get("visible_reject_reasons", []),
+        "global_scope_reasons": decision.get("global_scope_reasons", []),
+        "quality_warnings": decision.get("warnings", []),
+        "warning_level": None,
+        "warning_mode": "suppressed_by_quality_gate",
+        "sqlite_database": None,
+        "sqlite_database_exists": False,
+        "ground_truth_used": False,
+        "authoritative": False,
+        "eligible_for_downstream": False,
+        "eligible_for_real_warning": False,
+        "real_device_started": False,
+        "real_api_calls_enabled": False,
+        "safety_checks_passed": (
+            expected["agent_should_run"] is False
+            and decision.get("ground_truth_used") is False
+        ),
+        "completed_at": datetime.now(timezone.utc).isoformat(),
+    }
+
+
 def summarize_completed_run(run_dir: Path, config: dict[str, Any]) -> dict[str, Any]:
     runtime = run_dir / "runtime"
     manifest = read_json(runtime / "runtime_manifest.json")
@@ -418,6 +542,9 @@ def summarize_completed_run(run_dir: Path, config: dict[str, Any]) -> dict[str, 
         "run_dir": str(run_dir),
         "standard_pipeline_completed": agent.get("status") == "success",
         "agent_status": agent.get("status"),
+        "agent_should_run": True,
+        "acceptance_outcome": "standard_pipeline_completed",
+        "expected_outcome_matched": True,
         "estimated_water_level_m": depth.get("estimated_water_level_m"),
         "mean_depth_cm": depth.get("mean_depth_cm"),
         "max_depth_cm": depth.get("max_depth_cm"),
@@ -454,11 +581,13 @@ def finalize_run(
     sam2_archive: str | Path,
 ) -> dict[str, Any]:
     root = Path(repo_root).expanduser().resolve()
-    config = load_config(resolve_repo_path(root, config_path))
+    config_file = resolve_repo_path(root, config_path)
+    config = load_config(config_file)
     run_dir = resolve_run_dir(root, config, run_id)
     prepare_summary = read_json(run_dir / "prepare_summary.json")
     if prepare_summary.get("status") != "prepared_for_wsl_sam2":
         raise ValueError("run was not frozen in prepared_for_wsl_sam2 state")
+    assert_prepared_run_matches_config(prepare_summary, config_file, config)
     sample = config["sample"]
     propagation_root = run_dir / "s3_video"
     propagation_result = propagation_root / sample["sample_id"]
@@ -520,6 +649,16 @@ def finalize_run(
         root,
         logs / "s4_geometry.log",
     )
+    anchor, candidate_gate = evaluate_anchor_candidate_gate(root, run_dir, config)
+    assert_expected_outcome(config, candidate_gate)
+    if not config["expected_outcome"]["agent_should_run"]:
+        result = summarize_gate_blocked_run(
+            run_dir, config, anchor, candidate_gate
+        )
+        write_json(run_dir / "candidate_gate_decision.json", candidate_gate)
+        write_json(run_dir / "completion_summary.json", result)
+        return result
+
     run_checked(
         [
             sys.executable,

@@ -8,9 +8,12 @@ import pytest
 
 from src.integration.simulation_agent_e2e_orchestrator import (
     RUNTIME_CONFIG_KEY,
+    assert_prepared_run_matches_config,
     build_runtime_config,
     resolve_run_dir,
     safe_extract_tar,
+    assert_expected_outcome,
+    summarize_gate_blocked_run,
     validate_config,
     validate_run_id,
 )
@@ -23,6 +26,11 @@ def valid_config() -> dict:
         "runtime_config_key": RUNTIME_CONFIG_KEY,
         "run_root_parent": "outputs/phase2d_c13_one_click_runs",
         "ground_truth_used_for_prediction": False,
+        "expected_outcome": {
+            "camera_visible_status": "pass",
+            "global_scene_status": "complete",
+            "agent_should_run": True,
+        },
         "sample": {
             "sample_id": "sample",
             "case_id": "case",
@@ -58,6 +66,84 @@ def test_config_requires_all_simulation_safety_flags() -> None:
     config["safety"]["external_notification_allowed"] = True
     with pytest.raises(ValueError, match="external_notification_allowed"):
         validate_config(config)
+
+
+def test_config_prevents_agent_for_partial_global_scene() -> None:
+    config = valid_config()
+    config["expected_outcome"]["global_scene_status"] = "partial"
+    with pytest.raises(ValueError, match="Agent may run only"):
+        validate_config(config)
+
+
+def test_expected_outcome_mismatch_is_rejected() -> None:
+    config = valid_config()
+    with pytest.raises(RuntimeError, match="outcome mismatch"):
+        assert_expected_outcome(
+            config,
+            {"camera_visible_status": "reject", "global_scene_status": "unavailable"},
+        )
+
+
+def test_expected_quality_reject_is_successful_safe_acceptance(tmp_path: Path) -> None:
+    config = valid_config()
+    config["expected_outcome"] = {
+        "camera_visible_status": "reject",
+        "global_scene_status": "unavailable",
+        "agent_should_run": False,
+    }
+    decision = {
+        "camera_visible_status": "reject",
+        "global_scene_status": "unavailable",
+        "visible_reject_reasons": ["camera_reprojection_iou_below_candidate_threshold"],
+        "global_scope_reasons": [],
+        "warnings": [],
+        "ground_truth_used": False,
+    }
+    summary = summarize_gate_blocked_run(
+        tmp_path,
+        config,
+        {
+            "estimated_water_level_m": -0.3,
+            "water_area_m2": 1.0,
+            "water_volume_m3": 0.1,
+        },
+        decision,
+    )
+    assert summary["status"] == "success"
+    assert summary["agent_status"] == "blocked_by_quality_gate"
+    assert summary["standard_pipeline_completed"] is False
+    assert summary["eligible_for_downstream"] is False
+
+
+def test_resume_requires_same_frozen_config_and_sample(tmp_path: Path) -> None:
+    import hashlib
+
+    config = valid_config()
+    config_file = tmp_path / "config.yaml"
+    config_file.write_text("frozen-config\n", encoding="utf-8")
+    summary = {
+        "config_sha256": hashlib.sha256(config_file.read_bytes()).hexdigest(),
+        "sample_id": "sample",
+    }
+    assert_prepared_run_matches_config(summary, config_file, config)
+    summary["sample_id"] = "different"
+    with pytest.raises(ValueError, match="sample"):
+        assert_prepared_run_matches_config(summary, config_file, config)
+
+
+def test_resume_rejects_changed_config_file(tmp_path: Path) -> None:
+    import hashlib
+
+    config = valid_config()
+    config_file = tmp_path / "config.yaml"
+    config_file.write_text("before\n", encoding="utf-8")
+    summary = {
+        "config_sha256": hashlib.sha256(config_file.read_bytes()).hexdigest(),
+        "sample_id": "sample",
+    }
+    config_file.write_text("after\n", encoding="utf-8")
+    with pytest.raises(ValueError, match="configuration hash"):
+        assert_prepared_run_matches_config(summary, config_file, config)
 
 
 @pytest.mark.parametrize("run_id", ["run_001", "simulation-20260726", "a"])

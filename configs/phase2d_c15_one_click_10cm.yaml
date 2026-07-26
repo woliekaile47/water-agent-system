@@ -1,5 +1,5 @@
 phase2d_c13_one_click:
-  protocol_version: phase2d_c13_one_click_simulation_e2e_v1
+  protocol_version: phase2d_c15_multiscenario_acceptance_v1
   data_domain: simulation
   runtime_config_key: phase2d_c11_direct_e2e_20cm
   run_root_parent: outputs/phase2d_c13_one_click_runs
@@ -14,17 +14,17 @@ phase2d_c13_one_click:
     ground_dem_pipeline_config: configs/phase2d_c11_simulation_sensor_pipeline.yaml
 
   sample:
-    sample_id: c8c3_008
-    case_id: sim_water_20cm_001
+    sample_id: c8c3_005
+    case_id: sim_water_10cm_001
     rain_level: moderate
     seed: 303
-    role: one_click_standard_pipeline_demo
-    frames_dir: data/simulation_dynamic/sim_water_20cm_001/moderate/seed_303/frames
+    role: multiscenario_acceptance
+    frames_dir: data/simulation_dynamic/sim_water_10cm_001/moderate/seed_303/frames
     fps: 20
     window_start: 129
     window_end: 169
     anchor_frame_index: 149
-    anchor_image_sha256: c442b25dad5729137359f17d6a460cdeb05571cfc3c2b0716af69cf1614009f1
+    anchor_image_sha256: 7a2e4ba394552900445718f09e227f4b9448119e2064177192e18116f8ecbd5a
 
   prediction_configs:
     temporal_prompt: configs/temporal_sam2_prompt_c6c.yaml

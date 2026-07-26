@@ -1,0 +1,33 @@
+phase2d_c15_multiscenario_acceptance:
+  protocol_version: phase2d_c15_multiscenario_acceptance_v1
+  output_root: outputs/phase2d_c15_multiscenario_acceptance
+  scenarios:
+    - label: 5cm
+      config: configs/phase2d_c15_one_click_5cm.yaml
+      expected:
+        camera_visible_status: reject
+        global_scene_status: unavailable
+        agent_should_run: false
+    - label: 10cm
+      config: configs/phase2d_c15_one_click_10cm.yaml
+      expected:
+        camera_visible_status: pass
+        global_scene_status: complete
+        agent_should_run: true
+    - label: 20cm
+      config: configs/phase2d_c13_one_click_20cm.yaml
+      expected:
+        camera_visible_status: pass
+        global_scene_status: complete
+        agent_should_run: true
+    - label: 40cm
+      config: configs/phase2d_c15_one_click_40cm.yaml
+      expected:
+        camera_visible_status: pass
+        global_scene_status: partial
+        agent_should_run: false
+  safety:
+    simulation_only: true
+    ground_truth_used: false
+    authoritative: false
+    eligible_for_real_warning: false
