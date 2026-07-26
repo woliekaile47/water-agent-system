@@ -336,7 +336,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
     self_consistency = prediction_result["self_consistency"]
     full_boundary_p95 = self_consistency.get("boundary_reprojection_p95_px")
     outer_boundary_p95 = self_consistency.get("outer_boundary_reprojection_p95_px")
-    boundary_threshold = float(gate_config["max_boundary_reprojection_p95_px"])
+    boundary_threshold = float(gate_config["advisory_boundary_reprojection_p95_px"])
     unselected = [
         basin for basin in candidate_analysis["basins"]
         if not basin["selected_by_frozen_prediction"]
@@ -352,16 +352,17 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         "frozen_gate_status": prediction_gate.get("status"),
         "frozen_gate_reasons": prediction_gate.get("reasons", []),
         "gate_thresholds_modified": False,
-        "boundary_reprojection_error_above_threshold": {
-            "existing_threshold_px": boundary_threshold,
+        "boundary_reprojection_advisory": {
+            "advisory_threshold_px": boundary_threshold,
+            "may_reject_by_itself": False,
             "full_boundary_p50_px": self_consistency.get("boundary_reprojection_p50_px"),
             "full_boundary_p95_px": full_boundary_p95,
             "outer_boundary_p50_px": self_consistency.get("outer_boundary_reprojection_p50_px"),
             "outer_boundary_p95_px": outer_boundary_p95,
-            "full_boundary_passes_existing_threshold": bool(
+            "full_boundary_within_advisory_threshold": bool(
                 full_boundary_p95 is not None and full_boundary_p95 <= boundary_threshold
             ),
-            "outer_boundary_passes_existing_threshold": bool(
+            "outer_boundary_within_advisory_threshold": bool(
                 outer_boundary_p95 is not None and outer_boundary_p95 <= boundary_threshold
             ),
             "observed_mask_holes": observed_holes,

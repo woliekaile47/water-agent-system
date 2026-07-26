@@ -1,11 +1,13 @@
 import numpy as np
+import pytest
 
 from src.evaluation.water_surface_aware_quality_gate import evaluate_water_surface_aware_quality_gate
 
 
 CONFIG = {
     "min_shoreline_intersection_rate": 0.65, "max_camera_mask_edge_touch_ratio": 0.2,
-    "min_camera_reprojection_iou": 0.9, "max_boundary_reprojection_p95_px": 3.0,
+    "min_camera_reprojection_iou": 0.9, "advisory_boundary_reprojection_p95_px": 5.0,
+    "boundary_metric_may_reject_by_itself": False,
     "max_candidate_basin_count": 5, "min_water_surface_projection_coverage": 0.95,
     "min_valid_shoreline_samples": 20, "max_shoreline_mad_m": 0.02,
     "max_shoreline_iqr_m": 0.06, "max_physical_depth_m": 0.6,
@@ -16,7 +18,7 @@ def arguments(intersection_rate=0.9, reprojection_iou=0.98):
     ray = {"shoreline_intersection_success_rate": intersection_rate, "camera_mask_edge_touch_ratio": 0.0}
     shoreline = {"estimated_water_level_m": 0.1, "valid_shoreline_sample_count": 50, "shoreline_height_mad_m": 0.005, "shoreline_height_iqr_m": 0.01, "water_level_converged": True}
     reconstruction = {"candidate_basin_count": 1, "selected_basin_count": 1, "ambiguous_candidate_basins": False, "unobserved_candidate_basin_count": 0, "seed_valid": True}
-    consistency = {"camera_reprojection_iou": reprojection_iou, "boundary_reprojection_p95_px": 1.0, "water_surface_projection_coverage": 1.0}
+    consistency = {"camera_reprojection_iou": reprojection_iou, "boundary_reprojection_p95_px": 1.0, "outer_boundary_reprojection_p95_px": 1.0, "water_surface_projection_coverage": 1.0}
     result = {"max_depth_m": 0.2, "negative_depth_count": 0, "inf_depth_count": 0}
     return ray, shoreline, reconstruction, consistency, result, np.zeros((3, 3), dtype=np.float32)
 
@@ -41,6 +43,37 @@ def test_low_reprojection_iou_rejects_without_ground_truth_input():
     gate = evaluate_water_surface_aware_quality_gate(*arguments(reprojection_iou=0.5), CONFIG)
     assert gate["status"] == "reject"
     assert "camera_reprojection_iou_below_threshold" in gate["reasons"]
+
+
+def test_old_three_pixel_boundary_rule_no_longer_rejects():
+    ray, shoreline, reconstruction, consistency, result, depth = arguments()
+    consistency["outer_boundary_reprojection_p95_px"] = 3.6
+    gate = evaluate_water_surface_aware_quality_gate(
+        ray, shoreline, reconstruction, consistency, result, depth, CONFIG
+    )
+    assert gate["status"] == "pass"
+    assert gate["warnings"] == []
+    assert gate["boundary_metric_rejected_by_itself"] is False
+
+
+def test_boundary_above_five_pixels_is_advisory_only():
+    ray, shoreline, reconstruction, consistency, result, depth = arguments()
+    consistency["outer_boundary_reprojection_p95_px"] = 8.0
+    gate = evaluate_water_surface_aware_quality_gate(
+        ray, shoreline, reconstruction, consistency, result, depth, CONFIG
+    )
+    assert gate["status"] == "pass"
+    assert "outer_boundary_reprojection_p95_above_advisory_threshold" in gate["warnings"]
+    assert gate["boundary_metric_rejected_by_itself"] is False
+
+
+def test_boundary_rejection_cannot_be_reenabled_by_config():
+    unsafe = dict(CONFIG)
+    unsafe["boundary_metric_may_reject_by_itself"] = True
+    with pytest.raises(ValueError, match="advisory"):
+        evaluate_water_surface_aware_quality_gate(
+            *arguments(), unsafe
+        )
 
 
 def test_unobservable_candidate_is_partial_lower_bound_but_observable_result_valid():

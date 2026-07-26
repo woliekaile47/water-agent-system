@@ -93,6 +93,7 @@ def build_canonical_water_state(
             "deployment_mode": "shadow",
             "active_runtime_gate": str(config["active_runtime_gate"]),
             "legacy_runtime_gate": {
+                "mode": str(config.get("legacy_runtime_gate_mode", "audit_only")),
                 "status": legacy_status,
                 "reasons": list(geometry.get("gate_reasons", [])),
             },

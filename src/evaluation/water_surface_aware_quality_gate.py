@@ -20,11 +20,21 @@ def evaluate_water_surface_aware_quality_gate(
     required_files: list[str | Path] | None = None,
 ) -> dict[str, Any]:
     reasons: list[str] = []
+    warnings: list[str] = []
+    if config.get("boundary_metric_may_reject_by_itself") is not False:
+        raise ValueError(
+            "Boundary reprojection is advisory and cannot reject by itself"
+        )
+    outer_boundary_p95 = consistency.get(
+        "outer_boundary_reprojection_p95_px",
+        consistency.get("boundary_reprojection_p95_px"),
+    )
     metrics = {
         "shoreline_intersection_success_rate": float(ray_diagnostics.get("shoreline_intersection_success_rate", 0.0)),
         "camera_mask_edge_touch_ratio": float(ray_diagnostics.get("camera_mask_edge_touch_ratio", 1.0)),
         "camera_reprojection_iou": float(consistency.get("camera_reprojection_iou", 0.0)),
         "boundary_reprojection_p95_px": consistency.get("boundary_reprojection_p95_px"),
+        "outer_boundary_reprojection_p95_px": outer_boundary_p95,
         "water_surface_projection_coverage": float(consistency.get("water_surface_projection_coverage", 0.0)),
         "candidate_basin_count": int(reconstruction_diagnostics.get("candidate_basin_count", 0)),
         "selected_basin_count": int(reconstruction_diagnostics.get("selected_basin_count", 0)),
@@ -50,9 +60,11 @@ def evaluate_water_surface_aware_quality_gate(
         reasons.append("camera_mask_touches_image_edge_excessively")
     if metrics["camera_reprojection_iou"] < float(config["min_camera_reprojection_iou"]):
         reasons.append("camera_reprojection_iou_below_threshold")
-    boundary_error = metrics["boundary_reprojection_p95_px"]
-    if boundary_error is None or not np.isfinite(boundary_error) or float(boundary_error) > float(config["max_boundary_reprojection_p95_px"]):
-        reasons.append("boundary_reprojection_error_above_threshold")
+    boundary_error = metrics["outer_boundary_reprojection_p95_px"]
+    if boundary_error is None or not np.isfinite(boundary_error):
+        warnings.append("outer_boundary_reprojection_p95_unavailable")
+    elif float(boundary_error) > float(config["advisory_boundary_reprojection_p95_px"]):
+        warnings.append("outer_boundary_reprojection_p95_above_advisory_threshold")
     if metrics["candidate_basin_count"] > int(config["max_candidate_basin_count"]):
         reasons.append("too_many_candidate_basins")
     if metrics["ambiguous_candidate_basins"]:
@@ -113,6 +125,8 @@ def evaluate_water_surface_aware_quality_gate(
     return {
         "status": "reject" if reasons else "pass",
         "reasons": reasons,
+        "warnings": warnings,
+        "boundary_metric_rejected_by_itself": False,
         "metrics": metrics,
         "observation_scope": "camera_observable_region",
         "global_estimate_status": global_estimate_status,

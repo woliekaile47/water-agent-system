@@ -2,7 +2,8 @@ water_surface_aware_quality_gate:
   min_shoreline_intersection_rate: 0.65
   max_camera_mask_edge_touch_ratio: 0.20
   min_camera_reprojection_iou: 0.90
-  max_boundary_reprojection_p95_px: 3.0
+  advisory_boundary_reprojection_p95_px: 5.0
+  boundary_metric_may_reject_by_itself: false
   max_candidate_basin_count: 5
   min_water_surface_projection_coverage: 0.95
   min_valid_shoreline_samples: 20

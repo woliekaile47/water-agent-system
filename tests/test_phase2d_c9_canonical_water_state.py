@@ -60,6 +60,8 @@ def test_complete_candidate_is_still_blocked_in_shadow_mode() -> None:
     assert state["quality"]["gate_status_disagreement"] is True
     assert state["eligible_for_downstream"] is False
     assert state["authoritative"] is False
+    assert state["quality"]["active_runtime_gate"] == "phase2d_c8_candidate_gate_v1"
+    assert state["quality"]["legacy_runtime_gate"]["mode"] == "audit_only"
 
 
 def test_partial_candidate_is_visible_lower_bound() -> None:
