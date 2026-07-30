@@ -51,12 +51,18 @@ outputs/temporal_event_classifier/
 outputs/temporal_water_detection_model/
 outputs/synthetic_visual_to_depth_integration/
 outputs/temporal_sam2_prompt_heldout_*/
+outputs/temporal_dense_burst_*/
+outputs/temporal_dense_burst_gt_evaluation_*/
 outputs/sam2_auto_prompt_heldout_*/
 outputs/sam2_auto_prompt_gt_evaluation_*/
 outputs/sam2_auto_prompt_failure_audit_*/
 outputs/sam2_video_pilot*/
+outputs/sam2_video_gt_evaluation_*/
+outputs/sam2_video_propagation_gt_evaluation_*/
 outputs/sam2_video_geometry_stability_*/
 outputs/sam2_video_geometry_gt_evaluation_*/
+outputs/temporal_sam2_prompt_c16_*/
+outputs/phase2d_c16_*/
 outputs/phase2d_c8_candidate_gate_*/
 outputs/phase2d_c8_seed303_prompt_*/
 outputs/phase2d_c8_seed303_video_*/
@@ -74,6 +80,8 @@ outputs/phase2d_c11_simulation_e2e_runtime_*/
 outputs/phase2d_c13_one_click_runs/
 outputs/phase2d_c15_multiscenario_acceptance/
 outputs/phase2d_wsl_competition_demo_snapshot/
+outputs/sensor_input_validation/
+outputs/camera_window_runtime/
 
 # Phase 2D-C manually prompted SAM 2 geometry inputs and generated diagnostics
 # are local experiment artifacts. Source adapters, tests, and documents remain tracked.

@@ -4,6 +4,7 @@ from pathlib import Path
 import numpy as np
 
 from src.vision.generate_temporal_sam2_prompt import generate_temporal_sam2_prompt
+from src.perception.temporal_water_pipeline import build_temporal_support_fraction
 
 
 def test_prediction_interface_has_no_ground_truth_inputs_or_evaluation_imports():
@@ -11,6 +12,15 @@ def test_prediction_interface_has_no_ground_truth_inputs_or_evaluation_imports()
     forbidden = {"gt", "ground_truth", "water_level", "depth", "area", "volume", "nominal_depth_cm"}
     assert not parameters & forbidden
     source = inspect.getsource(generate_temporal_sam2_prompt)
+    assert "src.evaluation" not in source
+    assert "ground_truth_used" in source
+
+
+def test_temporal_support_interface_is_prediction_only():
+    parameters = set(inspect.signature(build_temporal_support_fraction).parameters)
+    forbidden = {"gt", "ground_truth", "water_level", "depth", "area", "volume", "nominal_depth_cm"}
+    assert not parameters & forbidden
+    source = inspect.getsource(build_temporal_support_fraction)
     assert "src.evaluation" not in source
     assert "ground_truth_used" in source
 

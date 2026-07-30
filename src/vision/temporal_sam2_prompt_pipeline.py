@@ -72,6 +72,7 @@ def run_temporal_sam2_prompt_from_frames(
         full["classifications"],
         gate,
         prompt_config,
+        temporal_support_fraction=full["temporal_support_fraction"],
         image_path=str(image),
         image_sha256=image_sha256,
         frame_index=int(frame_index),

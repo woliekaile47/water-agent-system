@@ -1,0 +1,36 @@
+phase2d_c20_10cm_60s_seed308:
+  protocol_version: phase2d_c20_10cm_depth_control_automatic_e2e_v1
+  purpose: compare_10cm_against_frozen_5cm_dense_burst_pipeline
+  evaluation_role: held_out_depth_control_not_parameter_selection
+  seed: 308
+  rain_level: moderate
+  source_fps: 20
+  source_duration_seconds: 60
+  source_frame_count: 1201
+  dense_burst_frame_count: 41
+  dense_burst_selection_config: configs/temporal_dense_burst_selection.yaml
+  window_start: 0
+  window_end: 40
+  anchor_frame_index: 20
+  samples:
+    - sample_id: c20_001
+      role: held_out_depth_control
+      case_id: sim_water_10cm_001
+      rain_level: moderate
+      seed: 308
+      frames_dir: outputs/temporal_dense_burst_c20_10cm_60s_seed308/frames
+      evaluation_sequence_dir: data/simulation_dynamic/sim_water_10cm_001/moderate/seed_308
+      prompt_path: outputs/temporal_dense_burst_c20_10cm_60s_seed308/automatic_prompt.json
+  safety:
+    automatic_prompt_only: true
+    dense_burst_selected_automatically: true
+    human_burst_selection_used: false
+    manual_prompt_fallback_used: false
+    prediction_reads_ground_truth: false
+    evaluation_runs_after_prediction_freeze: true
+    per_case_parameter_tuning_allowed: false
+    only_depth_changed_from_c19: true
+    authoritative: false
+    eligible_for_downstream: false
+    real_device_action_allowed: false
+    real_api_calls_enabled: false

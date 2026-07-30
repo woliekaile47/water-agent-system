@@ -1,0 +1,40 @@
+schema_version: 1
+
+# Only input_mode changes between offline verification and field deployment.
+# The downstream topic/frame/image contract remains identical.
+sensor_input:
+  input_mode: rosbag
+  # baseline_scan: LiDAR required; Camera optional
+  # rain_monitoring: Camera required; LiDAR optional/off
+  # combined_validation: both required (used for the migrated joint bag)
+  operating_phase: combined_validation
+  topics:
+    camera_image: /hik_camera/image_raw
+    lidar_points: /cx/lslidar_point_cloud
+    camera_info: /hik_camera/camera_info
+    tf_static: /tf_static
+  expected_frames:
+    camera: hik_camera_link
+    lidar: laser_link
+  expected_image:
+    width: 640
+    height: 360
+  sources:
+    rosbag:
+      # Supply a local bag with --bag. Keep host-specific data paths untracked.
+      path:
+    live_topics:
+      observation_timeout_seconds: 5.0
+
+calibration:
+  # Supply a real, independent calibration file with --calibration.
+  # Until it exists, sensor ingest may pass but geometry must remain blocked.
+  path:
+  required_for_geometry: true
+
+safety:
+  allow_ground_truth: false
+  allow_depth_inversion_without_calibration: false
+
+output:
+  path: outputs/sensor_input_validation/readiness.json

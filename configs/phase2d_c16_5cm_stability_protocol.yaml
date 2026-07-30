@@ -1,0 +1,143 @@
+phase2d_c16_5cm_stability_dev:
+  protocol_version: phase2d_c16_stable_support_development_v2
+  evaluation_role: development_only_not_heldout
+  seed: 303
+  fps: 20
+  window_start: 129
+  window_end: 169
+  anchor_frame_index: 149
+  window_frame_count: 41
+  samples:
+    - sample_id: c8c3_002
+      case_id: sim_water_5cm_001
+      rain_level: moderate
+      seed: 303
+      role: development_only_not_heldout
+      frames_dir: data/simulation_dynamic/sim_water_5cm_001/moderate/seed_303/frames
+      prompt_path: outputs/phase2d_c13_one_click_runs/wsl_migration_matrix_20260726_01_5cm/s3_prompt/c8c3_002/automatic_prompt.json
+  prediction_configs:
+    temporal_detector: configs/temporal_water_mask_detector.yaml
+    temporal_quality_gate: configs/temporal_water_quality_gate.yaml
+    temporal_prompt: configs/temporal_sam2_prompt_stable_support.yaml
+    temporal_mask_stabilization: configs/temporal_sam2_mask_stabilization.yaml
+    sensors: simulation/config/sensors.yaml
+    mask_to_dem_mapping: configs/water_surface_aware_mapping.yaml
+    geometry_quality_gate: configs/water_surface_aware_quality_gate.yaml
+    candidate_quality_gate: configs/phase2d_c8_candidate_quality_gate.yaml
+  acceptance_targets:
+    water_level_absolute_error_cm_max: 3.0
+    water_level_window_std_cm_max: 1.0
+  safety:
+    ground_truth_used_for_prediction: false
+    authoritative: false
+    eligible_for_downstream: false
+    real_device_action_allowed: false
+    real_api_calls_enabled: false
+
+phase2d_c16_5cm_stability_heldout:
+  protocol_version: phase2d_c16_5cm_seed304_heldout_freeze_v1
+  matrix_id: phase2d_c16_5cm_seed304_light_moderate_heavy
+  evaluation_role: heldout_final_evaluation_not_threshold_selection
+  selection_frozen_before_rgb_inspection: true
+  rgb_opened_for_subjective_selection: false
+  ground_truth_opened_for_prediction: false
+  prediction_started_at_freeze: false
+  heldout_prediction_run_limit: 1
+  seed: 304
+  fps: 20
+  frame_count_per_sequence: 200
+  anchor_frame_index: 149
+  window_start: 129
+  window_end: 169
+  window_frame_count: 41
+  sample_count: 3
+  acceptance_targets:
+    water_level_absolute_error_cm_max: 3.0
+    water_level_window_std_cm_max: 1.0
+    evidence_insufficient_may_reject: true
+  frozen_configs:
+    dynamic_generator:
+      path: configs/dynamic_rain_visual_simulation.yaml
+      sha256: 7c1700a064ae330c7cbc8e6792af7296caef3f61c3b1567ff1ae380515d067c0
+    temporal_detector:
+      path: configs/temporal_water_mask_detector.yaml
+      sha256: 35637f358777f07f1b6156da70bba20585b2d62a1efed8281095659b732eda49
+    temporal_quality_gate:
+      path: configs/temporal_water_quality_gate.yaml
+      sha256: 93f010668fc6b8a9893e6f5efe92bd818236e40a1951307ee3df81f04a4bdb82
+    temporal_prompt:
+      path: configs/temporal_sam2_prompt_stable_support.yaml
+      sha256: b22fdbcc1efb5015ae07b6172e3842f447a986f9bd5e757c7425bfded78e74dd
+    temporal_mask_stabilization:
+      path: configs/temporal_sam2_mask_stabilization.yaml
+      sha256: c58152f6f67a022fe25c595588ab5225a6afcc527c8124ecd7582125a51bac78
+    sensors:
+      path: simulation/config/sensors.yaml
+      sha256: 6e0b38f7421b15af370e5ec7a44618252fa694b808e9d7fc4f130dad29bf8a33
+    mask_to_dem_mapping:
+      path: configs/water_surface_aware_mapping.yaml
+      sha256: 58e964ba07177725328895cbf8ca3b59e3317b9e73b336635d703da60bbce5ca
+    geometry_quality_gate:
+      path: configs/water_surface_aware_quality_gate.yaml
+      sha256: 188f1ec3c8949b02d017e9d65ecc79ce6a4a070ebe4df35319c5b0a7c6cd032c
+    candidate_quality_gate:
+      path: configs/phase2d_c8_candidate_quality_gate.yaml
+      sha256: 75c92e7f4f21ef9c05a65d564a78a4634dc6b3c3c5382fb31b6b1a2f8c45c728
+  frozen_prediction_source_sha256:
+    src/perception/temporal_water_pipeline.py: 0e44c6f601c7da22c7cedc387f5dc4979df013696bde28a6d3303334323c8335
+    src/vision/generate_temporal_sam2_prompt.py: b99c385cbd2e4d1ba7c97dd58aee632a50b581c683abd49b72b1334e468317d1
+    src/vision/temporal_sam2_prompt_pipeline.py: ab82d5dcb0a5aa0669d219f42bf42dcfafd058ee949e3e0fcb937de1df37b44a
+    src/vision/temporal_sam2_mask_stabilization.py: b14552fd383e080c149a871ad28b103935ff11c466ae231e6acba157e6fecd46
+    scripts/generate_temporal_sam2_prompt.py: 7474e00f6b216b79245c19eff509bb43fa3e720266209ee40dfe4090ae424a4c
+    scripts/run_sam2_video_geometry_stability.py: 7d2edb2ff6796f69ffba2e0f286db3804da57987d41df4ce90f0bc4ab51412a4
+  samples:
+    - sample_id: c16h_001
+      case_id: sim_water_5cm_001
+      rain_level: light
+      seed: 304
+      role: heldout
+      frames_dir: data/simulation_dynamic/sim_water_5cm_001/light/seed_304/frames
+      anchor_image: data/simulation_dynamic/sim_water_5cm_001/light/seed_304/frames/frame_000149.png
+      prompt_path: outputs/temporal_sam2_prompt_heldout_c16_seed304/c16h_001/automatic_prompt.json
+      anchor_sha256: 3401c3cf35e98ffd4547d9e0a517a758d7b4bec9ef25de93e9016b35d6723700
+      window_sha256: 7a519898a6977a1a881a1d8328971de725cba02d2b29cfd960c481686ee225e3
+      manifest_sha256: a2190882a96ce30fdec6aef22cf5a5e6cbd13cd5c12b58fb668c7d04cdd91f5f
+      sequence_sha256: 9ff6f960003754688efb01830c63981fe74dbef68414696002859ad117e52fba
+    - sample_id: c16h_002
+      case_id: sim_water_5cm_001
+      rain_level: moderate
+      seed: 304
+      role: heldout
+      frames_dir: data/simulation_dynamic/sim_water_5cm_001/moderate/seed_304/frames
+      anchor_image: data/simulation_dynamic/sim_water_5cm_001/moderate/seed_304/frames/frame_000149.png
+      prompt_path: outputs/temporal_sam2_prompt_heldout_c16_seed304/c16h_002/automatic_prompt.json
+      anchor_sha256: 8b0bf52f326484fa08b03c8566276156f23fee5a64cb3859d801074c708cd30f
+      window_sha256: a47c89e1fdc3834dd2737e758a0e1aecf9e410cb8ebde65a90a002f8cbbb6194
+      manifest_sha256: 44ab650171ada4d86737743930751a26cc0dbffffa132e225b8340d17d4b9a2c
+      sequence_sha256: 65b6f76d021397622f58377bb155dcb366c4e5257d2be822ead4f402cfdf7175
+    - sample_id: c16h_003
+      case_id: sim_water_5cm_001
+      rain_level: heavy
+      seed: 304
+      role: heldout
+      frames_dir: data/simulation_dynamic/sim_water_5cm_001/heavy/seed_304/frames
+      anchor_image: data/simulation_dynamic/sim_water_5cm_001/heavy/seed_304/frames/frame_000149.png
+      prompt_path: outputs/temporal_sam2_prompt_heldout_c16_seed304/c16h_003/automatic_prompt.json
+      anchor_sha256: 0ffd3b03344eefa4a45faba3165f09b3b6b8a9ec282c99953e0295fe3b7a0b63
+      window_sha256: a2dd35609e7afd18f9af11430cadc99d5ffc58f2fcdf70f36714b612fd0d7698
+      manifest_sha256: c6a45ea79c562b70f010b5bff71cb5663d78aa7fe37734b80c57c400d135921e
+      sequence_sha256: 6c477cad1e937ae429e2ee5b9799e4b88f3061822b842e14e09014764cc81dbe
+  safety:
+    prediction_uses_rgb_frames_for_visual_evidence: true
+    prediction_reads_frozen_prompt_and_sam2_masks: true
+    prediction_reads_dry_ground_dem_baseline: true
+    prediction_reads_camera_calibration_and_configs: true
+    prediction_reads_water_state_ground_truth: false
+    prediction_reads_dynamic_ground_truth: false
+    prediction_reads_evaluation_outputs: false
+    per_case_parameter_tuning_allowed: false
+    repeated_heldout_prediction_allowed: false
+    authoritative: false
+    eligible_for_downstream: false
+    real_device_action_allowed: false
+    real_api_calls_enabled: false

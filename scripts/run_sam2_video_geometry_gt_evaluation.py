@@ -57,6 +57,11 @@ def write_json(path: Path, value: Any) -> None:
     path.write_text(json.dumps(value, ensure_ascii=False, indent=2, allow_nan=False) + "\n", encoding="utf-8")
 
 
+def resolve_evaluation_sequence_relative(sample: dict[str, Any]) -> str:
+    """Use an explicit evaluation-only sequence path when prediction frames were staged elsewhere."""
+    return str(sample.get("evaluation_sequence_dir", Path(sample["frames_dir"]).parent))
+
+
 def verify_frozen_geometry_outputs(
     geometry_root: Path,
     samples: list[dict[str, Any]],
@@ -94,12 +99,22 @@ def verify_frozen_geometry_outputs(
             raise ValueError(f"Frozen C7-3 frame count mismatch for {sample_id}")
         if [int(row["frame_index"]) for row in rows] != expected:
             raise ValueError(f"Frozen C7-3 frame order mismatch for {sample_id}")
-        if any(row.get("ground_truth_used") is not False for row in rows if row["geometry_available"]):
+        if any(row.get("ground_truth_used") is not False for row in rows):
             raise ValueError(f"Frozen C7-3 row has invalid GT provenance for {sample_id}")
-        if sequence_summary.get("ground_truth_used") is not False:
+        sequence_ground_truth_used = sequence_summary.get(
+            "ground_truth_used",
+            dataset.get("ground_truth_used"),
+        )
+        if sequence_ground_truth_used is not False:
             raise ValueError(f"Frozen C7-3 sequence summary has invalid GT provenance for {sample_id}")
         verified[sample_id] = {
             "verified_before_ground_truth_read": True,
+            "ground_truth_used": False,
+            "sequence_ground_truth_provenance_source": (
+                "sequence_summary"
+                if "ground_truth_used" in sequence_summary
+                else "verified_dataset_summary_fallback"
+            ),
             "frame_count": len(rows),
             "rows": rows,
             "hashes": {name: sha256_file(path) for name, path in paths.items()},
@@ -156,6 +171,15 @@ def save_error_chart(rows: list[dict[str, Any]], field: str, path: Path, title: 
     width, height = 1000, 520
     image = Image.new("RGB", (width, height), "white")
     draw = ImageDraw.Draw(image)
+    if not valid:
+        draw.text((40, 30), title, fill=(20, 20, 20))
+        draw.text(
+            (40, 90),
+            "No scalar evaluation available: all frozen geometry predictions were unavailable.",
+            fill=(155, 45, 45),
+        )
+        image.save(path)
+        return
     left, right, top, bottom = 90, 35, 55, 70
     xs = np.asarray([row["frame_index"] for row in valid], dtype=np.float64)
     ys = np.asarray([row[field] for row in valid], dtype=np.float64)
@@ -192,6 +216,12 @@ def write_report(output_root: Path, summary: dict[str, Any]) -> None:
         "|---|---:|---:|---:|---:|---:|",
     ]
     for sample_id, item in summary["sequences"].items():
+        if item.get("available_frame_count", 0) == 0:
+            lines.append(
+                f"| {sample_id} | unavailable | 0/{item['frame_count']} | "
+                "unavailable | unavailable | unavailable |"
+            )
+            continue
         lines.append(
             f"| {sample_id} | {item['water_level_absolute_error_cm']['median']:.4f} | "
             f"{item['water_level_within_3cm_count']}/{item['frame_count']} | "
@@ -236,7 +266,7 @@ def main() -> int:
     sequence_summaries: dict[str, Any] = {}
     for sample in samples:
         sample_id = sample["sample_id"]
-        sequence_relative = str(Path(sample["frames_dir"]).parent)
+        sequence_relative = resolve_evaluation_sequence_relative(sample)
         gt = load_ground_truth_evaluation_inputs(root, sample["case_id"], sequence_relative)
         basin_truth = derive_camera_visible_basin_ground_truth(gt, sensors)
         evaluated = [
@@ -273,6 +303,9 @@ def main() -> int:
         "input_config_key": args.config_key,
         "sample_count": len(samples),
         "frame_count": len(all_flat),
+        "available_frame_count": sum(
+            item.get("available_frame_count", 0) for item in sequence_summaries.values()
+        ),
         "all_frozen_predictions_verified_before_first_ground_truth_read": True,
         "frozen_dataset_summary_sha256": frozen["dataset_summary_sha256"],
         "sam2_rerun_count": 0,
@@ -306,7 +339,7 @@ def main() -> int:
     print(json.dumps({
         "frame_count": len(all_flat),
         "within_3cm": {
-            sample_id: item["water_level_within_3cm_count"]
+            sample_id: item.get("water_level_within_3cm_count", 0)
             for sample_id, item in sequence_summaries.items()
         },
         "output_root": str(output_root),

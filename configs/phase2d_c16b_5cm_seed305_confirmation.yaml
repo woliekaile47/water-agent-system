@@ -1,0 +1,234 @@
+phase2d_c16b_5cm_seed305_confirmation:
+  protocol_version: phase2d_c16b_5cm_seed305_confirmation_freeze_v1
+  matrix_id: phase2d_c16b_5cm_seed305_light_moderate_heavy
+  purpose: confirm_frozen_c16_method_on_second_unseen_seed
+  evaluation_role: confirmation_only_not_parameter_selection
+  selection_rule_frozen_before_generation: true
+  audit_record_created_before_generation: true
+  audit_record_updated_after_generation_only_to_add_frozen_hashes: true
+  rgb_opened_for_subjective_selection: false
+  ground_truth_opened_for_prediction: false
+  evaluation_started_at_freeze: false
+  prediction_started_at_freeze: false
+  prediction_run_limit_per_sequence: 1
+  seed: 305
+  fps: 20
+  frame_count_per_sequence: 200
+  window_start: 129
+  window_end: 169
+  window_frame_count: 41
+  anchor_frame_index: 149
+  sample_count: 3
+  acceptance_targets:
+    water_level_absolute_error_cm_max: 3.0
+    water_level_window_std_cm_max: 1.0
+    pass_and_error_above_3cm_count_max: 0
+    evidence_insufficient_may_reject: true
+  prediction_inputs:
+    visual_evidence: rgb_frames_only
+    prompt: frozen_automatic_temporal_prompt
+    segmentation: frozen_sam2_video_masks
+    spatial_baseline: dry_ground_dem
+    camera_geometry: frozen_sensor_calibration
+    dynamic_water_state_ground_truth_allowed: false
+    dry_ground_dem_path: outputs/phase2d_c13_one_click_runs/wsl_migration_matrix_20260726_01_5cm/s2/data/dem/ground_dem_interpolated.npy
+    dry_ground_dem_sha256: 8c79f8a503baa889947050c1c93b1716f4e7f1c152115859b9c32d5eed4a9d8e
+  frozen_configs:
+    dynamic_generator:
+      path: configs/dynamic_rain_visual_simulation.yaml
+      sha256: 7c1700a064ae330c7cbc8e6792af7296caef3f61c3b1567ff1ae380515d067c0
+    temporal_detector:
+      path: configs/temporal_water_mask_detector.yaml
+      sha256: 35637f358777f07f1b6156da70bba20585b2d62a1efed8281095659b732eda49
+    temporal_quality_gate:
+      path: configs/temporal_water_quality_gate.yaml
+      sha256: 93f010668fc6b8a9893e6f5efe92bd818236e40a1951307ee3df81f04a4bdb82
+    temporal_prompt:
+      path: configs/temporal_sam2_prompt_stable_support.yaml
+      sha256: b22fdbcc1efb5015ae07b6172e3842f447a986f9bd5e757c7425bfded78e74dd
+    temporal_mask_stabilization:
+      path: configs/temporal_sam2_mask_stabilization.yaml
+      sha256: c58152f6f67a022fe25c595588ab5225a6afcc527c8124ecd7582125a51bac78
+    sensors:
+      path: simulation/config/sensors.yaml
+      sha256: 6e0b38f7421b15af370e5ec7a44618252fa694b808e9d7fc4f130dad29bf8a33
+    mask_to_dem_mapping:
+      path: configs/water_surface_aware_mapping.yaml
+      sha256: 58e964ba07177725328895cbf8ca3b59e3317b9e73b336635d703da60bbce5ca
+    geometry_quality_gate:
+      path: configs/water_surface_aware_quality_gate.yaml
+      sha256: 188f1ec3c8949b02d017e9d65ecc79ce6a4a070ebe4df35319c5b0a7c6cd032c
+    candidate_quality_gate:
+      path: configs/phase2d_c8_candidate_quality_gate.yaml
+      sha256: 75c92e7f4f21ef9c05a65d564a78a4634dc6b3c3c5382fb31b6b1a2f8c45c728
+  frozen_prediction_sources:
+    src/perception/temporal_water_pipeline.py: 0e44c6f601c7da22c7cedc387f5dc4979df013696bde28a6d3303334323c8335
+    src/vision/generate_temporal_sam2_prompt.py: b99c385cbd2e4d1ba7c97dd58aee632a50b581c683abd49b72b1334e468317d1
+    src/vision/temporal_sam2_prompt_pipeline.py: ab82d5dcb0a5aa0669d219f42bf42dcfafd058ee949e3e0fcb937de1df37b44a
+    src/vision/temporal_sam2_mask_stabilization.py: b14552fd383e080c149a871ad28b103935ff11c466ae231e6acba157e6fecd46
+    scripts/generate_temporal_sam2_prompt.py: 7474e00f6b216b79245c19eff509bb43fa3e720266209ee40dfe4090ae424a4c
+    scripts/run_sam2_video_propagation.py: f2352e0911e62b19f8dbea62084e6815d3dae298f3f4464e684634ea43e8d37d
+    scripts/run_sam2_video_geometry_stability.py: 7d2edb2ff6796f69ffba2e0f286db3804da57987d41df4ce90f0bc4ab51412a4
+  frozen_evaluation_sources:
+    scripts/run_sam2_video_propagation_gt_evaluation.py: ff6584df6737cc2576dff38169d0a0dcabfd33d94118cdba495b83f62bfbf4e9
+    scripts/run_sam2_video_geometry_gt_evaluation.py: 25638497905185a83ec513ff72148ff50732d9509be262299b1d911c8639ca61
+  frozen_model:
+    repository_commit: 2b90b9f5ceec907a1c18123530e92e794ad901a4
+    model_config_argument: configs/sam2.1/sam2.1_hiera_t.yaml
+    model_config_disk_path: /home/wlkl/ai_models/sam2/sam2/configs/sam2.1/sam2.1_hiera_t.yaml
+    model_config_sha256: f932eac1c6241e910031b2f000a81cd9f8a8d4896e2277ab5ffb721f378b188d
+    checkpoint_path: /home/wlkl/ai_models/sam2/checkpoints/sam2.1_hiera_tiny.pt
+    checkpoint_sha256: 7402e0d864fa82708a20fbd15bc84245c2f26dff0eb43a4b5b93452deb34be69
+  frozen_runtime_environment:
+    python: 3.10.12
+    torch: 2.7.1+cu128
+    numpy: 2.2.6
+    opencv_python: 5.0.0.93
+    gpu: NVIDIA GeForce RTX 4060 Laptop GPU
+    reproducibility_scope: same_wsl_gpu_environment_auditable_not_cross_gpu_bitwise
+  samples:
+    - sample_id: c16b_001
+      case_id: sim_water_5cm_001
+      rain_level: light
+      seed: 305
+      role: confirmation
+      frames_dir: data/simulation_dynamic/sim_water_5cm_001/light/seed_305/frames
+      anchor_image: data/simulation_dynamic/sim_water_5cm_001/light/seed_305/frames/frame_000149.png
+      prompt_path: outputs/temporal_sam2_prompt_heldout_c16b_seed305/c16b_001/automatic_prompt.json
+      anchor_sha256: 319da8cda13c72f48a81c2c7a298b7fdb90260bfb5e57c159f65a34532d9d96f
+      window_sha256: 749ef61cc2b232f0573849913c5b947be9d7643d11190523d50c5320b5d0c933
+      sequence_sha256: 268208e5b022351a88a6e34432943397bcb63e45882b7e60a915fb5c1ea8537e
+      rgb_sha256_listing_digest: 05a48194f5c0fef9f21ee6410754fe073abd55a129e394d4a005b529a5528784
+      sequence_manifest_sha256: 5f5b3b484e22f6347416e11e0cfd0d4c2872268f748e25a04e0f323bda0c4f7d
+      generation_quality_report_sha256: 73382975170fc1c84f9e0f576c31ac4d4bfafc3d67c8fbd8bcdea03ebfd05acf
+      generator_config_snapshot_sha256: 043f459412bd5bc38892236c1672b0ced3349ed0525ad4ce8c384eed700705cb
+      prompt_status: diagnostic_only
+      prompt_sha256: d167a4ff07b77270551aeaa33b762235dca40e5cad20f42dde9fc5f7f75a44f0
+      prompt_diagnostics_sha256: d492149cedb7541eabb24313d00ba9a172ca1c5eaa8c772939cfb889f7687a92
+      prompt_preview_sha256: 35249a885f56188866dae5561c1efceb92df2be2d2bcee3bc3a852e77b91aa8c
+      propagation_summary_sha256: 9591e24e49951f5850bcfa09f0c6a6ae7b7a35a70132561419e8e002ffbd6d8c
+      propagation_frame_metrics_json_sha256: bf3a046630f1ed12abf5ee289cca91f94edf7a34d74480d2e1d4eae9fd30f782
+      propagation_frame_metrics_csv_sha256: c6c4c7bbe1bc4fb765fb3a90be1f77791662c82aaf8398c4093e29f6907de2f2
+      propagation_mask_listing_digest: 1a2fa052ce166e0a4b286a284e9d06d44f9a14b8a3b6cede07c5183c415626fd
+    - sample_id: c16b_002
+      case_id: sim_water_5cm_001
+      rain_level: moderate
+      seed: 305
+      role: confirmation
+      frames_dir: data/simulation_dynamic/sim_water_5cm_001/moderate/seed_305/frames
+      anchor_image: data/simulation_dynamic/sim_water_5cm_001/moderate/seed_305/frames/frame_000149.png
+      prompt_path: outputs/temporal_sam2_prompt_heldout_c16b_seed305/c16b_002/automatic_prompt.json
+      anchor_sha256: 9a00a967a3aa358e534a2c95a37113a68d6558b0221777c07d2ff355a1dd4d7e
+      window_sha256: 95f9f1a77ba13a28538416e7686bb2c07c4072e5500678978ca27d7307047a40
+      sequence_sha256: 7235dd58bee2dc98e58e2e1c92924d2fe376e075c16577d1337ee8d3cd8b274b
+      rgb_sha256_listing_digest: f106fbc8775defefe7a4aba2cb4443fe061c5c478d9654ab6825f9cb7d93f75e
+      sequence_manifest_sha256: 60db3333c1d9e4292cbd82222957e2263ad98a57fa5b0b090bec3ae44eb35179
+      generation_quality_report_sha256: 44b6a03870e6066c5fc24bec15f885a9cd2cb73d7cdc106ff4edfd9c672c3abc
+      generator_config_snapshot_sha256: 043f459412bd5bc38892236c1672b0ced3349ed0525ad4ce8c384eed700705cb
+      prompt_status: diagnostic_only
+      prompt_sha256: 36c274b34c1558ff46702ec906077c2ed6f7b92e4b36c4d4005e538b4abcb655
+      prompt_diagnostics_sha256: bee2b13d7d2e29ecf82b71f522031d688d3ab33eb1c88a1906f0c0ab3705f1fb
+      prompt_preview_sha256: c16aaacc06b49b943c6e8cb07fa252feb71a2ef64b87dadf7e14ae904a21388c
+      propagation_summary_sha256: 907724b21cc75f3498443d5695e8d611669ebddb6aaf2540074f7d3e5ef6c0ac
+      propagation_frame_metrics_json_sha256: 2cd6e8a22fe4548ceb15622e2c32b74ed9c50ddc67cc29a40c19e63ce8a04b81
+      propagation_frame_metrics_csv_sha256: 50c885e26e61d12ccaf712006d7c82356638c2e88ad9602ad1e62c9c1b217483
+      propagation_mask_listing_digest: c6640d1ce8b9d8522c0aa90579ae260c3c2e43391f61fb188706b9bf6c6ec835
+    - sample_id: c16b_003
+      case_id: sim_water_5cm_001
+      rain_level: heavy
+      seed: 305
+      role: confirmation
+      frames_dir: data/simulation_dynamic/sim_water_5cm_001/heavy/seed_305/frames
+      anchor_image: data/simulation_dynamic/sim_water_5cm_001/heavy/seed_305/frames/frame_000149.png
+      prompt_path: outputs/temporal_sam2_prompt_heldout_c16b_seed305/c16b_003/automatic_prompt.json
+      anchor_sha256: 9385a72a53c7c2918e5c682e37131d1e5db662dc91e8212ba881142d1d8799c7
+      window_sha256: 44ba617ba8781829c68a8938410d3e2f68f71375051ffbb234798d584c71d314
+      sequence_sha256: 51ad2a31a9fc2d5c8a2e2523d0636e7c70734e8956d903d45e990ba63356f972
+      rgb_sha256_listing_digest: f23d6e8b917ff065d2b5e5df89487dd5000ef274436c6f186ad71b4fe075d3d9
+      sequence_manifest_sha256: 7445f5e50456b504169d931dd068d76c6fa2f7eadc0369fc874a09a50b4ad264
+      generation_quality_report_sha256: 169d29d9a205d60a69ff846ccf6dd3987ee6582c64219ee42ddf721c800af0f7
+      generator_config_snapshot_sha256: 043f459412bd5bc38892236c1672b0ced3349ed0525ad4ce8c384eed700705cb
+      prompt_status: diagnostic_only
+      prompt_sha256: 31681c5ea7864f2ee181156c34485ab74072d01411801e9cbc05826a22f501ce
+      prompt_diagnostics_sha256: 9e7fd8232844db6f49f8e3620bda9119418358507a5521f6abbf31be868155ab
+      prompt_preview_sha256: bce3a0fe4718a4da5a48a70576cc72d3d4a25785855fba8fe2d1699f98aa554e
+      propagation_summary_sha256: a9d9a8f37fef22cb6beff1e34a2547bfe6b8657f1304bb34d8375f027a5b99ee
+      propagation_frame_metrics_json_sha256: 6d48e8746ac441894ba8905ac22a21c224ba9d2828a94c42b192b571c868f245
+      propagation_frame_metrics_csv_sha256: 65028f48670ccdb6403929aea4258b54368c99027618a787d9efe6571d824649
+      propagation_mask_listing_digest: b97620eff45cbb46f65b2b763e32673bd5d413010720fd573b6d90917a4e6620
+  output_roots:
+    prompts: outputs/temporal_sam2_prompt_heldout_c16b_seed305
+    propagation: outputs/sam2_video_pilot_c16b_seed305
+    geometry_prediction: outputs/sam2_video_geometry_stability_c16b_seed305
+    camera_gt_evaluation: outputs/sam2_video_gt_evaluation_c16b_seed305
+    geometry_gt_evaluation: outputs/sam2_video_geometry_gt_evaluation_c16b_seed305
+  safety:
+    per_case_parameter_tuning_allowed: false
+    repeated_confirmation_prediction_allowed: false
+    prediction_reads_water_state_ground_truth: false
+    prediction_reads_evaluation_outputs: false
+    authoritative: false
+    eligible_for_downstream: false
+    real_device_action_allowed: false
+    real_api_calls_enabled: false
+  runtime_state_before_geometry_prediction:
+    prompt_generation_completed: true
+    prompt_generation_run_count_per_sequence: 1
+    prompt_coordinates_manually_modified: false
+    sam2_propagation_completed: true
+    sam2_propagation_run_count_per_sequence: 1
+    sam2_cuda_oom: false
+    sam2_postprocess_extension_available: false
+    sam2_postprocess_extension_note: fill_holes_skipped_same_environment_as_seed304
+    geometry_prediction_started: false
+    ground_truth_evaluation_started: false
+    ground_truth_used_for_prediction: false
+  frozen_geometry_prediction:
+    geometry_stability_summary_sha256: 8bc4f5bc395ff16e19623e800597ce06af57176842e7a307784c132be35c6ae1
+    per_frame_geometry_summary_sha256: 1c7d0e9db1ca871631268fd70ba5e7d12782bd8a9f406788bb1ce2f84449cab8
+    complete_output_listing_digest: a5aaff34024be6b47c1d93b39648b6f505c5848e1c9a9f7da7c4a8a803271824
+    sequence_geometry_stability_sha256:
+      c16b_001: 8bac6bbfd13c245861ece11ceb00580e28337cbb0a4c0864e901a858a7ab8f91
+      c16b_002: 0f9150470fd6b04d6777a69a497b314e2e2a54d990938d7af0476ac59f4c0cdb
+      c16b_003: d1af2cbedfc1c4ecfdabc378f656f721880826dbc62e50df78dbef1a78c49c80
+    prediction_completed: true
+    prediction_run_count: 1
+    frame_count: 123
+    quality_status_counts:
+      c16b_001: {pass: 0, reject: 41}
+      c16b_002: {pass: 7, reject: 34}
+      c16b_003: {pass: 0, reject: 41}
+    ground_truth_used: false
+    authoritative: false
+    eligible_for_downstream: false
+  runtime_state_before_ground_truth_evaluation:
+    prediction_frozen: true
+    prediction_may_be_rerun_after_this_point: false
+    prompt_may_be_modified_after_this_point: false
+    ground_truth_evaluation_started: false
+    ground_truth_used_for_prediction: false
+  frozen_independent_evaluation:
+    camera_mask_evaluation_summary_sha256: 3079c9a2aa7d32636e57f6b2941d81efa5fc6531d6d939185b7ebc11213ec85f
+    camera_mask_evaluation_complete_listing_digest: 4ee53c221c61d8260289d087b66a9aef9f2bcbf91a484d7e4dfa415711454d27
+    geometry_evaluation_summary_sha256: 435c5a95ba54b7746bc1144150090031095917733b8bc5e9e1e63df759547479
+    geometry_evaluation_complete_listing_digest: 4e6a559faa4dd68ac80412512220d723ab680449ddefcd37cd4f1e8903582f8c
+    prediction_summary_sha256_after_evaluation: 8bc4f5bc395ff16e19623e800597ce06af57176842e7a307784c132be35c6ae1
+    prediction_summary_unchanged_by_evaluation: true
+    evaluated_frame_count: 123
+    water_level_within_3cm_count: 123
+    geometry_pass_and_error_above_3cm_count: 0
+    seed305_prompt_quality_status:
+      c16b_001: diagnostic_only
+      c16b_002: diagnostic_only
+      c16b_003: diagnostic_only
+    safety_confirmation: confirmed
+    end_to_end_availability_status: diagnostic_only
+    result_semantics: non_authoritative_research_confirmation
+  final_runtime_state:
+    prediction_run_count: 1
+    ground_truth_evaluation_completed: true
+    prediction_rerun_after_ground_truth: false
+    prompt_modified_after_ground_truth: false
+    gate_thresholds_modified: false
+    authoritative: false
+    eligible_for_downstream: false

@@ -1,0 +1,32 @@
+phase2d_c18_5cm_60s_seed307:
+  protocol_version: phase2d_c18_5cm_60second_automatic_e2e_v1
+  purpose: validate_one_minute_camera_schedule_to_sam2_geometry
+  evaluation_role: held_out_validation_not_parameter_selection
+  seed: 307
+  rain_level: moderate
+  source_fps: 20
+  source_duration_seconds: 60
+  source_frame_count: 1201
+  scheduler_sample_count: 41
+  window_start: 0
+  window_end: 40
+  anchor_frame_index: 20
+  samples:
+    - sample_id: c18_001
+      role: held_out_validation
+      case_id: sim_water_5cm_001
+      rain_level: moderate
+      seed: 307
+      frames_dir: outputs/camera_window_runtime/c18_5cm_moderate_seed307/frames
+      evaluation_sequence_dir: data/simulation_dynamic/sim_water_5cm_001/moderate/seed_307
+      prompt_path: outputs/temporal_sam2_prompt_heldout_c18_5cm_60s_seed307/c18_001/automatic_prompt.json
+  safety:
+    automatic_prompt_only: true
+    manual_prompt_fallback_used: false
+    prediction_reads_ground_truth: false
+    evaluation_runs_after_prediction_freeze: true
+    per_case_parameter_tuning_allowed: false
+    authoritative: false
+    eligible_for_downstream: false
+    real_device_action_allowed: false
+    real_api_calls_enabled: false

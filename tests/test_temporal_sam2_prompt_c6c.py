@@ -7,6 +7,7 @@ from pathlib import Path
 
 import numpy as np
 
+from src.perception.temporal_water_pipeline import build_temporal_support_fraction
 from src.vision.generate_temporal_sam2_prompt import generate_temporal_sam2_prompt
 
 
@@ -48,7 +49,11 @@ def _inputs() -> tuple:
     return probability, water, unknown, [], gate
 
 
-def _run(inputs: tuple, config: dict | None = None):
+def _run(
+    inputs: tuple,
+    config: dict | None = None,
+    temporal_support_fraction: np.ndarray | None = None,
+):
     probability, water, unknown, classifications, gate = inputs
     return generate_temporal_sam2_prompt(
         probability,
@@ -57,6 +62,7 @@ def _run(inputs: tuple, config: dict | None = None):
         classifications,
         gate,
         config or _config(),
+        temporal_support_fraction=temporal_support_fraction,
         image_path="frame.png",
         image_sha256="c" * 64,
         frame_index=149,
@@ -113,6 +119,62 @@ def test_partial_gate_disables_dry_splash_negatives_but_keeps_ring_negatives() -
     assert len(prompt["negative_points_xy"]) >= 6
 
 
+def test_recurrent_prompt_support_can_corroborate_only_the_allowed_partial_reason() -> None:
+    inputs = list(_inputs())
+    inputs[-1] = {
+        "status": "partial",
+        "reasons": ["insufficient_high_confidence_water_tracks"],
+        "observable_region_result_valid": True,
+        "ground_truth_used": False,
+    }
+    config = _config()
+    config["min_positive_temporal_support_fraction"] = 2.0 / 3.0
+    config["allow_temporally_corroborated_partial_gate"] = True
+    config["corroboratable_partial_gate_reasons"] = [
+        "insufficient_high_confidence_water_tracks"
+    ]
+    support = np.ones(inputs[0].shape, dtype=np.float32)
+
+    prompt, diagnostics = _run(tuple(inputs), config, support)
+
+    assert prompt["prompt_quality_status"] == "pass"
+    assert prompt["partial_gate_corroboration_applied"] is True
+    assert prompt["upstream_temporal_quality_gate_status"] == "partial"
+    assert prompt["authoritative"] is False
+    assert prompt["eligible_for_downstream"] is False
+    assert diagnostics["partial_gate_corroboration_applied"] is True
+    assert diagnostics["temporal_quality_gate_status"] == "partial"
+    assert diagnostics["informational_reasons"] == [
+        "partial_temporal_gate_corroborated_by_recurrent_prompt_support"
+    ]
+
+
+def test_recurrent_support_does_not_override_an_unapproved_partial_reason() -> None:
+    inputs = list(_inputs())
+    inputs[-1] = {
+        "status": "partial",
+        "reasons": ["water_evidence_coverage_too_low"],
+        "observable_region_result_valid": True,
+        "ground_truth_used": False,
+    }
+    config = _config()
+    config["min_positive_temporal_support_fraction"] = 2.0 / 3.0
+    config["allow_temporally_corroborated_partial_gate"] = True
+    config["corroboratable_partial_gate_reasons"] = [
+        "insufficient_high_confidence_water_tracks"
+    ]
+    support = np.ones(inputs[0].shape, dtype=np.float32)
+
+    prompt, diagnostics = _run(tuple(inputs), config, support)
+
+    assert prompt["prompt_quality_status"] == "diagnostic_only"
+    assert prompt["partial_gate_corroboration_applied"] is False
+    assert diagnostics["partial_gate_corroboration_applied"] is False
+    assert diagnostics["diagnostic_reasons"] == [
+        "temporal_quality_gate_not_pass"
+    ]
+
+
 def test_legacy_config_without_c6c_keys_preserves_baseline_behavior() -> None:
     inputs = _inputs()
     legacy = _config()
@@ -137,6 +199,95 @@ def test_c6c_rules_are_deterministic_and_gt_free() -> None:
     prompt, diagnostics = first
     assert prompt["ground_truth_used"] is False
     assert diagnostics["ground_truth_used"] is False
+
+
+def test_temporal_support_filter_keeps_only_recurrent_positive_core() -> None:
+    inputs = _inputs()
+    support = np.full(inputs[0].shape, 1.0 / 3.0, dtype=np.float32)
+    support[22:38, 31:49] = 2.0 / 3.0
+    config = _config()
+    config["min_positive_temporal_support_fraction"] = 2.0 / 3.0
+    prompt, diagnostics = _run(inputs, config, support)
+    assert prompt["prompt_quality_status"] == "pass"
+    assert diagnostics["temporal_support_available"] is True
+    assert (
+        diagnostics["positive_candidate_count_after_temporal_support_filter"]
+        < diagnostics["positive_candidate_count_after_confidence_filter"]
+    )
+    assert all(
+        support[y, x] >= 2.0 / 3.0
+        for x, y in prompt["positive_points_xy"]
+    )
+    assert all(
+        value >= 2.0 / 3.0
+        for value in diagnostics["positive_point_temporal_support_fractions"]
+    )
+
+
+def test_insufficient_recurrent_positive_core_fails_closed() -> None:
+    inputs = _inputs()
+    support = np.full(inputs[0].shape, 1.0 / 3.0, dtype=np.float32)
+    config = _config()
+    config["min_positive_temporal_support_fraction"] = 2.0 / 3.0
+    prompt, diagnostics = _run(inputs, config, support)
+    assert prompt["prompt_quality_status"] == "reject"
+    assert "insufficient_safe_positive_points" in diagnostics["hard_reasons"]
+    assert diagnostics["positive_candidate_count_after_temporal_support_filter"] == 0
+
+
+def test_temporal_support_threshold_fails_closed_when_map_is_unavailable() -> None:
+    inputs = _inputs()
+    config = _config()
+    config["min_positive_temporal_support_fraction"] = 2.0 / 3.0
+    prompt, diagnostics = _run(inputs, config)
+    assert prompt["prompt_quality_status"] == "reject"
+    assert "temporal_support_unavailable" in diagnostics["hard_reasons"]
+
+
+def test_default_temporal_support_setting_preserves_existing_result() -> None:
+    inputs = _inputs()
+    without_map = _run(tuple(deepcopy(item) for item in inputs))
+    support = np.zeros(inputs[0].shape, dtype=np.float32)
+    with_ignored_map = _run(tuple(deepcopy(item) for item in inputs), _config(), support)
+    assert without_map[0]["positive_points_xy"] == with_ignored_map[0]["positive_points_xy"]
+    assert without_map[0]["prompt_quality_status"] == with_ignored_map[0]["prompt_quality_status"]
+
+
+def test_three_window_support_distinguishes_recurrent_from_transient_evidence() -> None:
+    def ripple(center: list[float], frame: int) -> dict:
+        return {
+            "classification": "water_ripple",
+            "center_mean": center,
+            "maximum_area": 25,
+            "confidence": 0.9,
+            "duration_frames": 5,
+            "start_frame": frame,
+            "end_frame": frame + 4,
+        }
+
+    classifications = [
+        ripple([20.0, 20.0], 3),
+        ripple([20.0, 20.0], 33),
+        ripple([20.0, 20.0], 63),
+        ripple([65.0, 40.0], 6),
+    ]
+    support, diagnostics = build_temporal_support_fraction(
+        classifications,
+        (60, 90),
+        {
+            "minimum_kernel_sigma_px": 4.0,
+            "maximum_propagation_radius_px": 22.0,
+            "probability_scale": 2.0,
+            "water_probability_threshold": 0.36,
+            "unknown_evidence_threshold": 0.08,
+            "morphology_close_kernel": 5,
+        },
+        frame_count=90,
+    )
+    assert diagnostics["window_count"] == 3
+    assert diagnostics["ground_truth_used"] is False
+    assert support[20, 20] == 1.0
+    assert np.isclose(support[40, 65], 1.0 / 3.0)
 
 
 def test_matrix_runner_accepts_explicit_prompt_config_without_changing_legacy_default() -> None:

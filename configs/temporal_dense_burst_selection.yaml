@@ -1,0 +1,26 @@
+temporal_dense_burst_selection:
+  schema_version: phase2d_c19_dense_burst_selection_v1
+  algorithm_version: phase2d_c19_fixed_prediction_side_dense_burst_v1
+  parameter_scope: all_water_depths_and_rain_levels
+  burst_frame_count: 41
+  anchor_frame_index: 20
+  candidate_stride_seconds: 5.0
+  max_candidate_count: 16
+  required_prompt_status: pass
+  selection_order:
+    - prompt_quality_status
+    - temporal_gate_status
+    - box_not_touching_image_border
+    - sufficient_positive_and_negative_points
+    - temporal_support
+    - temporal_stability
+    - feature_score_separation
+    - order_sensitivity
+    - earliest_start_tie_break
+  safety:
+    manual_selection_allowed: false
+    manual_prompt_fallback_allowed: false
+    per_case_parameter_tuning_allowed: false
+    sam2_allowed_only_when_selection_passes: true
+    authoritative: false
+    eligible_for_downstream: false

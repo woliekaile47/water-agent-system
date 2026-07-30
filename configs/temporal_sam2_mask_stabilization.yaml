@@ -1,0 +1,20 @@
+temporal_sam2_mask_stabilization:
+  schema_version: temporal_sam2_mask_stabilization_v1
+  description: >-
+    Optional GT-free short-window consensus for already-frozen SAM 2 video masks.
+    Raw masks remain unchanged and are retained for audit.
+  window:
+    mode: centered
+    size: 5
+    support_fraction: 0.8
+    edge_policy: available_frames
+  positive_support:
+    required: true
+    minimum_count: 1
+    failure_policy: empty_mask_reject
+  provenance:
+    ground_truth_used: false
+    sam2_rerun_required: false
+    morphology_applied: false
+    authoritative: false
+    eligible_for_downstream: false

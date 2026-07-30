@@ -25,6 +25,11 @@ from src.fusion.sam2_video_geometry_pipeline import (  # noqa: E402
     run_video_frame_geometry,
     summarize_video_geometry,
 )
+from src.vision.temporal_sam2_mask_stabilization import (  # noqa: E402
+    mask_content_sha256,
+    stabilize_frozen_mask_sequence,
+    validate_stabilization_config,
+)
 
 
 def parse_args() -> argparse.Namespace:
@@ -41,6 +46,15 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--sensors-config", type=Path, default=Path("simulation/config/sensors.yaml"))
     parser.add_argument("--mapping-config", type=Path, default=Path("configs/water_surface_aware_mapping.yaml"))
     parser.add_argument("--gate-config", type=Path, default=Path("configs/water_surface_aware_quality_gate.yaml"))
+    parser.add_argument(
+        "--mask-stabilization-config",
+        type=Path,
+        default=None,
+        help=(
+            "Optional GT-free short-window stabilization config. When omitted, "
+            "the frozen raw masks enter geometry unchanged."
+        ),
+    )
     parser.add_argument("--output-root", type=Path, required=True)
     return parser.parse_args()
 
@@ -57,8 +71,63 @@ def read_json(path: Path) -> Any:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+def json_compatible(value: Any) -> Any:
+    """Remove diagnostic ndarray payloads while preserving their audit shape."""
+    if isinstance(value, np.ndarray):
+        return {
+            "omitted_value_type": "numpy.ndarray",
+            "shape": list(value.shape),
+            "dtype": str(value.dtype),
+        }
+    if isinstance(value, np.generic):
+        return value.item()
+    if isinstance(value, dict):
+        return {key: json_compatible(item) for key, item in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [json_compatible(item) for item in value]
+    return value
+
+
 def write_json(path: Path, value: Any) -> None:
-    path.write_text(json.dumps(value, ensure_ascii=False, indent=2, allow_nan=False) + "\n", encoding="utf-8")
+    path.write_text(
+        json.dumps(
+            json_compatible(value),
+            ensure_ascii=False,
+            indent=2,
+            allow_nan=False,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+
+def _resolve_under_root(root: Path, path: Path) -> Path:
+    expanded = path.expanduser()
+    return expanded.resolve() if expanded.is_absolute() else (root / expanded).resolve()
+
+
+def _numeric_stats(values: list[float | int]) -> dict[str, float | int | None]:
+    if not values:
+        return {"count": 0, "min": None, "median": None, "mean": None, "max": None}
+    array = np.asarray(values, dtype=np.float64)
+    return {
+        "count": int(array.size),
+        "min": float(np.min(array)),
+        "median": float(np.median(array)),
+        "mean": float(np.mean(array)),
+        "max": float(np.max(array)),
+    }
+
+
+def _csv_fieldnames(rows: list[dict[str, Any]]) -> list[str]:
+    ordered: list[str] = []
+    seen: set[str] = set()
+    for row in rows:
+        for key in row:
+            if key not in seen:
+                seen.add(key)
+                ordered.append(key)
+    return ordered
 
 
 def verify_frozen_prediction_inputs(
@@ -247,6 +316,19 @@ def main() -> int:
     sensors = load_yaml(sensors_path)
     mapping = load_yaml(root / args.mapping_config, "water_surface_aware_mapping")
     gate_config = load_yaml(root / args.gate_config, "water_surface_aware_quality_gate")
+    stabilization_path = (
+        None
+        if args.mask_stabilization_config is None
+        else _resolve_under_root(root, args.mask_stabilization_config)
+    )
+    stabilization_config = None
+    stabilization_config_sha256 = None
+    if stabilization_path is not None:
+        stabilization_config = load_yaml(
+            stabilization_path, "temporal_sam2_mask_stabilization"
+        )
+        validate_stabilization_config(stabilization_config)
+        stabilization_config_sha256 = sha256_file(stabilization_path)
     if not np.isfinite(ground_dem).all():
         raise ValueError("dry Ground DEM contains NaN or Inf")
 
@@ -260,17 +342,95 @@ def main() -> int:
         positives = np.asarray(verified[sample_id]["positive_points_xy"], dtype=np.float64)
         rows: list[dict[str, Any]] = []
         details: list[dict[str, Any]] = []
-        for frame in verified[sample_id]["frames"]:
+        anchor_stabilized_mask_artifact: dict[str, Any] | None = None
+        raw_masks = [
+            np.load(frame["mask_path"], allow_pickle=False).astype(bool)
+            for frame in verified[sample_id]["frames"]
+        ]
+        if stabilization_config is None:
+            stabilized_records = [{
+                "mask": raw_mask.copy(),
+                "status": "disabled_raw_mask_passthrough",
+                "eligible_for_geometry": True,
+                "fail_closed": False,
+                "failure_reason": None,
+                "window_start_offset": index,
+                "window_stop_offset_exclusive": index + 1,
+                "window_frame_count": 1,
+                "required_support_count": 1,
+                "supported_positive_count": None,
+                "raw_area_pixels": int(np.count_nonzero(raw_mask)),
+                "stabilized_area_pixels": int(np.count_nonzero(raw_mask)),
+                "raw_stabilized_iou": 1.0,
+            } for index, raw_mask in enumerate(raw_masks)]
+        else:
+            stabilized_records = stabilize_frozen_mask_sequence(
+                raw_masks, positives, stabilization_config
+            )
+        for frame, raw_mask, stabilization in zip(
+            verified[sample_id]["frames"], raw_masks, stabilized_records
+        ):
             frame_index = int(frame["frame_index"])
-            mask = np.load(frame["mask_path"], allow_pickle=False).astype(bool)
-            result = run_video_frame_geometry(mask, positives, ground_dem, sensors, mapping, gate_config)
+            mask = stabilization["mask"]
+            if stabilization["eligible_for_geometry"]:
+                result = run_video_frame_geometry(
+                    mask, positives, ground_dem, sensors, mapping, gate_config
+                )
+            else:
+                failure_reason = stabilization["failure_reason"] or "empty_mask_window"
+                result = {
+                    "available": False,
+                    "failure_reason": failure_reason,
+                    "quality_status": "reject",
+                    "prediction_side_quality_gate": {
+                        "status": "reject",
+                        "reasons": [failure_reason],
+                        "eligible_for_downstream": False,
+                    },
+                    "ground_truth_used": False,
+                    "eligible_for_downstream": False,
+                }
             row, detail = compact_frame_result(frame_index, result)
             row.update({
                 "sample_id": sample_id,
                 "is_anchor_frame": frame_index == anchor,
-                "mask_sha256": frame["mask_sha256"],
             })
-            detail.update({"frame_index": frame_index, "sample_id": sample_id})
+            if stabilization_config is None:
+                row["mask_sha256"] = frame["mask_sha256"]
+                detail.update({"frame_index": frame_index, "sample_id": sample_id})
+            else:
+                stabilized_content_sha256 = mask_content_sha256(mask)
+                if (
+                    stabilization["stabilized_mask_content_sha256"]
+                    != stabilized_content_sha256
+                ):
+                    raise RuntimeError(
+                        f"stabilized mask content hash mismatch for {sample_id}/{frame_index}"
+                    )
+                row.update({
+                    "mask_stabilization_enabled": True,
+                    "mask_stabilization_status": stabilization["status"],
+                    "mask_stabilization_fail_closed": stabilization["fail_closed"],
+                    "mask_stabilization_config_sha256": stabilization_config_sha256,
+                    "raw_mask_sha256": frame["mask_sha256"],
+                    "stabilized_mask_content_sha256": stabilized_content_sha256,
+                    "geometry_input_mask_content_sha256": stabilized_content_sha256,
+                    "raw_mask_area_pixels": stabilization["raw_area_pixels"],
+                    "stabilized_mask_area_pixels": stabilization["stabilized_area_pixels"],
+                    "raw_stabilized_mask_iou": stabilization["raw_stabilized_iou"],
+                    "ground_truth_used": False,
+                })
+                detail.update({
+                    "frame_index": frame_index,
+                    "sample_id": sample_id,
+                    "mask_stabilization": {
+                        key: value for key, value in stabilization.items() if key != "mask"
+                    },
+                    "mask_stabilization_config_sha256": stabilization_config_sha256,
+                    "raw_mask_sha256": frame["mask_sha256"],
+                    "geometry_input_mask_content_sha256": stabilized_content_sha256,
+                    "ground_truth_used": False,
+                })
             rows.append(row)
             details.append(detail)
             if frame_index == anchor and result["available"]:
@@ -279,19 +439,65 @@ def main() -> int:
                 Image.fromarray(
                     np.where(result["reprojected_camera_mask"], 255, 0).astype(np.uint8), mode="L"
                 ).save(sample_dir / "anchor_reprojected_camera_mask.png")
+                if stabilization_config is not None:
+                    anchor_npy_path = sample_dir / "anchor_stabilized_camera_mask.npy"
+                    anchor_png_path = sample_dir / "anchor_stabilized_camera_mask.png"
+                    np.save(anchor_npy_path, mask)
+                    Image.fromarray(
+                        np.where(mask, 255, 0).astype(np.uint8), mode="L"
+                    ).save(anchor_png_path)
+                    anchor_stabilized_mask_artifact = {
+                        "npy_path": str(anchor_npy_path),
+                        "npy_sha256": sha256_file(anchor_npy_path),
+                        "png_path": str(anchor_png_path),
+                        "png_sha256": sha256_file(anchor_png_path),
+                        "content_sha256": mask_content_sha256(mask),
+                        "ground_truth_used": False,
+                    }
+                    row["anchor_stabilized_mask_npy_sha256"] = (
+                        anchor_stabilized_mask_artifact["npy_sha256"]
+                    )
+                    row["anchor_stabilized_mask_content_sha256"] = (
+                        anchor_stabilized_mask_artifact["content_sha256"]
+                    )
+            if not np.array_equal(
+                raw_mask,
+                np.load(frame["mask_path"], allow_pickle=False).astype(bool),
+            ):
+                raise RuntimeError(f"raw frozen mask was modified for {sample_id}/{frame_index}")
         summary = summarize_video_geometry(rows, anchor)
         summary.update({
             "sample_id": sample_id,
             "role": sample["role"],
             "frozen_input_verification": verified[sample_id],
         })
+        if stabilization_config is not None:
+            summary["mask_stabilization"] = {
+                "enabled": stabilization_config is not None,
+                "config_path": None if stabilization_path is None else str(stabilization_path),
+                "config_sha256": stabilization_config_sha256,
+                "ground_truth_used": False,
+                "raw_mask_area_pixels": _numeric_stats([
+                    row["raw_mask_area_pixels"] for row in rows
+                ]),
+                "stabilized_mask_area_pixels": _numeric_stats([
+                    row["stabilized_mask_area_pixels"] for row in rows
+                ]),
+                "raw_stabilized_mask_iou": _numeric_stats([
+                    row["raw_stabilized_mask_iou"] for row in rows
+                ]),
+                "fail_closed_frame_count": int(sum(
+                    bool(row["mask_stabilization_fail_closed"]) for row in rows
+                )),
+                "anchor_stabilized_mask_artifact": anchor_stabilized_mask_artifact,
+            }
         dataset_summary[sample_id] = summary
         all_rows.extend(rows)
         write_json(sample_dir / "per_frame_geometry.json", details)
         write_json(sample_dir / "per_frame_geometry_summary.json", rows)
         write_json(sample_dir / "sequence_geometry_stability.json", summary)
         with (sample_dir / "per_frame_geometry.csv").open("w", encoding="utf-8", newline="") as stream:
-            writer = csv.DictWriter(stream, fieldnames=list(rows[0]))
+            writer = csv.DictWriter(stream, fieldnames=_csv_fieldnames(rows))
             writer.writeheader()
             writer.writerows(rows)
         _save_chart(rows, "estimated_water_level_m", sample_dir / "water_level_over_time.png", "Estimated water level")
@@ -300,14 +506,22 @@ def main() -> int:
         _save_chart(rows, "max_depth_cm", sample_dir / "max_depth_over_time.png", "Maximum depth")
 
     final = {
-        "protocol_version": "phase2d_c7_video_geometry_stability_v1",
+        "protocol_version": (
+            "phase2d_c7_video_geometry_stability_v1_mask_stabilization_v1"
+            if stabilization_config is not None
+            else "phase2d_c7_video_geometry_stability_v1"
+        ),
         "input_config_key": args.config_key,
         "sample_count": len(samples),
         "frame_count": len(all_rows),
         "window_start": window_start,
         "window_end": window_end,
         "anchor_frame_index": anchor,
-        "algorithm": "existing_phase2d_c3c_geometry_with_external_main_shoreline_per_frame",
+        "algorithm": (
+            "fixed_short_window_stabilized_mask_then_existing_phase2d_c3c_geometry"
+            if stabilization_config is not None
+            else "existing_phase2d_c3c_geometry_with_external_main_shoreline_per_frame"
+        ),
         "ground_dem_path": str(ground_dem_path),
         "ground_dem_sha256": sha256_file(ground_dem_path),
         "sensors_config_path": str(sensors_path),
@@ -323,20 +537,33 @@ def main() -> int:
         "sequences": dataset_summary,
         "elapsed_seconds": float(time.perf_counter() - started),
     }
+    if stabilization_config is not None:
+        final.update({
+            "mask_stabilization_enabled": True,
+            "mask_stabilization_config_path": str(stabilization_path),
+            "mask_stabilization_config_sha256": stabilization_config_sha256,
+            "mask_stabilization_ground_truth_used": False,
+        })
     write_json(output_root / "geometry_stability_summary.json", final)
     with (output_root / "per_frame_geometry.csv").open("w", encoding="utf-8", newline="") as stream:
-        writer = csv.DictWriter(stream, fieldnames=list(all_rows[0]))
+        writer = csv.DictWriter(stream, fieldnames=_csv_fieldnames(all_rows))
         writer.writeheader()
         writer.writerows(all_rows)
     write_json(output_root / "per_frame_geometry_summary.json", all_rows)
+    run_log = {
+        "status": "completed",
+        "frame_count": len(all_rows),
+        "elapsed_seconds": final["elapsed_seconds"],
+        "ground_truth_used": False,
+        "sam2_rerun_count": 0,
+    }
+    if stabilization_config is not None:
+        run_log.update({
+            "mask_stabilization_enabled": True,
+            "mask_stabilization_config_sha256": stabilization_config_sha256,
+        })
     (output_root / "run_log.txt").write_text(
-        json.dumps({
-            "status": "completed",
-            "frame_count": len(all_rows),
-            "elapsed_seconds": final["elapsed_seconds"],
-            "ground_truth_used": False,
-            "sam2_rerun_count": 0,
-        }, indent=2) + "\n",
+        json.dumps(run_log, indent=2) + "\n",
         encoding="utf-8",
     )
     print(json.dumps({

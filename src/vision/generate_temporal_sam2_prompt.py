@@ -48,23 +48,30 @@ def _component_records(
 def _select_positive_points(
     component: np.ndarray,
     probability: np.ndarray,
+    temporal_support_fraction: np.ndarray,
     target: int,
     min_boundary_distance: float,
     min_spacing: float,
     min_probability: float,
-) -> tuple[list[list[int]], list[float], int]:
+    min_temporal_support_fraction: float,
+) -> tuple[list[list[int]], list[float], list[float], int, int]:
     distance = cv2.distanceTransform(component.astype(np.uint8), cv2.DIST_L2, 5)
-    safe_core = (
+    confidence_core = (
         component
         & (distance >= min_boundary_distance)
         & (probability >= min_probability)
     )
+    confidence_candidate_count = int(np.count_nonzero(confidence_core))
+    safe_core = confidence_core & (
+        temporal_support_fraction >= min_temporal_support_fraction
+    )
     ys, xs = np.where(safe_core)
     if ys.size == 0:
-        return [], [], 0
+        return [], [], [], confidence_candidate_count, 0
     candidates = np.column_stack((xs, ys)).astype(np.int32)
     selected: list[np.ndarray] = []
     selected_boundary_distances: list[float] = []
+    selected_temporal_support: list[float] = []
     available = np.ones(candidates.shape[0], dtype=bool)
     while len(selected) < target and np.any(available):
         indices = np.flatnonzero(available)
@@ -92,10 +99,15 @@ def _select_positive_points(
         chosen = candidates[chosen_index]
         selected.append(chosen.copy())
         selected_boundary_distances.append(float(distance[chosen[1], chosen[0]]))
+        selected_temporal_support.append(
+            float(temporal_support_fraction[chosen[1], chosen[0]])
+        )
         available[chosen_index] = False
     return (
         [[int(point[0]), int(point[1])] for point in selected],
         selected_boundary_distances,
+        selected_temporal_support,
+        confidence_candidate_count,
         int(candidates.shape[0]),
     )
 
@@ -246,6 +258,7 @@ def generate_temporal_sam2_prompt(
     temporal_quality_gate: dict[str, Any],
     config: dict[str, Any],
     *,
+    temporal_support_fraction: np.ndarray | None = None,
     image_path: str,
     image_sha256: str,
     frame_index: int,
@@ -256,19 +269,52 @@ def generate_temporal_sam2_prompt(
     unknown = np.asarray(unknown_mask, dtype=bool)
     if probability.ndim != 2 or water.shape != probability.shape or unknown.shape != probability.shape:
         raise ValueError("probability, water_mask and unknown_mask must be same-shape 2-D arrays")
+    temporal_support_available = temporal_support_fraction is not None
+    if temporal_support_fraction is None:
+        temporal_support = np.ones_like(probability, dtype=np.float32)
+    else:
+        temporal_support = np.asarray(temporal_support_fraction, dtype=np.float32)
+        if temporal_support.shape != probability.shape:
+            raise ValueError("temporal_support_fraction must match probability shape")
     if int(config.get("connectivity", 8)) not in (4, 8):
         raise ValueError("connectivity must be 4 or 8")
     height, width = probability.shape
     hard_reasons: list[str] = []
     diagnostic_reasons: list[str] = []
+    informational_reasons: list[str] = []
+    temporal_gate_status = str(
+        temporal_quality_gate.get("status", "unavailable")
+    )
+    temporal_gate_reasons = [
+        str(reason) for reason in temporal_quality_gate.get("reasons", [])
+    ]
+    corroboratable_partial_reasons = {
+        str(reason)
+        for reason in config.get("corroboratable_partial_gate_reasons", [])
+    }
     if not np.isfinite(probability).all():
         hard_reasons.append("nonfinite_probability")
+    if not np.isfinite(temporal_support).all():
+        hard_reasons.append("nonfinite_temporal_support")
+        temporal_support = np.nan_to_num(
+            temporal_support, nan=0.0, posinf=0.0, neginf=0.0
+        )
+    minimum_temporal_support = float(
+        config.get("min_positive_temporal_support_fraction", 0.0)
+    )
+    if not 0.0 <= minimum_temporal_support <= 1.0:
+        raise ValueError(
+            "min_positive_temporal_support_fraction must be between 0 and 1"
+        )
+    if minimum_temporal_support > 0.0 and not temporal_support_available:
+        hard_reasons.append("temporal_support_unavailable")
+        temporal_support = np.zeros_like(probability, dtype=np.float32)
     if np.any(water & unknown):
         hard_reasons.append("water_unknown_overlap")
     water = water & ~unknown
-    if temporal_quality_gate.get("status") == "reject":
+    if temporal_gate_status == "reject":
         hard_reasons.append("temporal_quality_gate_reject")
-    elif temporal_quality_gate.get("status") != "pass":
+    elif temporal_gate_status != "pass":
         diagnostic_reasons.append("temporal_quality_gate_not_pass")
     if not np.any(water):
         hard_reasons.append("predicted_water_mask_empty")
@@ -293,11 +339,13 @@ def generate_temporal_sam2_prompt(
     box_border_touch_ratio = 0.0
     positive_points: list[list[int]] = []
     positive_boundary_distances: list[float] = []
-    positive_candidate_count = 0
+    positive_temporal_support: list[float] = []
+    positive_confidence_candidate_count = 0
+    positive_supported_candidate_count = 0
     negative_points: list[list[int]] = []
     negative_sources: list[str] = []
     negative_sectors: list[int] = []
-    gate_status = str(temporal_quality_gate.get("status", "unavailable"))
+    gate_status = temporal_gate_status
     partial_gate = gate_status not in ("pass", "reject")
     box_margin_xy = [int(config["box_margin_px"]), int(config["box_margin_px"])]
     allow_dry_track_negatives = not partial_gate or bool(
@@ -332,13 +380,21 @@ def generate_temporal_sam2_prompt(
             hard_reasons.append("box_excessively_touches_image_border")
         elif box_border_touch_ratio > 0:
             diagnostic_reasons.append("box_touches_image_border")
-        positive_points, positive_boundary_distances, positive_candidate_count = _select_positive_points(
+        (
+            positive_points,
+            positive_boundary_distances,
+            positive_temporal_support,
+            positive_confidence_candidate_count,
+            positive_supported_candidate_count,
+        ) = _select_positive_points(
             selected_component,
             probability,
+            temporal_support,
             int(config["target_positive_points"]),
             float(config["min_positive_boundary_distance_px"]),
             float(config["min_positive_spacing_px"]),
             float(config.get("min_positive_probability", 0.0)),
+            minimum_temporal_support,
         )
         negative_points, negative_sources, negative_sectors = _select_negative_points(
             water,
@@ -364,8 +420,37 @@ def generate_temporal_sam2_prompt(
     elif any(not (box[0] <= x <= box[2] and box[1] <= y <= box[3]) for x, y in positive_points):
         hard_reasons.append("box_does_not_contain_positive_points")
 
+    partial_gate_corroboration_applied = False
+    partial_reason_set = set(temporal_gate_reasons)
+    if (
+        bool(config.get("allow_temporally_corroborated_partial_gate", False))
+        and temporal_gate_status == "partial"
+        and bool(partial_reason_set)
+        and partial_reason_set.issubset(corroboratable_partial_reasons)
+        and temporal_quality_gate.get("observable_region_result_valid") is True
+        and temporal_support_available
+        and minimum_temporal_support > 0.0
+        and len(positive_points) >= int(config["min_positive_points"])
+        and all(
+            value >= minimum_temporal_support
+            for value in positive_temporal_support
+        )
+        and ambiguous_count == 0
+        and not hard_reasons
+    ):
+        diagnostic_reasons = [
+            reason
+            for reason in diagnostic_reasons
+            if reason != "temporal_quality_gate_not_pass"
+        ]
+        informational_reasons.append(
+            "partial_temporal_gate_corroborated_by_recurrent_prompt_support"
+        )
+        partial_gate_corroboration_applied = True
+
     hard_reasons = list(dict.fromkeys(hard_reasons))
     diagnostic_reasons = list(dict.fromkeys(diagnostic_reasons))
+    informational_reasons = list(dict.fromkeys(informational_reasons))
     status = "reject" if hard_reasons else "diagnostic_only" if diagnostic_reasons else "pass"
     all_reasons = hard_reasons + diagnostic_reasons
     prompt = {
@@ -384,6 +469,11 @@ def generate_temporal_sam2_prompt(
         "negative_points_xy": negative_points,
         "prompt_quality_status": status,
         "prompt_quality_reasons": all_reasons,
+        "prompt_informational_reasons": informational_reasons,
+        "upstream_temporal_quality_gate_status": temporal_gate_status,
+        "partial_gate_corroboration_applied": bool(
+            partial_gate_corroboration_applied
+        ),
         "ground_truth_used": False,
         "eligible_for_downstream": False,
     }
@@ -402,18 +492,34 @@ def generate_temporal_sam2_prompt(
         "positive_point_count": len(positive_points),
         "positive_boundary_distances_px": positive_boundary_distances,
         "positive_point_probabilities": [float(probability[y, x]) for x, y in positive_points],
+        "positive_point_temporal_support_fractions": positive_temporal_support,
         "positive_probability_floor": float(config.get("min_positive_probability", 0.0)),
-        "positive_candidate_count_after_confidence_filter": int(positive_candidate_count),
+        "positive_temporal_support_floor": minimum_temporal_support,
+        "temporal_support_available": bool(temporal_support_available),
+        "positive_candidate_count_after_confidence_filter": int(
+            positive_confidence_candidate_count
+        ),
+        "positive_candidate_count_after_temporal_support_filter": int(
+            positive_supported_candidate_count
+        ),
         "negative_point_count": len(negative_points),
         "negative_point_sources": negative_sources,
         "dry_splash_negatives_allowed": bool(allow_dry_track_negatives),
         "negative_direction_sector_count": len(negative_sectors),
         "negative_direction_sectors": negative_sectors,
         "unknown_fraction": float(np.mean(unknown)),
-        "temporal_quality_gate_status": temporal_quality_gate.get("status", "unavailable"),
+        "temporal_quality_gate_status": temporal_gate_status,
+        "temporal_quality_gate_reasons": temporal_gate_reasons,
+        "corroboratable_partial_gate_reasons": sorted(
+            corroboratable_partial_reasons
+        ),
+        "partial_gate_corroboration_applied": bool(
+            partial_gate_corroboration_applied
+        ),
         "status": status,
         "hard_reasons": hard_reasons,
         "diagnostic_reasons": diagnostic_reasons,
+        "informational_reasons": informational_reasons,
         "geometry_diagnostic_readiness": "ready" if status == "pass" else status,
         "ground_truth_used": False,
         "eligible_for_downstream": False,

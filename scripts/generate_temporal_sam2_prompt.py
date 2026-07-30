@@ -69,6 +69,16 @@ def _load_gate(prediction_dir: Path) -> tuple[dict[str, Any], Path]:
     raise FileNotFoundError("visual_quality_gate.json or quality_gate.json is required")
 
 
+def _load_temporal_support(
+    prediction_dir: Path,
+) -> tuple[np.ndarray | None, list[Path]]:
+    support_path = prediction_dir / "temporal_support_fraction.npy"
+    diagnostics_path = prediction_dir / "temporal_support_diagnostics.json"
+    if support_path.is_file() and diagnostics_path.is_file():
+        return np.load(support_path), [support_path, diagnostics_path]
+    return None, []
+
+
 def _save_preview(path: Path, image: Image.Image, prompt: dict[str, Any]) -> None:
     preview = image.convert("RGB").copy()
     draw = ImageDraw.Draw(preview)
@@ -95,6 +105,7 @@ def _save_prediction_artifacts(path: Path, result: dict[str, Any]) -> None:
     evidence = prediction["evidence"]
     np.save(path / "predicted_water_probability.npy", evidence["predicted_water_probability"])
     np.save(path / "evidence_count_map.npy", evidence["evidence_count_map"])
+    np.save(path / "temporal_support_fraction.npy", prediction["temporal_support_fraction"])
     _save_binary(path / "predicted_camera_water_mask.png", evidence["predicted_water_mask"])
     _save_binary(path / "predicted_camera_unknown_mask.png", evidence["predicted_unknown_mask"])
     _write_json(path / "event_classifications.json", {
@@ -112,7 +123,22 @@ def _save_prediction_artifacts(path: Path, result: dict[str, Any]) -> None:
         "order_sensitivity": result["order_sensitivity"],
         "ground_truth_used": False,
     })
+    _write_json(
+        path / "temporal_support_diagnostics.json",
+        prediction["temporal_support_diagnostics"],
+    )
     _write_json(path / "visual_quality_gate.json", result["temporal_quality_gate"])
+    artifact_paths = [
+        path / "predicted_water_probability.npy",
+        path / "evidence_count_map.npy",
+        path / "temporal_support_fraction.npy",
+        path / "predicted_camera_water_mask.png",
+        path / "predicted_camera_unknown_mask.png",
+        path / "event_classifications.json",
+        path / "temporal_diagnostics.json",
+        path / "temporal_support_diagnostics.json",
+        path / "visual_quality_gate.json",
+    ]
     _write_json(path / "prediction_manifest.json", {
         "data_role": "prediction",
         "source": "temporal_water_evidence_for_sam2_prompt",
@@ -121,6 +147,9 @@ def _save_prediction_artifacts(path: Path, result: dict[str, Any]) -> None:
         "quality_gate_status": result["temporal_quality_gate"]["status"],
         "result_semantics": "sparse_temporal_evidence_for_prompt_generation",
         "eligible_for_downstream": False,
+        "prediction_artifact_sha256": {
+            str(artifact.resolve()): sha256_file(artifact) for artifact in artifact_paths
+        },
     })
 
 
@@ -186,8 +215,11 @@ def main() -> int:
     )
     classifications, classifications_path = _load_classifications(prediction_dir)
     gate, gate_path = _load_gate(prediction_dir)
+    temporal_support, temporal_support_paths = _load_temporal_support(prediction_dir)
     if probability.shape != (image.height, image.width):
         raise ValueError("prediction artifacts do not match the reference image dimensions")
+    if temporal_support is not None and temporal_support.shape != probability.shape:
+        raise ValueError("temporal support artifact does not match prediction dimensions")
     if generated_result is None:
         prompt, diagnostics = generate_temporal_sam2_prompt(
             probability,
@@ -196,6 +228,7 @@ def main() -> int:
             classifications,
             gate,
             prompt_config,
+            temporal_support_fraction=temporal_support,
             image_path=str(image_path),
             image_sha256=image_sha256,
             frame_index=args.frame_index,
@@ -214,6 +247,7 @@ def main() -> int:
     ]
     if classifications_path is not None:
         artifact_paths.append(classifications_path)
+    artifact_paths.extend(temporal_support_paths)
     prompt["prediction_artifact_sha256"] = {
         str(path.resolve()): sha256_file(path) for path in artifact_paths
     }

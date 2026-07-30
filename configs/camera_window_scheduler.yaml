@@ -1,0 +1,23 @@
+schema_version: 1
+
+camera_window:
+  # One unattended result cycle uses one minute of Camera observations.
+  duration_seconds: 60.0
+  # Reuse the existing 41-frame temporal/SAM2 input size.
+  sample_count: 41
+  minimum_source_frame_count: 41
+  # Allows small timestamp jitter while still requiring approximately one minute.
+  minimum_coverage_ratio: 1.0
+  maximum_inter_frame_gap_seconds: 2.0
+  # Live mode observes an already-published topic and never launches the device.
+  collection_timeout_seconds: 75.0
+  allowed_encodings:
+    - rgb8
+    - bgr8
+    - rgba8
+    - bgra8
+    - mono8
+
+safety:
+  allow_ground_truth: false
+  require_independent_calibration_for_geometry: true

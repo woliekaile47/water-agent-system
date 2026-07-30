@@ -1,0 +1,182 @@
+phase2d_c17b_multidepth_seed306_regression:
+  protocol_version: phase2d_c17b_multidepth_seed306_regression_v1
+  matrix_id: phase2d_c17b_10_20_40cm_seed306_three_rain_levels
+  purpose: fixed_protocol_regression_after_5cm_seed306_validation
+  evaluation_role: held_out_regression_not_parameter_selection
+  selection_rule: reuse_frozen_seed306_anchor149_window129_169_across_depths
+  selection_rule_frozen_before_generation: true
+  rgb_opened_for_subjective_selection: false
+  ground_truth_opened_for_prediction: false
+  prediction_run_limit_per_sequence: 1
+  seed: 306
+  fps: 20
+  frame_count_per_sequence: 200
+  window_start: 129
+  window_end: 169
+  window_frame_count: 41
+  anchor_frame_index: 149
+  sample_count: 9
+  acceptance_targets:
+    water_level_absolute_error_cm_max: 3.0
+    water_level_window_std_cm_max: 1.0
+    pass_and_error_above_3cm_count_max: 0
+    evidence_insufficient_may_reject: true
+  prediction_inputs:
+    visual_evidence: rgb_frames_only
+    prompt: frozen_automatic_temporal_prompt
+    segmentation: frozen_sam2_video_masks
+    spatial_baseline: dry_ground_dem
+    camera_geometry: frozen_sensor_calibration
+    dynamic_water_state_ground_truth_allowed: false
+    dry_ground_dem_path: outputs/phase2d_c13_one_click_runs/wsl_migration_matrix_20260726_01_5cm/s2/data/dem/ground_dem_interpolated.npy
+    dry_ground_dem_sha256: 8c79f8a503baa889947050c1c93b1716f4e7f1c152115859b9c32d5eed4a9d8e
+  frozen_configs:
+    dynamic_generator: configs/dynamic_rain_visual_simulation.yaml
+    temporal_detector: configs/temporal_water_mask_detector.yaml
+    temporal_quality_gate: configs/temporal_water_quality_gate.yaml
+    temporal_prompt: configs/temporal_sam2_prompt_corroborated.yaml
+    temporal_mask_stabilization: configs/temporal_sam2_mask_stabilization.yaml
+    sensors: simulation/config/sensors.yaml
+    mask_to_dem_mapping: configs/water_surface_aware_mapping.yaml
+    geometry_quality_gate: configs/water_surface_aware_quality_gate.yaml
+  frozen_model:
+    repository_commit: 2b90b9f5ceec907a1c18123530e92e794ad901a4
+    model_config_argument: configs/sam2.1/sam2.1_hiera_t.yaml
+    checkpoint_path: /home/wlkl/ai_models/sam2/checkpoints/sam2.1_hiera_tiny.pt
+    checkpoint_sha256: 7402e0d864fa82708a20fbd15bc84245c2f26dff0eb43a4b5b93452deb34be69
+  samples:
+    - sample_id: c17b_001
+      case_id: sim_water_10cm_001
+      rain_level: light
+      seed: 306
+      role: regression
+      frames_dir: data/simulation_dynamic/sim_water_10cm_001/light/seed_306/frames
+      anchor_image: data/simulation_dynamic/sim_water_10cm_001/light/seed_306/frames/frame_000149.png
+      prompt_path: outputs/temporal_sam2_prompt_heldout_c17b_multidepth_seed306/c17b_001/automatic_prompt.json
+      anchor_sha256: a441c6588fa0dd738180a426b30fe7e950457f04f3b126192266f1deb78ce050
+    - sample_id: c17b_002
+      case_id: sim_water_10cm_001
+      rain_level: moderate
+      seed: 306
+      role: regression
+      frames_dir: data/simulation_dynamic/sim_water_10cm_001/moderate/seed_306/frames
+      anchor_image: data/simulation_dynamic/sim_water_10cm_001/moderate/seed_306/frames/frame_000149.png
+      prompt_path: outputs/temporal_sam2_prompt_heldout_c17b_multidepth_seed306/c17b_002/automatic_prompt.json
+      anchor_sha256: 3207abeb34bad13fc5271d6d9ae139427cd7ecaddf87c655d6085a36c721d26f
+    - sample_id: c17b_003
+      case_id: sim_water_10cm_001
+      rain_level: heavy
+      seed: 306
+      role: regression
+      frames_dir: data/simulation_dynamic/sim_water_10cm_001/heavy/seed_306/frames
+      anchor_image: data/simulation_dynamic/sim_water_10cm_001/heavy/seed_306/frames/frame_000149.png
+      prompt_path: outputs/temporal_sam2_prompt_heldout_c17b_multidepth_seed306/c17b_003/automatic_prompt.json
+      anchor_sha256: c4704a42322abea59f50eab7f82fb5b95f584d5e9f6e1d9793c23fca87de09f3
+    - sample_id: c17b_004
+      case_id: sim_water_20cm_001
+      rain_level: light
+      seed: 306
+      role: regression
+      frames_dir: data/simulation_dynamic/sim_water_20cm_001/light/seed_306/frames
+      anchor_image: data/simulation_dynamic/sim_water_20cm_001/light/seed_306/frames/frame_000149.png
+      prompt_path: outputs/temporal_sam2_prompt_heldout_c17b_multidepth_seed306/c17b_004/automatic_prompt.json
+      anchor_sha256: 8fdae5d7e7101dddc21488396fd9f9fdaa99402a6348beae98f9375e06bb4b2f
+    - sample_id: c17b_005
+      case_id: sim_water_20cm_001
+      rain_level: moderate
+      seed: 306
+      role: regression
+      frames_dir: data/simulation_dynamic/sim_water_20cm_001/moderate/seed_306/frames
+      anchor_image: data/simulation_dynamic/sim_water_20cm_001/moderate/seed_306/frames/frame_000149.png
+      prompt_path: outputs/temporal_sam2_prompt_heldout_c17b_multidepth_seed306/c17b_005/automatic_prompt.json
+      anchor_sha256: f267178a2613797ba9c3f59330cef81af6c79c067e6c60f1f439b6165a64dce1
+    - sample_id: c17b_006
+      case_id: sim_water_20cm_001
+      rain_level: heavy
+      seed: 306
+      role: regression
+      frames_dir: data/simulation_dynamic/sim_water_20cm_001/heavy/seed_306/frames
+      anchor_image: data/simulation_dynamic/sim_water_20cm_001/heavy/seed_306/frames/frame_000149.png
+      prompt_path: outputs/temporal_sam2_prompt_heldout_c17b_multidepth_seed306/c17b_006/automatic_prompt.json
+      anchor_sha256: 4ba14c3a9c3e3302391dde437f845046240af9ecd8aa11275130c4a90fcce034
+    - sample_id: c17b_007
+      case_id: sim_water_40cm_001
+      rain_level: light
+      seed: 306
+      role: regression
+      frames_dir: data/simulation_dynamic/sim_water_40cm_001/light/seed_306/frames
+      anchor_image: data/simulation_dynamic/sim_water_40cm_001/light/seed_306/frames/frame_000149.png
+      prompt_path: outputs/temporal_sam2_prompt_heldout_c17b_multidepth_seed306/c17b_007/automatic_prompt.json
+      anchor_sha256: 8f0682248895309fdbed8b1310826a4967176536804a0dcaa17617a91f8ccb0b
+    - sample_id: c17b_008
+      case_id: sim_water_40cm_001
+      rain_level: moderate
+      seed: 306
+      role: regression
+      frames_dir: data/simulation_dynamic/sim_water_40cm_001/moderate/seed_306/frames
+      anchor_image: data/simulation_dynamic/sim_water_40cm_001/moderate/seed_306/frames/frame_000149.png
+      prompt_path: outputs/temporal_sam2_prompt_heldout_c17b_multidepth_seed306/c17b_008/automatic_prompt.json
+      anchor_sha256: 9b24ea80edc1e320b92fba90f5fbc316697271706690ded964996bcab3bfb7a0
+    - sample_id: c17b_009
+      case_id: sim_water_40cm_001
+      rain_level: heavy
+      seed: 306
+      role: regression
+      frames_dir: data/simulation_dynamic/sim_water_40cm_001/heavy/seed_306/frames
+      anchor_image: data/simulation_dynamic/sim_water_40cm_001/heavy/seed_306/frames/frame_000149.png
+      prompt_path: outputs/temporal_sam2_prompt_heldout_c17b_multidepth_seed306/c17b_009/automatic_prompt.json
+      anchor_sha256: ec0aa4a8303932ad1c9f3efe8ba553d983191a48a3b033936fb9eb000c3c9df4
+  output_roots:
+    prompts: outputs/temporal_sam2_prompt_heldout_c17b_multidepth_seed306
+    propagation: outputs/sam2_video_pilot_c17b_multidepth_seed306
+    geometry_prediction: outputs/sam2_video_geometry_stability_c17b_multidepth_seed306
+    camera_gt_evaluation: outputs/sam2_video_gt_evaluation_c17b_multidepth_seed306
+    geometry_gt_evaluation: outputs/sam2_video_geometry_gt_evaluation_c17b_multidepth_seed306
+  frozen_results:
+    prompt_status_pass_count: 9
+    prompt_sha256_by_sample:
+      c17b_001: 57a3fa75a20ea2df3c035e178b21cb9d53a53bfddceadbb06a6c3fd8363d3b25
+      c17b_002: 261526f34d4279e41b11ad5b4d0da4db37ba581da28c395394f76e44be725932
+      c17b_003: 038a215d80051573178c62fce0f646e54c6e4113c2ae8d0d53da914cdd9c6e61
+      c17b_004: 51901875d7f59a927de9a0aea05aae13c151bfdf9a5213da2f854733d1fb2d32
+      c17b_005: a60fb7bb8f06b1bc4acb22af6c57917750067fc466802a703c20f82aac645cf5
+      c17b_006: 4b08eb0709f944f0fab565d1f5c7dedfd8529093bd5696c1056fe8242a7be695
+      c17b_007: b4c4a20e91810fa799120a3571cfa9415c60b8e54f68cf326b190d3bff5d89b6
+      c17b_008: c4e096426d5d15de9f5eb6e451ce17fca6bb46bcf165a66aa1b6f21e30902d7c
+      c17b_009: d4bb9c0ec6caa9c00b8b451e36d2e6b09077750f65619d14229250078707bd2d
+    propagation_summary_sha256_by_sample:
+      c17b_001: ef0f994c0a49d1e5e2827a75eb1de95798a2c3fd4524cbd40e6918b4aaa84f1e
+      c17b_002: 0c3bb34c0dac5233d2404941e4b08a46b91805057ce5ff98acc7d13b8ae81e12
+      c17b_003: 487826812abf4072ffc11066712e17bad87241804efc9a68e81ec2870966bf32
+      c17b_004: 091ea930c17f205f82eab98a449d1032c2d589dee1dfea37e6dd08352c423fbe
+      c17b_005: 0c2e008fc930fafd6fef09d0d846864c8220e021c0d823aa58feda4a05add847
+      c17b_006: 719d0d9a7b1a02f1d8a7cb2a7d89ff525c078e28fe43b58c5034384dec9a45e1
+      c17b_007: ff1dcf31e955e212296e434d6bef1c8beb2ad7eb514f0bffbd2cb7c6b2fcb0e8
+      c17b_008: d4682ebacd3f61e8cb81d47f1f8605c2c75421b899023b72b927d42b4df7e558
+      c17b_009: f1a4a756a37795b5bd2318cb99cc6f97cfc3241837a8e7dcc8b436a69df3baf1
+    geometry_prediction_summary_sha256: f8e5fbbd881f41a1cb924bd85bc98ab1d2a90f925843e83abf4f0394268ad1c6
+    camera_gt_evaluation_summary_sha256: 4971ba96ec0a95ea740047bf3f84cd617566a16d8f7724612d097827461be122
+    geometry_gt_evaluation_summary_sha256: bd20910b70074d382dc6a41085d8612e35b53214f4c5341fa2af3b43d96ffcdf
+    evaluated_frame_count: 369
+    water_level_error_within_3cm_frame_count: 368
+    water_level_target_sequence_count: 8
+    geometry_pass_frame_count: 233
+    geometry_reject_frame_count: 136
+    prediction_rerun_after_ground_truth_evaluation: false
+  safety:
+    per_case_parameter_tuning_allowed: false
+    repeated_prediction_allowed: false
+    prediction_reads_water_state_ground_truth: false
+    prediction_reads_evaluation_outputs: false
+    upstream_temporal_quality_gate_modified: false
+    quality_gate_thresholds_modified: false
+    authoritative: false
+    eligible_for_downstream: false
+    real_device_action_allowed: false
+    real_api_calls_enabled: false
+  runtime_state:
+    data_generation_completed: true
+    prompt_generation_completed: true
+    sam2_propagation_completed: true
+    geometry_prediction_completed: true
+    ground_truth_evaluation_completed: true
