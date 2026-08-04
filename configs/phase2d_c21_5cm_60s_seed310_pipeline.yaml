@@ -1,0 +1,44 @@
+phase2d_c21_5cm_60s_seed310:
+  protocol_version: phase2d_c21_5cm_multi_window_evidence_fusion_corrected_v1
+  purpose: heldout_validation_after_final_core_support_correctness_fix
+  evaluation_role: held_out_validation_not_parameter_selection
+  seed: 310
+  rain_level: moderate
+  source_fps: 20
+  source_duration_seconds: 60
+  source_frame_count: 1201
+  burst_frame_count: 41
+  window_selection_config: configs/temporal_dense_burst_selection.yaml
+  multi_window_fusion_config: configs/temporal_multi_window_evidence_fusion.yaml
+  window_start: 0
+  window_end: 40
+  anchor_frame_index: 20
+  samples:
+    - sample_id: c21_heldout_001
+      role: held_out_validation
+      case_id: sim_water_5cm_001
+      rain_level: moderate
+      seed: 310
+      frames_dir: outputs/temporal_dense_burst_c21_5cm_60s_seed310/frames
+      source_frames_dir: data/simulation_dynamic/sim_water_5cm_001/moderate/seed_310/frames
+      evaluation_sequence_dir: data/simulation_dynamic/sim_water_5cm_001/moderate/seed_310
+      fused_output_dir: outputs/temporal_dense_burst_c21_5cm_60s_seed310
+      prompt_path: outputs/temporal_dense_burst_c21_5cm_60s_seed310/automatic_prompt.json
+  acceptance:
+    automatic_prompt_required: true
+    minimum_supporting_window_count: 3
+    minimum_supporting_time_span_seconds: 15
+    sam2_video_frame_count: 41
+    water_level_absolute_error_limit_cm: 3.0
+    stable_output_required: true
+  safety:
+    automatic_prompt_only: true
+    human_window_selection_used: false
+    manual_prompt_fallback_used: false
+    prediction_reads_ground_truth: false
+    evaluation_runs_after_prediction_freeze: true
+    per_case_parameter_tuning_allowed: false
+    authoritative: false
+    eligible_for_downstream: false
+    real_device_action_allowed: false
+    real_api_calls_enabled: false

@@ -1,0 +1,47 @@
+temporal_multi_window_evidence_fusion:
+  schema_version: phase2d_c21_multi_window_fusion_v1
+  algorithm_version: phase2d_c21_recurring_shallow_water_core_v1
+  parameter_scope: all_water_depths_and_rain_levels
+  selection_note: "Fixed prediction-side rules; no per-case or Ground Truth tuning."
+  required_source_frame_count: 1201
+
+  minimum_eligible_window_count: 3
+  allowed_partial_gate_reasons:
+    - insufficient_high_confidence_water_tracks
+  minimum_window_component_area_pixels: 16
+  maximum_window_water_fraction: 0.35
+  window_ambiguous_component_area_ratio: 0.80
+  maximum_window_ambiguous_component_count: 0
+
+  minimum_component_iou: 0.10
+  maximum_centroid_distance_pixels: 20.0
+  cluster_overlap_tolerance_radius_pixels: 3
+  minimum_cluster_window_count: 3
+  minimum_cluster_time_span_seconds: 15.0
+  ambiguous_cluster_window_count_ratio: 0.80
+
+  minimum_support_window_count: 3
+  minimum_support_fraction: 0.50
+  minimum_raw_support_window_count: 1
+  minimum_final_core_overlap_fraction: 0.10
+  # Compensates a few pixels of localization jitter between independent bursts.
+  # The final core is cropped back to the union of raw window observations.
+  support_tolerance_radius_pixels: 4
+  probability_weight: 0.50
+  support_weight: 0.50
+  minimum_fused_confidence: 0.50
+  morphology_close_kernel: 3
+  minimum_fused_component_area_pixels: 16
+  fused_ambiguous_component_area_ratio: 0.80
+  maximum_fused_ambiguous_component_count: 0
+  unknown_consensus_fraction: 0.50
+
+  required_prompt_status: pass
+  safety:
+    manual_window_selection_allowed: false
+    manual_prompt_fallback_allowed: false
+    per_case_parameter_tuning_allowed: false
+    prediction_uses_reference_labels: false
+    sam2_allowed_only_when_fusion_and_prompt_pass: true
+    authoritative: false
+    eligible_for_downstream: false

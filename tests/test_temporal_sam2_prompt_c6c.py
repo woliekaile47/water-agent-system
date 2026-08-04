@@ -90,6 +90,82 @@ def test_insufficient_high_confidence_core_fails_closed() -> None:
     assert "insufficient_safe_positive_points" in diagnostics["hard_reasons"]
 
 
+def test_feasibility_first_selection_finds_three_points_when_greedy_center_blocks() -> None:
+    inputs = list(_inputs())
+    probability, water = inputs[0], inputs[1]
+    probability[:] = 0.0
+    # The deepest center point is within 10 px of every outer candidate. A
+    # center-first greedy choice therefore stops early, while the three outer
+    # candidates form a valid pairwise-spaced set.
+    center = (40, 30)
+    feasible_outer_points = ((40, 23), (34, 34), (46, 34))
+    for x, y in (center, *feasible_outer_points):
+        probability[y, x] = 0.9
+    config = _config()
+    config["min_positive_spacing_px"] = 10.0
+    config["positive_point_selection_method"] = (
+        "feasibility_preserving_fallback_v1"
+    )
+    before = tuple(deepcopy(item) for item in inputs)
+
+    prompt, diagnostics = _run(tuple(inputs), config)
+
+    assert prompt["prompt_quality_status"] == "pass"
+    assert len(prompt["positive_points_xy"]) >= 3
+    selected = np.asarray(prompt["positive_points_xy"], dtype=np.float64)
+    pairwise = np.linalg.norm(selected[:, None, :] - selected[None, :, :], axis=2)
+    assert np.all(pairwise[np.triu_indices(len(selected), k=1)] >= 10.0)
+    assert diagnostics["positive_point_selection_method"] == (
+        "feasibility_preserving_fallback_v1"
+    )
+    assert diagnostics["positive_feasible_required_set_found"] is True
+    assert np.array_equal(inputs[0], before[0])
+    assert np.array_equal(inputs[1], before[1])
+    assert np.array_equal(inputs[2], before[2])
+
+
+def test_packing_fallback_preserves_successful_legacy_greedy_points() -> None:
+    inputs = _inputs()
+    legacy_prompt, legacy_diagnostics = _run(
+        tuple(deepcopy(item) for item in inputs)
+    )
+    config = _config()
+    config["positive_point_selection_method"] = (
+        "feasibility_preserving_fallback_v1"
+    )
+
+    fallback_prompt, fallback_diagnostics = _run(
+        tuple(deepcopy(item) for item in inputs), config
+    )
+
+    assert legacy_prompt["positive_points_xy"] == fallback_prompt["positive_points_xy"]
+    assert legacy_diagnostics["positive_point_selection_method"] == "legacy_greedy_v1"
+    assert fallback_diagnostics["positive_point_selection_method"] == "legacy_greedy_v1"
+
+
+def test_packing_fallback_fails_closed_when_no_feasible_three_point_set_exists() -> None:
+    inputs = list(_inputs())
+    probability, water = inputs[0], inputs[1]
+    probability[:] = 0.0
+    for x, y in ((38, 30), (40, 30), (42, 30)):
+        probability[y, x] = 0.9
+    config = _config()
+    config["min_positive_spacing_px"] = 10.0
+    config["positive_point_selection_method"] = (
+        "feasibility_preserving_fallback_v1"
+    )
+
+    prompt, diagnostics = _run(tuple(inputs), config)
+
+    assert prompt["prompt_quality_status"] == "reject"
+    assert len(prompt["positive_points_xy"]) < 3
+    assert "insufficient_safe_positive_points" in diagnostics["hard_reasons"]
+    assert diagnostics["positive_point_selection_method"] == (
+        "feasibility_preserving_fallback_v1"
+    )
+    assert diagnostics["positive_feasible_required_set_found"] is False
+
+
 def test_partial_gate_expands_box_by_component_scale_with_cap() -> None:
     inputs = list(_inputs())
     pass_prompt, pass_diagnostics = _run(tuple(deepcopy(item) for item in inputs))

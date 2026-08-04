@@ -50,11 +50,13 @@ def _select_positive_points(
     probability: np.ndarray,
     temporal_support_fraction: np.ndarray,
     target: int,
+    minimum_required: int,
+    selection_method: str,
     min_boundary_distance: float,
     min_spacing: float,
     min_probability: float,
     min_temporal_support_fraction: float,
-) -> tuple[list[list[int]], list[float], list[float], int, int]:
+) -> tuple[list[list[int]], list[float], list[float], int, int, str, bool]:
     distance = cv2.distanceTransform(component.astype(np.uint8), cv2.DIST_L2, 5)
     confidence_core = (
         component
@@ -67,48 +69,190 @@ def _select_positive_points(
     )
     ys, xs = np.where(safe_core)
     if ys.size == 0:
-        return [], [], [], confidence_candidate_count, 0
+        return (
+            [], [], [], confidence_candidate_count, 0,
+            "legacy_greedy_v1", False,
+        )
     candidates = np.column_stack((xs, ys)).astype(np.int32)
-    selected: list[np.ndarray] = []
-    selected_boundary_distances: list[float] = []
-    selected_temporal_support: list[float] = []
-    available = np.ones(candidates.shape[0], dtype=bool)
-    while len(selected) < target and np.any(available):
-        indices = np.flatnonzero(available)
-        points = candidates[indices]
-        point_distances = distance[points[:, 1], points[:, 0]]
-        point_probabilities = probability[points[:, 1], points[:, 0]]
-        if selected:
-            prior = np.asarray(selected, dtype=np.float64)
+    candidate_distances = distance[candidates[:, 1], candidates[:, 0]]
+    candidate_probabilities = probability[candidates[:, 1], candidates[:, 0]]
+    candidate_support = temporal_support_fraction[candidates[:, 1], candidates[:, 0]]
+    requested_minimum = max(0, min(int(minimum_required), int(target)))
+    allowed_methods = {
+        "legacy_greedy_v1",
+        "feasibility_preserving_fallback_v1",
+    }
+    if selection_method not in allowed_methods:
+        raise ValueError(
+            f"unsupported positive_point_selection_method: {selection_method}"
+        )
+
+    def mutually_spaced(
+        candidate_array: np.ndarray,
+        candidate_index: int,
+        selected_indices: list[int],
+    ) -> bool:
+        if not selected_indices:
+            return True
+        delta = (
+            candidate_array[np.asarray(selected_indices, dtype=np.intp)].astype(np.float64)
+            - candidate_array[candidate_index].astype(np.float64)
+        )
+        return bool(np.all(np.linalg.norm(delta, axis=1) >= min_spacing))
+
+    def legacy_greedy_indices() -> list[int]:
+        selected_indices: list[int] = []
+        available = np.ones(candidates.shape[0], dtype=bool)
+        while len(selected_indices) < target and np.any(available):
+            indices = np.flatnonzero(available)
+            points = candidates[indices]
+            point_distances = candidate_distances[indices]
+            point_probabilities = candidate_probabilities[indices]
+            if selected_indices:
+                prior = candidates[
+                    np.asarray(selected_indices, dtype=np.intp)
+                ].astype(np.float64)
+                spacing = np.min(
+                    np.linalg.norm(
+                        points[:, None, :].astype(np.float64) - prior[None, :, :],
+                        axis=2,
+                    ),
+                    axis=1,
+                )
+                valid_spacing = spacing >= min_spacing
+                if not np.any(valid_spacing):
+                    break
+                indices = indices[valid_spacing]
+                points = candidates[indices]
+                point_distances = candidate_distances[indices]
+                point_probabilities = candidate_probabilities[indices]
+                spacing = spacing[valid_spacing]
+            else:
+                spacing = np.zeros(points.shape[0], dtype=np.float64)
+            order = np.lexsort((
+                points[:, 0],
+                points[:, 1],
+                -point_probabilities,
+                -point_distances,
+                -spacing,
+            ))
+            chosen_index = int(indices[int(order[0])])
+            selected_indices.append(chosen_index)
+            available[chosen_index] = False
+        return selected_indices
+
+    legacy_indices = legacy_greedy_indices()
+    if (
+        selection_method == "legacy_greedy_v1"
+        or len(legacy_indices) >= requested_minimum
+    ):
+        selected = candidates[np.asarray(legacy_indices, dtype=np.intp)]
+        return (
+            [[int(point[0]), int(point[1])] for point in selected],
+            [float(candidate_distances[index]) for index in legacy_indices],
+            [float(candidate_support[index]) for index in legacy_indices],
+            confidence_candidate_count,
+            int(candidates.shape[0]),
+            "legacy_greedy_v1",
+            len(legacy_indices) >= requested_minimum,
+        )
+
+    quality_order = np.lexsort((
+        candidates[:, 0],
+        candidates[:, 1],
+        -candidate_support,
+        -candidate_probabilities,
+        -candidate_distances,
+    ))
+    candidates = candidates[quality_order]
+    candidate_distances = candidate_distances[quality_order]
+    candidate_probabilities = candidate_probabilities[quality_order]
+    candidate_support = candidate_support[quality_order]
+
+    def find_feasible_subset(
+        start_index: int,
+        selected_indices: list[int],
+    ) -> list[int] | None:
+        """Return the first quality-ordered feasible minimum-size point set."""
+        if len(selected_indices) >= requested_minimum:
+            return selected_indices.copy()
+        still_needed = requested_minimum - len(selected_indices)
+        if candidates.shape[0] - start_index < still_needed:
+            return None
+        last_start = candidates.shape[0] - still_needed
+        for candidate_index in range(start_index, last_start + 1):
+            if not mutually_spaced(candidates, candidate_index, selected_indices):
+                continue
+            selected_indices.append(candidate_index)
+            result = find_feasible_subset(candidate_index + 1, selected_indices)
+            selected_indices.pop()
+            if result is not None:
+                return result
+        return None
+
+    selected_indices = find_feasible_subset(0, [])
+    feasible_required_set_found = selected_indices is not None
+    if selected_indices is not None:
+        # Once the safety minimum is feasible, extend toward the requested target
+        # with deterministic maximin spacing while retaining all fixed thresholds.
+        while len(selected_indices) < target:
+            compatible = [
+                index
+                for index in range(candidates.shape[0])
+                if index not in selected_indices
+                and mutually_spaced(candidates, index, selected_indices)
+            ]
+            if not compatible:
+                break
+            prior = candidates[np.asarray(selected_indices, dtype=np.intp)].astype(np.float64)
+            points = candidates[np.asarray(compatible, dtype=np.intp)].astype(np.float64)
             spacing = np.min(
-                np.linalg.norm(points[:, None, :].astype(np.float64) - prior[None, :, :], axis=2),
+                np.linalg.norm(points[:, None, :] - prior[None, :, :], axis=2),
                 axis=1,
             )
-            valid_spacing = spacing >= min_spacing
-            if not np.any(valid_spacing):
-                break
-            indices = indices[valid_spacing]
-            points = candidates[indices]
-            point_distances = distance[points[:, 1], points[:, 0]]
-            point_probabilities = probability[points[:, 1], points[:, 0]]
-            spacing = spacing[valid_spacing]
-        else:
-            spacing = np.zeros(points.shape[0], dtype=np.float64)
-        order = np.lexsort((points[:, 0], points[:, 1], -point_probabilities, -point_distances, -spacing))
-        chosen_index = int(indices[int(order[0])])
-        chosen = candidates[chosen_index]
-        selected.append(chosen.copy())
-        selected_boundary_distances.append(float(distance[chosen[1], chosen[0]]))
-        selected_temporal_support.append(
-            float(temporal_support_fraction[chosen[1], chosen[0]])
+            order = np.lexsort((
+                candidates[compatible, 0],
+                candidates[compatible, 1],
+                -candidate_support[compatible],
+                -candidate_probabilities[compatible],
+                -candidate_distances[compatible],
+                -spacing,
+            ))
+            selected_indices.append(compatible[int(order[0])])
+    else:
+        # There truly is no feasible minimum-size set. Keep the original greedy
+        # diagnostic points and fail closed; never relax spacing or confidence.
+        selected = np.asarray(
+            np.column_stack((xs, ys)).astype(np.int32)[legacy_indices],
+            dtype=np.int32,
         )
-        available[chosen_index] = False
+        original_distances = distance[selected[:, 1], selected[:, 0]]
+        original_support = temporal_support_fraction[selected[:, 1], selected[:, 0]]
+        return (
+            [[int(point[0]), int(point[1])] for point in selected],
+            [float(value) for value in original_distances],
+            [float(value) for value in original_support],
+            confidence_candidate_count,
+            int(candidates.shape[0]),
+            "feasibility_preserving_fallback_v1",
+            False,
+        )
+
+    selected = candidates[np.asarray(selected_indices, dtype=np.intp)]
+    selected_boundary_distances = [
+        float(candidate_distances[index]) for index in selected_indices
+    ]
+    selected_temporal_support = [
+        float(candidate_support[index]) for index in selected_indices
+    ]
     return (
         [[int(point[0]), int(point[1])] for point in selected],
         selected_boundary_distances,
         selected_temporal_support,
         confidence_candidate_count,
         int(candidates.shape[0]),
+        "feasibility_preserving_fallback_v1",
+        feasible_required_set_found,
     )
 
 
@@ -342,6 +486,8 @@ def generate_temporal_sam2_prompt(
     positive_temporal_support: list[float] = []
     positive_confidence_candidate_count = 0
     positive_supported_candidate_count = 0
+    positive_selection_method = "legacy_greedy_v1"
+    positive_feasible_required_set_found = False
     negative_points: list[list[int]] = []
     negative_sources: list[str] = []
     negative_sectors: list[int] = []
@@ -386,11 +532,15 @@ def generate_temporal_sam2_prompt(
             positive_temporal_support,
             positive_confidence_candidate_count,
             positive_supported_candidate_count,
+            positive_selection_method,
+            positive_feasible_required_set_found,
         ) = _select_positive_points(
             selected_component,
             probability,
             temporal_support,
             int(config["target_positive_points"]),
+            int(config["min_positive_points"]),
+            str(config.get("positive_point_selection_method", "legacy_greedy_v1")),
             float(config["min_positive_boundary_distance_px"]),
             float(config["min_positive_spacing_px"]),
             float(config.get("min_positive_probability", 0.0)),
@@ -490,6 +640,10 @@ def generate_temporal_sam2_prompt(
         "box_margin_xy_px": box_margin_xy,
         "box_expansion_policy": "partial_gate_component_scaled" if partial_gate else "fixed_base_margin",
         "positive_point_count": len(positive_points),
+        "positive_point_selection_method": positive_selection_method,
+        "positive_feasible_required_set_found": bool(
+            positive_feasible_required_set_found
+        ),
         "positive_boundary_distances_px": positive_boundary_distances,
         "positive_point_probabilities": [float(probability[y, x]) for x, y in positive_points],
         "positive_point_temporal_support_fractions": positive_temporal_support,
