@@ -1,0 +1,124 @@
+phase2d_c23_multidepth_seed306_regression:
+  protocol_version: phase2d_c23_multidepth_seed306_regression_v1
+  matrix_id: phase2d_c23_10_20_40cm_seed306_three_rain_levels
+  purpose: fixed_c23_non_degradation_regression
+  evaluation_role: regression_not_parameter_selection
+  source_matrix: configs/phase2d_c17b_multidepth_seed306_regression.yaml
+  parameter_selection_completed_before_regression: true
+  ground_truth_opened_for_prediction: false
+  prediction_run_limit_per_sequence: 1
+  seed: 306
+  fps: 20
+  window_start: 129
+  window_end: 169
+  window_frame_count: 41
+  anchor_frame_index: 149
+  sample_count: 9
+  frozen_configs:
+    temporal_prompt: configs/temporal_sam2_prompt_c23_shallow_recall.yaml
+    temporal_mask_stabilization: configs/temporal_sam2_mask_stabilization.yaml
+    sensors: simulation/config/sensors.yaml
+    mask_to_dem_mapping: configs/water_surface_aware_mapping.yaml
+    geometry_quality_gate: configs/water_surface_aware_quality_gate.yaml
+  samples:
+    - sample_id: c17b_001
+      case_id: sim_water_10cm_001
+      rain_level: light
+      seed: 306
+      role: regression
+      frames_dir: data/simulation_dynamic/sim_water_10cm_001/light/seed_306/frames
+      anchor_image: data/simulation_dynamic/sim_water_10cm_001/light/seed_306/frames/frame_000149.png
+      prompt_path: outputs/temporal_sam2_prompt_c23_regression_seed306/c17b_001/automatic_prompt.json
+    - sample_id: c17b_002
+      case_id: sim_water_10cm_001
+      rain_level: moderate
+      seed: 306
+      role: regression
+      frames_dir: data/simulation_dynamic/sim_water_10cm_001/moderate/seed_306/frames
+      anchor_image: data/simulation_dynamic/sim_water_10cm_001/moderate/seed_306/frames/frame_000149.png
+      prompt_path: outputs/temporal_sam2_prompt_c23_regression_seed306/c17b_002/automatic_prompt.json
+    - sample_id: c17b_003
+      case_id: sim_water_10cm_001
+      rain_level: heavy
+      seed: 306
+      role: regression
+      frames_dir: data/simulation_dynamic/sim_water_10cm_001/heavy/seed_306/frames
+      anchor_image: data/simulation_dynamic/sim_water_10cm_001/heavy/seed_306/frames/frame_000149.png
+      prompt_path: outputs/temporal_sam2_prompt_c23_regression_seed306/c17b_003/automatic_prompt.json
+    - sample_id: c17b_004
+      case_id: sim_water_20cm_001
+      rain_level: light
+      seed: 306
+      role: regression
+      frames_dir: data/simulation_dynamic/sim_water_20cm_001/light/seed_306/frames
+      anchor_image: data/simulation_dynamic/sim_water_20cm_001/light/seed_306/frames/frame_000149.png
+      prompt_path: outputs/temporal_sam2_prompt_c23_regression_seed306/c17b_004/automatic_prompt.json
+    - sample_id: c17b_005
+      case_id: sim_water_20cm_001
+      rain_level: moderate
+      seed: 306
+      role: regression
+      frames_dir: data/simulation_dynamic/sim_water_20cm_001/moderate/seed_306/frames
+      anchor_image: data/simulation_dynamic/sim_water_20cm_001/moderate/seed_306/frames/frame_000149.png
+      prompt_path: outputs/temporal_sam2_prompt_c23_regression_seed306/c17b_005/automatic_prompt.json
+    - sample_id: c17b_006
+      case_id: sim_water_20cm_001
+      rain_level: heavy
+      seed: 306
+      role: regression
+      frames_dir: data/simulation_dynamic/sim_water_20cm_001/heavy/seed_306/frames
+      anchor_image: data/simulation_dynamic/sim_water_20cm_001/heavy/seed_306/frames/frame_000149.png
+      prompt_path: outputs/temporal_sam2_prompt_c23_regression_seed306/c17b_006/automatic_prompt.json
+    - sample_id: c17b_007
+      case_id: sim_water_40cm_001
+      rain_level: light
+      seed: 306
+      role: regression
+      frames_dir: data/simulation_dynamic/sim_water_40cm_001/light/seed_306/frames
+      anchor_image: data/simulation_dynamic/sim_water_40cm_001/light/seed_306/frames/frame_000149.png
+      prompt_path: outputs/temporal_sam2_prompt_c23_regression_seed306/c17b_007/automatic_prompt.json
+    - sample_id: c17b_008
+      case_id: sim_water_40cm_001
+      rain_level: moderate
+      seed: 306
+      role: regression
+      frames_dir: data/simulation_dynamic/sim_water_40cm_001/moderate/seed_306/frames
+      anchor_image: data/simulation_dynamic/sim_water_40cm_001/moderate/seed_306/frames/frame_000149.png
+      prompt_path: outputs/temporal_sam2_prompt_c23_regression_seed306/c17b_008/automatic_prompt.json
+    - sample_id: c17b_009
+      case_id: sim_water_40cm_001
+      rain_level: heavy
+      seed: 306
+      role: regression
+      frames_dir: data/simulation_dynamic/sim_water_40cm_001/heavy/seed_306/frames
+      anchor_image: data/simulation_dynamic/sim_water_40cm_001/heavy/seed_306/frames/frame_000149.png
+      prompt_path: outputs/temporal_sam2_prompt_c23_regression_seed306/c17b_009/automatic_prompt.json
+  frozen_artifact_hashes:
+    c17b_001: {prompt: fef05f0daf772cab99dc36d969c3e1ccbb8680896ef58e161f45a2d135f0459c, propagation_summary: 47f285252b485fbb1cb4b5aed87d8a9438caa4f727ec0bc872d89f672642ef2d}
+    c17b_002: {prompt: 5e1d586e346d8ebf4ff3cd060dcfd56f0948717c9396c0d8027474d6dc600c49, propagation_summary: c62f6aafe6900ae3d132c286e665ed5b58e17124c7b09ccf614b091ebd4933bf}
+    c17b_003: {prompt: 884999617a596da989fab0c0bf19089fedd5e1d5740d570a096e530033655e7d, propagation_summary: 8ab285f6b13aabefe320fc1338cfaed62dfa5859ec898c2752cfa77cdbf11d90}
+    c17b_004: {prompt: a646067655d93fdbffb9728162447c17a5862d1cb7643d988cd887b10f1e82c4, propagation_summary: 63d1f1c00f6dce8de41430f7a90061e753dfa69b46fb6301a79789762a4a169f}
+    c17b_005: {prompt: 79cc574d3c30ee0afe01cc7655c9543fee4ce526db39129c68402487e88ab982, propagation_summary: 8a0cb16d156ccee01417b5a1f2c60aadf993003d3efdbac3b9e6848f39eb7c38}
+    c17b_006: {prompt: 1a1d4ba9077e9a66e4aa36a977f527b78ef0f9cc38017d42fc042868e22ea06d, propagation_summary: 6e84ff7f6544f48b872de815b78192b077232f402703063dc30ab3466c2575f5}
+    c17b_007: {prompt: 622a350be4548cc575e6e94dc8849498b80c60d1402471f9ec7176ce890c5fba, propagation_summary: 637e6715722628dd511a501872f13e89879514f7ea82c25bf62bb1378af0326e}
+    c17b_008: {prompt: 11cde59908926d65c426ab274841809dceaf6ebe99db827f42b9aa4dfa19b30a, propagation_summary: 8b65b6d8267cfe7b45a8c7244d6859d5c91e40606ace4186ba08db5e3445f79b}
+    c17b_009: {prompt: cf31c58f3e085d881b79480e0e9d1d06dab6c4c0f183d4c001dc6237e4a5b4e3, propagation_summary: 153610ad0fe4b806d0bbdedea1712d4f11f465b8837bc1649d2352ed44d08a99}
+  completed_results:
+    evaluated_frame_count: 369
+    water_level_error_within_3cm_frame_count: 369
+    prompt_pass_sequence_count: 9
+    geometry_pass_frame_count: 233
+    geometry_reject_frame_count: 136
+    camera_evaluation_summary_sha256: e683a0705fbf28eef03218d3f32db639bdc768b969d5038d70a8254b4013093a
+    geometry_prediction_summary_sha256: 9c5ab577528fc31280fb1c7a43772c502017680987db1cf2e098ee205a3bb03f
+    geometry_gt_evaluation_summary_sha256: b1985cc3765373a6e8ae8de7eb560ddff58b861e6a5aa0edc057640ee5e1b6ec
+    prediction_rerun_after_ground_truth_evaluation: false
+    non_degradation_conclusion: passed
+    note: "All 10/20/40 cm water-level errors remain below 3 cm; 40 cm remains conservatively rejected because an independent basin is outside single-camera coverage."
+  safety:
+    per_case_parameter_tuning_allowed: false
+    prediction_reads_water_state_ground_truth: false
+    prediction_reads_evaluation_outputs: false
+    quality_gate_thresholds_modified: false
+    authoritative: false
+    eligible_for_downstream: false

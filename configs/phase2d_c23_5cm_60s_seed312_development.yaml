@@ -1,0 +1,74 @@
+phase2d_c23_5cm_60s_seed312_development:
+  protocol_version: phase2d_c23_5cm_recall_development_v1
+  purpose: develop_generic_5cm_automatic_mask_recall_without_model_finetuning
+  evaluation_role: development_parameter_selection_not_heldout_claim
+  seed: 312
+  rain_levels: [light, moderate, heavy]
+  source_fps: 20
+  source_duration_seconds: 60
+  source_frame_count: 1201
+  burst_frame_count: 41
+  window_selection_config: configs/temporal_dense_burst_selection.yaml
+  multi_window_fusion_config: configs/temporal_multi_window_evidence_fusion.yaml
+  prompt_config: configs/temporal_sam2_prompt_c22_packing_aware.yaml
+  window_start: 0
+  window_end: 40
+  anchor_frame_index: 20
+  samples:
+    - sample_id: c23_dev_light
+      role: development
+      case_id: sim_water_5cm_001
+      rain_level: light
+      seed: 312
+      frames_dir: outputs/temporal_dense_burst_c23_5cm_60s_seed312_light_baseline/frames
+      source_frames_dir: data/simulation_dynamic/sim_water_5cm_001/light/seed_312/frames
+      evaluation_sequence_dir: data/simulation_dynamic/sim_water_5cm_001/light/seed_312
+      fused_output_dir: outputs/temporal_dense_burst_c23_5cm_60s_seed312_light_baseline
+      prompt_path: outputs/temporal_dense_burst_c23_5cm_60s_seed312_light_baseline/automatic_prompt.json
+    - sample_id: c23_dev_moderate
+      role: development
+      case_id: sim_water_5cm_001
+      rain_level: moderate
+      seed: 312
+      frames_dir: outputs/temporal_dense_burst_c23_5cm_60s_seed312_moderate_baseline/frames
+      source_frames_dir: data/simulation_dynamic/sim_water_5cm_001/moderate/seed_312/frames
+      evaluation_sequence_dir: data/simulation_dynamic/sim_water_5cm_001/moderate/seed_312
+      fused_output_dir: outputs/temporal_dense_burst_c23_5cm_60s_seed312_moderate_baseline
+      prompt_path: outputs/temporal_dense_burst_c23_5cm_60s_seed312_moderate_baseline/automatic_prompt.json
+    - sample_id: c23_dev_heavy
+      role: development
+      case_id: sim_water_5cm_001
+      rain_level: heavy
+      seed: 312
+      frames_dir: outputs/temporal_dense_burst_c23_5cm_60s_seed312_heavy_baseline/frames
+      source_frames_dir: data/simulation_dynamic/sim_water_5cm_001/heavy/seed_312/frames
+      evaluation_sequence_dir: data/simulation_dynamic/sim_water_5cm_001/heavy/seed_312
+      fused_output_dir: outputs/temporal_dense_burst_c23_5cm_60s_seed312_heavy_baseline
+      prompt_path: outputs/temporal_dense_burst_c23_5cm_60s_seed312_heavy_baseline/automatic_prompt.json
+  acceptance:
+    automatic_prompt_required: true
+    minimum_supporting_window_count: 3
+    minimum_supporting_time_span_seconds: 15
+    sam2_video_frame_count: 41
+    water_level_absolute_error_limit_cm: 3.0
+    water_level_window_std_cm_max: 0.5
+    adjacent_water_level_change_p95_cm_max: 1.0
+    area_coefficient_of_variation_max: 0.10
+    volume_coefficient_of_variation_max: 0.20
+    prediction_quality_gate_required_for_heldout: true
+  development_policy:
+    fixed_parameters_shared_across_rain_levels: true
+    gt_allowed_in_independent_evaluation_only: true
+    gt_may_inform_generic_development_iteration: true
+    per_rain_parameter_tuning_allowed: false
+    sam2_model_finetuning_allowed: false
+    sam2_checkpoint_change_allowed: false
+  safety:
+    automatic_prompt_only: true
+    manual_prompt_fallback_used: false
+    prediction_reads_ground_truth: false
+    evaluation_runs_after_prediction_freeze: true
+    authoritative: false
+    eligible_for_downstream: false
+    real_device_action_allowed: false
+    real_api_calls_enabled: false

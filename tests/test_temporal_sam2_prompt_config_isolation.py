@@ -1,4 +1,4 @@
-"""Regression checks for C17/C21 and C22 prompt configuration isolation."""
+"""Regression checks for C17/C21, C22 and C23 prompt configuration isolation."""
 
 from __future__ import annotations
 
@@ -11,6 +11,7 @@ import yaml
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 LEGACY_CONFIG = PROJECT_ROOT / "configs" / "temporal_sam2_prompt_corroborated.yaml"
 C22_CONFIG = PROJECT_ROOT / "configs" / "temporal_sam2_prompt_c22_packing_aware.yaml"
+C23_CONFIG = PROJECT_ROOT / "configs" / "temporal_sam2_prompt_c23_shallow_recall.yaml"
 SEED311_FROZEN_PROMPT_CONFIG_SHA256 = (
     "d90c94266677c1baf7cdb8cd9005f606b316827bf9833d0f0c8fbae5b576cc39"
 )
@@ -53,3 +54,21 @@ def test_c22_prompt_only_entry_uses_isolated_config_by_default() -> None:
         PROJECT_ROOT / "scripts" / "rebuild_prompt_from_frozen_fusion.py"
     ).read_text(encoding="utf-8")
     assert '"temporal_sam2_prompt_c22_packing_aware.yaml"' in script
+
+
+def test_c23_prompt_envelope_is_opt_in_and_does_not_mutate_c22() -> None:
+    c22 = _load(C22_CONFIG)
+    c23 = _load(C23_CONFIG)
+
+    assert _sha256(C22_CONFIG) == SEED311_FROZEN_PROMPT_CONFIG_SHA256
+    assert "use_temporal_support_prompt_envelope" not in c22
+    assert c23["algorithm_version"] == (
+        "phase2d_c23_recurrent_support_envelope_v1"
+    )
+    assert c23["use_temporal_support_prompt_envelope"] is True
+    assert c23["min_positive_points"] == c22["min_positive_points"] == 3
+    assert c23["min_positive_probability"] == c22["min_positive_probability"]
+    assert (
+        c23["min_positive_temporal_support_fraction"]
+        == c22["min_positive_temporal_support_fraction"]
+    )

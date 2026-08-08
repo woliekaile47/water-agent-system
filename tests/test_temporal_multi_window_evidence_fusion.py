@@ -91,6 +91,38 @@ def test_recurring_core_passes_and_transient_component_does_not_join() -> None:
     assert not artifacts["fused_water_mask"][3, 3]
 
 
+def test_unknown_heavy_partial_windows_require_recurring_cross_window_support() -> None:
+    core = np.zeros((40, 60), dtype=bool)
+    core[12:24, 20:36] = True
+    policy = _policy()
+    policy["allowed_partial_gate_reasons"] = [
+        "insufficient_high_confidence_water_tracks",
+        "unknown_fraction_high",
+    ]
+    candidates = [
+        _candidate(
+            index,
+            seconds,
+            core,
+            gate_status="partial",
+            gate_reasons=[
+                "insufficient_high_confidence_water_tracks",
+                "unknown_fraction_high",
+            ],
+            observable_region_result_valid=True,
+        )
+        for index, seconds in enumerate((0.0, 20.0, 40.0))
+    ]
+
+    summary, artifacts = fuse_prediction_candidates(candidates, policy)
+
+    assert summary["fusion_status"] == "pass"
+    assert summary["eligible_window_count"] == 3
+    assert summary["selected_cluster_time_span_seconds"] == 40.0
+    assert np.array_equal(artifacts["fused_water_mask"], core)
+    assert all(item["gate_status"] == "partial" for item in summary["candidates"])
+
+
 def test_fewer_than_three_consistent_windows_fails_closed() -> None:
     first = np.zeros((30, 50), dtype=bool)
     first[5:12, 5:15] = True

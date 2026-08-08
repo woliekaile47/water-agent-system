@@ -51,6 +51,7 @@ outputs/temporal_event_classifier/
 outputs/temporal_water_detection_model/
 outputs/synthetic_visual_to_depth_integration/
 outputs/temporal_sam2_prompt_heldout_*/
+outputs/temporal_sam2_prompt_c23_*/
 outputs/temporal_dense_burst_*/
 outputs/temporal_dense_burst_gt_evaluation_*/
 outputs/sam2_auto_prompt_heldout_*/

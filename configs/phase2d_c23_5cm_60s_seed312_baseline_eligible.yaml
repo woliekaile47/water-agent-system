@@ -1,0 +1,51 @@
+phase2d_c23_5cm_60s_seed312_baseline_eligible:
+  protocol_version: phase2d_c23_5cm_recall_development_v1
+  purpose: evaluate_only_seed312_baseline_samples_that_passed_prediction_prompt_safety
+  evaluation_role: development_baseline_independent_gt_evaluation
+  seed: 312
+  source_fps: 20
+  source_duration_seconds: 60
+  source_frame_count: 1201
+  burst_frame_count: 41
+  window_start: 0
+  window_end: 40
+  anchor_frame_index: 20
+  excluded_prediction_samples:
+    - sample_id: c23_dev_light
+      rain_level: light
+      exclusion_reason: automatic_prompt_safety_reject
+      fusion_status: reject
+      sam2_run_allowed: false
+  samples:
+    - sample_id: c23_dev_moderate
+      role: development
+      case_id: sim_water_5cm_001
+      rain_level: moderate
+      seed: 312
+      frames_dir: outputs/temporal_dense_burst_c23_5cm_60s_seed312_moderate_baseline/frames
+      source_frames_dir: data/simulation_dynamic/sim_water_5cm_001/moderate/seed_312/frames
+      evaluation_sequence_dir: data/simulation_dynamic/sim_water_5cm_001/moderate/seed_312
+      fused_output_dir: outputs/temporal_dense_burst_c23_5cm_60s_seed312_moderate_baseline
+      prompt_path: outputs/temporal_dense_burst_c23_5cm_60s_seed312_moderate_baseline/automatic_prompt.json
+    - sample_id: c23_dev_heavy
+      role: development
+      case_id: sim_water_5cm_001
+      rain_level: heavy
+      seed: 312
+      frames_dir: outputs/temporal_dense_burst_c23_5cm_60s_seed312_heavy_baseline/frames
+      source_frames_dir: data/simulation_dynamic/sim_water_5cm_001/heavy/seed_312/frames
+      evaluation_sequence_dir: data/simulation_dynamic/sim_water_5cm_001/heavy/seed_312
+      fused_output_dir: outputs/temporal_dense_burst_c23_5cm_60s_seed312_heavy_baseline
+      prompt_path: outputs/temporal_dense_burst_c23_5cm_60s_seed312_heavy_baseline/automatic_prompt.json
+  acceptance:
+    water_level_absolute_error_limit_cm: 3.0
+    water_level_window_std_cm_max: 0.5
+    adjacent_water_level_change_p95_cm_max: 1.0
+    area_coefficient_of_variation_max: 0.10
+    volume_coefficient_of_variation_max: 0.20
+  safety:
+    prediction_outputs_frozen_before_gt: true
+    prediction_reads_ground_truth: false
+    excluded_samples_are_not_reclassified: true
+    authoritative: false
+    eligible_for_downstream: false

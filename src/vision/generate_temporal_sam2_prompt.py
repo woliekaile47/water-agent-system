@@ -45,6 +45,50 @@ def _component_records(
     return labels, records
 
 
+def _connected_prompt_envelope(
+    component: np.ndarray,
+    probability: np.ndarray,
+    temporal_support_fraction: np.ndarray,
+    unknown: np.ndarray,
+    *,
+    minimum_probability: float,
+    minimum_temporal_support_fraction: float,
+    maximum_area_ratio_to_core: float,
+) -> tuple[np.ndarray, str]:
+    """Return a GT-free recurrent-evidence envelope connected to the safe core."""
+    core = np.asarray(component, dtype=bool)
+    core_area = int(np.count_nonzero(core))
+    if core_area == 0:
+        return core.copy(), "core_empty"
+    candidate = (
+        ~np.asarray(unknown, dtype=bool)
+        & (np.asarray(probability, dtype=np.float32) >= minimum_probability)
+        & (
+            np.asarray(temporal_support_fraction, dtype=np.float32)
+            >= minimum_temporal_support_fraction
+        )
+    ) | core
+    count, labels = cv2.connectedComponents(candidate.astype(np.uint8), connectivity=8)
+    envelope = np.zeros_like(core)
+    for label in range(1, count):
+        region = labels == label
+        if np.any(region & core):
+            envelope |= region
+    envelope_area = int(np.count_nonzero(envelope))
+    if envelope_area > core_area * maximum_area_ratio_to_core:
+        return core.copy(), "area_ratio_guard_fallback"
+    return envelope, "temporal_support_envelope"
+
+
+def _mask_bbox_xywh(mask: np.ndarray) -> list[int] | None:
+    ys, xs = np.where(np.asarray(mask, dtype=bool))
+    if xs.size == 0:
+        return None
+    left, right = int(xs.min()), int(xs.max())
+    top, bottom = int(ys.min()), int(ys.max())
+    return [left, top, right - left + 1, bottom - top + 1]
+
+
 def _select_positive_points(
     component: np.ndarray,
     probability: np.ndarray,
@@ -280,8 +324,14 @@ def _select_negative_points(
     config: dict[str, Any],
     *,
     allow_dry_track_negatives: bool,
+    protected_region: np.ndarray | None = None,
 ) -> tuple[list[list[int]], list[str], list[int]]:
-    ys, xs = np.where(component)
+    reference = (
+        np.asarray(protected_region, dtype=bool)
+        if protected_region is not None
+        else np.asarray(component, dtype=bool)
+    )
+    ys, xs = np.where(reference)
     center_x = float(np.mean(xs))
     center_y = float(np.mean(ys))
     target = int(config["target_negative_points"])
@@ -289,7 +339,7 @@ def _select_negative_points(
     sources: list[str] = []
     occupied_sectors: set[int] = set()
 
-    background = ~component
+    background = ~reference
     count, background_labels = cv2.connectedComponents(
         background.astype(np.uint8), connectivity=8
     )
@@ -453,6 +503,27 @@ def generate_temporal_sam2_prompt(
     if minimum_temporal_support > 0.0 and not temporal_support_available:
         hard_reasons.append("temporal_support_unavailable")
         temporal_support = np.zeros_like(probability, dtype=np.float32)
+    prompt_envelope_enabled = bool(
+        config.get("use_temporal_support_prompt_envelope", False)
+    )
+    prompt_envelope_min_probability = float(
+        config.get("prompt_envelope_min_probability", 0.0)
+    )
+    prompt_envelope_min_support = float(
+        config.get("prompt_envelope_min_temporal_support_fraction", 0.0)
+    )
+    prompt_envelope_max_area_ratio = float(
+        config.get("prompt_envelope_max_area_ratio_to_core", 1.0)
+    )
+    if prompt_envelope_enabled:
+        if not 0.0 <= prompt_envelope_min_probability <= 1.0:
+            raise ValueError("prompt_envelope_min_probability must be between 0 and 1")
+        if not 0.0 <= prompt_envelope_min_support <= 1.0:
+            raise ValueError(
+                "prompt_envelope_min_temporal_support_fraction must be between 0 and 1"
+            )
+        if prompt_envelope_max_area_ratio < 1.0:
+            raise ValueError("prompt_envelope_max_area_ratio_to_core must be at least 1")
     if np.any(water & unknown):
         hard_reasons.append("water_unknown_overlap")
     water = water & ~unknown
@@ -494,11 +565,27 @@ def generate_temporal_sam2_prompt(
     gate_status = temporal_gate_status
     partial_gate = gate_status not in ("pass", "reject")
     box_margin_xy = [int(config["box_margin_px"]), int(config["box_margin_px"])]
+    prompt_envelope = selected_component.copy()
+    prompt_envelope_status = "disabled"
+    prompt_envelope_bbox_xywh: list[int] | None = None
     allow_dry_track_negatives = not partial_gate or bool(
         config.get("use_dry_splash_negatives_when_temporal_partial", True)
     )
     if selected_record is not None:
-        x, y, component_width, component_height = selected_record["bbox_xywh"]
+        if prompt_envelope_enabled:
+            prompt_envelope, prompt_envelope_status = _connected_prompt_envelope(
+                selected_component,
+                probability,
+                temporal_support,
+                unknown,
+                minimum_probability=prompt_envelope_min_probability,
+                minimum_temporal_support_fraction=prompt_envelope_min_support,
+                maximum_area_ratio_to_core=prompt_envelope_max_area_ratio,
+            )
+        prompt_envelope_bbox_xywh = _mask_bbox_xywh(prompt_envelope)
+        if prompt_envelope_bbox_xywh is None:
+            prompt_envelope_bbox_xywh = list(selected_record["bbox_xywh"])
+        x, y, component_width, component_height = prompt_envelope_bbox_xywh
         base_margin = int(config["box_margin_px"])
         margin_x = base_margin
         margin_y = base_margin
@@ -554,6 +641,7 @@ def generate_temporal_sam2_prompt(
             classifications,
             config,
             allow_dry_track_negatives=allow_dry_track_negatives,
+            protected_region=prompt_envelope,
         )
     if len(positive_points) < int(config["min_positive_points"]):
         hard_reasons.append("insufficient_safe_positive_points")
@@ -563,7 +651,10 @@ def generate_temporal_sam2_prompt(
         hard_reasons.append("insufficient_negative_direction_coverage")
     if any(unknown[y, x] or not selected_component[y, x] for x, y in positive_points):
         hard_reasons.append("invalid_positive_point")
-    if any(unknown[y, x] or water[y, x] for x, y in negative_points):
+    if any(
+        unknown[y, x] or water[y, x] or prompt_envelope[y, x]
+        for x, y in negative_points
+    ):
         hard_reasons.append("invalid_negative_point")
     if box is None:
         hard_reasons.append("invalid_box")
@@ -638,7 +729,21 @@ def generate_temporal_sam2_prompt(
         "box_area_fraction": box_area_fraction,
         "box_border_touch_ratio": box_border_touch_ratio,
         "box_margin_xy_px": box_margin_xy,
-        "box_expansion_policy": "partial_gate_component_scaled" if partial_gate else "fixed_base_margin",
+        "box_expansion_policy": (
+            "temporal_support_envelope_with_partial_margin"
+            if prompt_envelope_status == "temporal_support_envelope" and partial_gate
+            else "temporal_support_envelope"
+            if prompt_envelope_status == "temporal_support_envelope"
+            else "partial_gate_component_scaled"
+            if partial_gate
+            else "fixed_base_margin"
+        ),
+        "prompt_envelope_status": prompt_envelope_status,
+        "prompt_envelope_area_pixels": int(np.count_nonzero(prompt_envelope)),
+        "prompt_envelope_bbox_xywh": prompt_envelope_bbox_xywh,
+        "prompt_envelope_min_probability": prompt_envelope_min_probability,
+        "prompt_envelope_min_temporal_support_fraction": prompt_envelope_min_support,
+        "prompt_envelope_max_area_ratio_to_core": prompt_envelope_max_area_ratio,
         "positive_point_count": len(positive_points),
         "positive_point_selection_method": positive_selection_method,
         "positive_feasible_required_set_found": bool(

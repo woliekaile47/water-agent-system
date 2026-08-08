@@ -6,6 +6,7 @@ from copy import deepcopy
 from pathlib import Path
 
 import numpy as np
+import pytest
 
 from src.perception.temporal_water_pipeline import build_temporal_support_fraction
 from src.vision.generate_temporal_sam2_prompt import generate_temporal_sam2_prompt
@@ -176,6 +177,100 @@ def test_partial_gate_expands_box_by_component_scale_with_cap() -> None:
     assert partial_prompt["box_xyxy"][0] < pass_prompt["box_xyxy"][0]
     assert partial_prompt["box_xyxy"][2] > pass_prompt["box_xyxy"][2]
     assert partial_prompt["prompt_quality_status"] == "diagnostic_only"
+
+
+def test_recurrent_support_envelope_expands_box_without_moving_positive_core() -> None:
+    inputs = list(_inputs())
+    probability, water = inputs[0], inputs[1]
+    probability[15:45, 20:60] = np.maximum(probability[15:45, 20:60], 0.30)
+    support = np.zeros_like(probability, dtype=np.float32)
+    support[15:45, 20:60] = 0.40
+    support[water] = 1.0
+    config = _config()
+    config.update({
+        "use_temporal_support_prompt_envelope": True,
+        "prompt_envelope_min_probability": 0.20,
+        "prompt_envelope_min_temporal_support_fraction": 1.0 / 3.0,
+        "prompt_envelope_max_area_ratio_to_core": 6.0,
+    })
+
+    baseline_prompt, _ = _run(tuple(deepcopy(item) for item in inputs), _config(), support)
+    prompt, diagnostics = _run(tuple(inputs), config, support)
+
+    assert diagnostics["prompt_envelope_status"] == "temporal_support_envelope"
+    assert diagnostics["prompt_envelope_area_pixels"] > int(np.count_nonzero(water))
+    assert prompt["box_xyxy"][0] < baseline_prompt["box_xyxy"][0]
+    assert prompt["box_xyxy"][2] > baseline_prompt["box_xyxy"][2]
+    assert all(water[y, x] for x, y in prompt["positive_points_xy"])
+    envelope_bbox = diagnostics["prompt_envelope_bbox_xywh"]
+    left, top, width, height = envelope_bbox
+    assert all(
+        not (left <= x < left + width and top <= y < top + height)
+        for x, y in prompt["negative_points_xy"]
+    )
+
+
+def test_recurrent_support_envelope_excludes_disconnected_evidence() -> None:
+    inputs = list(_inputs())
+    probability = inputs[0]
+    probability[2:10, 2:10] = 0.9
+    support = np.ones_like(probability, dtype=np.float32)
+    config = _config()
+    config.update({
+        "use_temporal_support_prompt_envelope": True,
+        "prompt_envelope_min_probability": 0.20,
+        "prompt_envelope_min_temporal_support_fraction": 1.0 / 3.0,
+        "prompt_envelope_max_area_ratio_to_core": 6.0,
+    })
+
+    _, diagnostics = _run(tuple(inputs), config, support)
+
+    assert diagnostics["prompt_envelope_bbox_xywh"] == [25, 18, 30, 24]
+
+
+def test_recurrent_support_envelope_area_guard_falls_back_to_safe_core() -> None:
+    inputs = list(_inputs())
+    probability = inputs[0]
+    probability[:, :] = 0.3
+    probability[inputs[1]] = 0.8
+    support = np.ones_like(probability, dtype=np.float32)
+    config = _config()
+    config.update({
+        "use_temporal_support_prompt_envelope": True,
+        "prompt_envelope_min_probability": 0.20,
+        "prompt_envelope_min_temporal_support_fraction": 1.0 / 3.0,
+        "prompt_envelope_max_area_ratio_to_core": 2.0,
+    })
+
+    _, diagnostics = _run(tuple(inputs), config, support)
+
+    assert diagnostics["prompt_envelope_status"] == "area_ratio_guard_fallback"
+    assert diagnostics["prompt_envelope_area_pixels"] == int(np.count_nonzero(inputs[1]))
+
+
+@pytest.mark.parametrize(
+    ("key", "value"),
+    (
+        ("prompt_envelope_min_probability", 1.1),
+        ("prompt_envelope_min_temporal_support_fraction", -0.1),
+        ("prompt_envelope_max_area_ratio_to_core", 0.9),
+    ),
+)
+def test_recurrent_support_envelope_rejects_unsafe_config_ranges(
+    key: str,
+    value: float,
+) -> None:
+    config = _config()
+    config.update({
+        "use_temporal_support_prompt_envelope": True,
+        "prompt_envelope_min_probability": 0.20,
+        "prompt_envelope_min_temporal_support_fraction": 1.0 / 3.0,
+        "prompt_envelope_max_area_ratio_to_core": 6.0,
+        key: value,
+    })
+
+    with pytest.raises(ValueError):
+        _run(_inputs(), config, np.ones((60, 80), dtype=np.float32))
 
 
 def test_partial_gate_disables_dry_splash_negatives_but_keeps_ring_negatives() -> None:
