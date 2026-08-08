@@ -1,0 +1,95 @@
+phase2d_c24_5cm_60s_seed313_eligible:
+  protocol_version: phase2d_c24_5cm_recall_heldout_v1
+  purpose: evaluate_only_seed313_samples_that_passed_frozen_prediction_prompt_safety
+  evaluation_role: heldout_independent_gt_evaluation
+  frozen_code_commit: c7319b2
+  seed: 313
+  source_fps: 20
+  source_duration_seconds: 60
+  source_frame_count: 1201
+  burst_frame_count: 41
+  window_start: 0
+  window_end: 40
+  anchor_frame_index: 20
+  excluded_prediction_samples:
+    - sample_id: c24_heldout_light
+      rain_level: light
+      exclusion_reason: insufficient_safe_positive_points
+      fusion_status: pass
+      eligible_window_count: 6
+      final_core_supporting_window_count: 4
+      supporting_time_span_seconds: 53.0
+      safe_positive_point_count: 1
+      sam2_run_allowed: false
+      prompt_sha256: 56450ff37ab78581092162840ee1029840f00ac52e9e7d17e363a703a19c57b6
+      fusion_sha256: c7f5df49c634143e1aff10a0b0d40394e403c5b492b2b0788107f948437ec491
+  samples:
+    - sample_id: c24_heldout_moderate
+      role: heldout
+      case_id: sim_water_5cm_001
+      rain_level: moderate
+      seed: 313
+      frames_dir: outputs/temporal_dense_burst_c24_5cm_60s_seed313_moderate/frames
+      source_frames_dir: data/simulation_dynamic/sim_water_5cm_001/moderate/seed_313/frames
+      evaluation_sequence_dir: data/simulation_dynamic/sim_water_5cm_001/moderate/seed_313
+      fused_output_dir: outputs/temporal_dense_burst_c24_5cm_60s_seed313_moderate
+      prompt_path: outputs/temporal_dense_burst_c24_5cm_60s_seed313_moderate/automatic_prompt.json
+      prompt_sha256: 3429b770c8660d3c27d9531463aa641d5be0d7725287044adfc67ff15195e54d
+      propagation_summary_sha256: e0d1fa53c3dc3fc982ba5c5b05fd21cf2919a9fd916c9ab581e343559165a148
+    - sample_id: c24_heldout_heavy
+      role: heldout
+      case_id: sim_water_5cm_001
+      rain_level: heavy
+      seed: 313
+      frames_dir: outputs/temporal_dense_burst_c24_5cm_60s_seed313_heavy/frames
+      source_frames_dir: data/simulation_dynamic/sim_water_5cm_001/heavy/seed_313/frames
+      evaluation_sequence_dir: data/simulation_dynamic/sim_water_5cm_001/heavy/seed_313
+      fused_output_dir: outputs/temporal_dense_burst_c24_5cm_60s_seed313_heavy
+      prompt_path: outputs/temporal_dense_burst_c24_5cm_60s_seed313_heavy/automatic_prompt.json
+      prompt_sha256: b2343d72015e8612adb7ebc0a17d3c5a320c3a0f661b9a62c5d86d6b8c850d55
+      propagation_summary_sha256: 95e08f3d04047305b6aab08011e99de40f485310aa8ea4f080069ac036b9a989
+  acceptance:
+    water_level_absolute_error_limit_cm: 3.0
+    water_level_window_std_cm_max: 0.5
+    adjacent_water_level_change_p95_cm_max: 1.0
+    area_coefficient_of_variation_max: 0.10
+    volume_coefficient_of_variation_max: 0.20
+    prediction_quality_gate_required: true
+  completed_results:
+    evaluated_frame_count: 82
+    water_level_error_within_3cm_frame_count: 82
+    geometry_pass_frame_count: 20
+    geometry_reject_frame_count: 62
+    moderate:
+      camera_iou_median: 0.8923814598
+      camera_recall_median: 0.9500283930
+      water_level_error_median_cm: 0.3657545056
+      water_level_error_max_cm: 0.6941681007
+      water_level_std_cm: 0.1550088523
+      area_cv: 0.0275789928
+      volume_cv: 0.0648107715
+      quality_pass_frames: 17
+      quality_reject_frames: 24
+    heavy:
+      camera_iou_median: 0.8380667663
+      camera_recall_median: 0.9551391255
+      water_level_error_median_cm: 0.5032433897
+      water_level_error_max_cm: 1.2825529629
+      water_level_std_cm: 0.2361504290
+      area_cv: 0.0461387080
+      volume_cv: 0.0976438894
+      quality_pass_frames: 3
+      quality_reject_frames: 38
+    frozen_summary_hashes:
+      camera_gt_evaluation: b26e4a82c7f5d22bf3f6d335ba9be6558931f183c31edda63c1b947cfb3983b9
+      geometry_prediction: 17fc9a1eb4b0af58c5bfc6900cc62c04189936c6e2b0f48d5f0f8aae77c56f63
+      geometry_gt_evaluation: ccf86bd15f3826f96214fbbbad74f6fa8b3c4376caabe32ba1c90b0b4518f2d8
+    heldout_success: false
+    failure_semantics: water_level_accuracy_and_stability_pass_for_evaluable_samples_but_full_automatic_quality_gated_output_fails
+  safety:
+    prediction_outputs_frozen_before_gt: true
+    prediction_reads_ground_truth: false
+    excluded_samples_are_not_reclassified: true
+    quality_gate_thresholds_modified: false
+    authoritative: false
+    eligible_for_downstream: false
